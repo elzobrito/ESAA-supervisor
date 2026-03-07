@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__plugin_esaa-claude_esaa-orchestrator-server__esaa_get_state",
+      "mcp__plugin_esaa-claude_esaa-orchestrator-server__esaa_validate_and_persist",
+      "Bash(python:*)",
+      "Bash(npm run:*)",
+      "Bash(bash:*)",
+      "Bash(netstat -ano)",
+      "Bash(xargs -r taskkill //F //PID)",
+      "Bash(python3:*)",
+      "Bash(taskkill:*)",
+      "Bash(cmd:*)",
+      "Bash(netstat:*)",
+      "Bash(/c/xampp/htdocs/ESAA-supervisor/.roadmap/activity.jsonl:*)",
+      "Bash(LC_ALL=C sort:*)",
+      "Bash(npx tsc:*)"
+    ]
+  }
+}

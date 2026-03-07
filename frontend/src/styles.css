@@ -1,0 +1,360 @@
+:root {
+  color-scheme: light;
+  font-family: "Segoe UI", sans-serif;
+  color: #14213d;
+  background: linear-gradient(160deg, #f5f1e8 0%, #d9ecff 100%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.app-shell {
+  display: grid;
+  grid-template-columns: minmax(260px, 320px) 1fr;
+  min-height: 100vh;
+}
+
+.app-sidebar {
+  padding: 32px;
+  background: rgba(20, 33, 61, 0.94);
+  color: #fefae0;
+}
+
+.sidebar-copy {
+  color: rgba(254, 250, 224, 0.82);
+  line-height: 1.6;
+}
+
+.app-main {
+  padding: 32px;
+}
+
+.page-header,
+.panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.page-header {
+  margin-bottom: 24px;
+}
+
+.header-right,
+.actions-row,
+.filters-row,
+.run-controls,
+.task-kind-line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.eyebrow,
+.card-label,
+.back-link {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.75rem;
+}
+
+.back-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.dashboard-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  gap: 20px;
+}
+
+.dashboard-main,
+.dashboard-side {
+  display: grid;
+  gap: 20px;
+}
+
+.card,
+.panel {
+  padding: 20px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: 0 20px 45px rgba(20, 33, 61, 0.08);
+}
+
+.card-link,
+.status-pill,
+.btn-primary,
+.btn-secondary,
+.btn-danger,
+.badge,
+.role-badge,
+.run-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 999px;
+  padding: 8px 14px;
+  text-decoration: none;
+}
+
+.card-link,
+.btn-primary,
+.status-pill.ok {
+  background: #fca311;
+  color: #14213d;
+  font-weight: 700;
+  border: none;
+}
+
+.status-pill.warn,
+.btn-danger {
+  background: #9b2226;
+  color: #fff;
+  border: none;
+}
+
+.btn-secondary {
+  border: 1px solid rgba(20, 33, 61, 0.12);
+  background: #fff;
+  color: #14213d;
+}
+
+.badge,
+.role-badge,
+.run-status-badge {
+  background: rgba(20, 33, 61, 0.08);
+  color: #14213d;
+  padding: 4px 10px;
+  font-size: 0.8rem;
+}
+
+.badge.eligible {
+  background: rgba(61, 132, 72, 0.14);
+  color: #256d1b;
+}
+
+.badge.todo {
+  background: rgba(20, 33, 61, 0.08);
+}
+
+.badge.in_progress,
+.run-status-running,
+.run-status-preflight,
+.run-status-syncing,
+.run-status-cancelling {
+  background: rgba(44, 99, 190, 0.16);
+  color: #1f5fbf;
+}
+
+.badge.done,
+.run-status-done,
+.run-status-cancelled {
+  background: rgba(47, 133, 90, 0.14);
+  color: #1f7a42;
+}
+
+.badge.review {
+  background: rgba(252, 163, 17, 0.18);
+  color: #9f5b00;
+}
+
+.run-status-error {
+  background: rgba(155, 34, 38, 0.14);
+  color: #9b2226;
+}
+
+.error-text {
+  color: #9b2226;
+}
+
+.muted-text,
+.artifact-path {
+  color: rgba(20, 33, 61, 0.68);
+  font-size: 0.9rem;
+}
+
+.filter-input,
+select {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(20, 33, 61, 0.12);
+  background: #fff;
+  min-width: 140px;
+}
+
+.filter-input {
+  min-width: 240px;
+}
+
+.tasks-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tasks-table th,
+.tasks-table td {
+  padding: 12px;
+  border-bottom: 1px solid rgba(20, 33, 61, 0.08);
+  vertical-align: top;
+  text-align: left;
+}
+
+.selected-row {
+  background: rgba(20, 33, 61, 0.04);
+}
+
+.task-title-cell,
+.artifact-info,
+.ev-content {
+  display: grid;
+  gap: 4px;
+}
+
+.status-cell,
+.artifact-item,
+.timeline-item,
+.log-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.timeline,
+.console-log-area,
+.artifact-list,
+.issue-list,
+.lesson-list {
+  display: grid;
+  gap: 12px;
+}
+
+.artifact-list,
+.issue-list,
+.lesson-list {
+  list-style: none;
+  padding: 0;
+}
+
+.artifact-item {
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(20, 33, 61, 0.04);
+}
+
+.artifact-item.error {
+  border: 1px solid rgba(155, 34, 38, 0.22);
+}
+
+.artifact-item.ok {
+  border: 1px solid rgba(47, 133, 90, 0.2);
+}
+
+.timeline-item {
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(20, 33, 61, 0.08);
+}
+
+.timeline-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.ev-seq,
+.log-ts {
+  font-family: Consolas, monospace;
+  font-size: 0.85rem;
+}
+
+.console-log-area {
+  max-height: 360px;
+  overflow: auto;
+  background: #101826;
+  color: #ecf3ff;
+  padding: 16px;
+  border-radius: 18px;
+}
+
+.source-system {
+  color: #93c5fd;
+}
+
+.source-stderr {
+  color: #fca5a5;
+}
+
+.source-stdout {
+  color: #d1fae5;
+}
+
+ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+li + li {
+  margin-top: 8px;
+}
+
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 1100px) {
+  .dashboard-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .stack-on-mobile,
+  .page-header {
+    flex-direction: column;
+  }
+
+  .app-main,
+  .app-sidebar {
+    padding: 20px;
+  }
+
+  .tasks-table {
+    display: block;
+    overflow-x: auto;
+  }
+}

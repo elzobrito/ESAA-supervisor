@@ -1,0 +1,87 @@
+{
+  "task_id": "SEC-010",
+  "domain": "secrets_config",
+  "checks": [
+    {
+      "check_id": "SC-001",
+      "name": "Segredos Hardcoded",
+      "status": "pass",
+      "severity_if_fail": "HIGH",
+      "evidence": {
+        "description": "Nenhum segredo ou chave foi encontrado no código fonte após varredura estática com grep."
+      }
+    },
+    {
+      "check_id": "SC-002",
+      "name": "Chaves API no Frontend",
+      "status": "pass",
+      "severity_if_fail": "HIGH",
+      "evidence": {
+        "description": "Frontend utiliza apenas VITE_API_BASE_URL configurado via variáveis de ambiente."
+      }
+    },
+    {
+      "check_id": "SC-003",
+      "name": "Arquivos Sensíveis Expostos",
+      "status": "fail",
+      "severity_if_fail": "MEDIUM",
+      "evidence": {
+        "files": ["backend/.env", "frontend/.env"],
+        "description": "Arquivos .env estão presentes mas não há .gitignore na raiz para evitar commit acidental."
+      },
+      "remediation": "Adicionar .gitignore na raiz do projeto com exclusões adequadas."
+    },
+    {
+      "check_id": "SC-004",
+      "name": "CORS Permissivo",
+      "status": "fail",
+      "severity_if_fail": "CRITICAL",
+      "evidence": {
+        "files": ["backend/app/main.py"],
+        "lines": ["allow_origins=[\"*\"]"],
+        "description": "O middleware de CORS está configurado para aceitar qualquer origem."
+      },
+      "remediation": "Configurar uma lista restrita de domínios permitidos no CORSMiddleware."
+    },
+    {
+      "check_id": "SC-005",
+      "name": "Modo Debug Enabled",
+      "status": "partial",
+      "severity_if_fail": "MEDIUM",
+      "evidence": {
+        "description": "Runbook sugere execução do Uvicorn com log level debug, aumentando exposição de informações técnicas."
+      },
+      "remediation": "Utilizar log level info em ambientes de produção."
+    },
+    {
+      "check_id": "SC-006",
+      "name": "Credenciais Padrão",
+      "status": "not_applicable",
+      "evidence": {
+        "description": "Nenhum sistema de banco de dados ou autenticação de usuários configurado na stack atual."
+      }
+    },
+    {
+      "check_id": "SC-007",
+      "name": "Configs de Exemplo",
+      "status": "fail",
+      "severity_if_fail": "LOW",
+      "evidence": {
+        "files": ["backend/.env", "backend/.env.example"],
+        "description": "Arquivos .env e .env.example são idênticos, expondo hosts e portas padrão."
+      },
+      "remediation": "Garantir que .env.example contenha apenas placeholders."
+    },
+    {
+      "check_id": "SC-008",
+      "name": "Variáveis Sensíveis em Logs",
+      "status": "fail",
+      "severity_if_fail": "CRITICAL",
+      "evidence": {
+        "files": ["backend/app/api/routes_logs.py", "backend/app/core/log_stream.py"],
+        "description": "Logs brutos dos agentes são transmitidos via SSE e persistidos sem sanitização ou autenticação."
+      },
+      "remediation": "Implementar sanitização de logs e autenticação para o endpoint de streaming."
+    }
+  ]
+}

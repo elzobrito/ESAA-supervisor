@@ -1,0 +1,26 @@
+from __future__ import annotations
+
+import json
+
+from app.adapters.base import BaseAgentAdapter
+from app.models.task_context import TaskContext
+
+
+class CodexAdapter(BaseAgentAdapter):
+    actor = "codex"
+    command_name = "codex"
+
+    def build_command(self, context: TaskContext, prompt: str) -> list[str]:
+        return [
+            self.resolve_command(),
+            "exec",
+            "--skip-git-repo-check",
+            "--color",
+            "never",
+            "--sandbox",
+            "workspace-write",
+            "-",
+        ]
+
+    def build_stdin(self, context: TaskContext, prompt: str) -> str:
+        return json.dumps({"prompt": prompt, "context": context.model_dump(mode="json")}, ensure_ascii=False)

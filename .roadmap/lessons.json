@@ -1,0 +1,420 @@
+{
+  "meta": {
+    "schema_version": "0.4.0",
+    "esaa_version": "0.4.x",
+    "generated_by": "esaa.project",
+    "source_event_store": ".roadmap/activity.jsonl",
+    "last_event_seq": 114,
+    "updated_at": "2026-03-07T10:55:07Z"
+  },
+  "lessons": [
+    {
+      "lesson_id": "LES-0001",
+      "status": "active",
+      "created_at": "2026-03-04T00:00:00Z",
+      "title": "Agente colapsou claim e complete em um unico output",
+      "mistake": "O agente emitiu action=complete em uma tarefa com status=todo, sem ter emitido claim previamente.",
+      "rule": "Cada invocacao de agente deve emitir exatamente uma action. claim e complete sao outputs de invocacoes separadas.",
+      "scope": {
+        "task_kinds": [
+          "spec",
+          "impl",
+          "qa"
+        ]
+      },
+      "enforcement": {
+        "mode": "reject",
+        "applies_to": "workflow_gate"
+      }
+    },
+    {
+      "lesson_id": "LES-0002",
+      "status": "active",
+      "created_at": "2026-03-04T00:00:00Z",
+      "title": "Agente entregou file_updates sem emitir action=complete",
+      "mistake": "O agente produziu file_updates com o trabalho realizado mas o campo action estava ausente ou era diferente de complete.",
+      "rule": "file_updates sem action=complete e output invalido.",
+      "scope": {
+        "task_kinds": [
+          "spec",
+          "impl",
+          "qa"
+        ]
+      },
+      "enforcement": {
+        "mode": "reject",
+        "applies_to": "output_contract"
+      }
+    },
+    {
+      "lesson_id": "LES-0003",
+      "status": "active",
+      "created_at": "2026-03-04T00:00:00Z",
+      "title": "Agente omitiu prior_status ou declarou valor inconsistente com o roadmap",
+      "mistake": "O agente produziu um output sem o campo prior_status, ou declarou prior_status=todo enquanto a tarefa ja estava em in_progress.",
+      "rule": "prior_status e campo obrigatorio em todo output de agente.",
+      "scope": {
+        "task_kinds": [
+          "spec",
+          "impl",
+          "qa"
+        ]
+      },
+      "enforcement": {
+        "mode": "require_field",
+        "applies_to": "output_contract"
+      }
+    },
+    {
+      "lesson_id": "LES-0004",
+      "status": "active",
+      "created_at": "2026-03-07T02:50:08Z",
+      "title": "Task de scaffold nao pode ser dada como completa sem arquivos-base executaveis",
+      "mistake": "Uma task impl de scaffold foi declarada como entregue com apenas parte dos arquivos principais.",
+      "rule": "Em tasks impl de scaffold, o agente deve validar a existencia real de todos os arquivos prometidos.",
+      "scope": {
+        "task_kinds": [
+          "impl"
+        ]
+      },
+      "enforcement": {
+        "mode": "require_step",
+        "applies_to": "verification_gate"
+      }
+    },
+    {
+      "lesson_id": "LES-0005",
+      "status": "active",
+      "created_at": "2026-03-07T03:35:00Z",
+      "title": "Nenhum agente deve gravar activity.jsonl em paralelo sem serializacao central",
+      "mistake": "Dois agentes anexaram eventos no mesmo activity.jsonl sem coordenacao. Resultou em colisao de sequencia e perda de integridade.",
+      "rule": "activity.jsonl e recurso serializado. Apenas um writer logico pode anexar eventos por vez.",
+      "scope": {
+        "task_kinds": [
+          "spec",
+          "impl",
+          "qa"
+        ]
+      },
+      "enforcement": {
+        "mode": "reject",
+        "applies_to": "workflow_gate"
+      }
+    },
+    {
+      "lesson_id": "LES-0006",
+      "status": "active",
+      "created_at": "2026-03-07T01:20:00Z",
+      "title": "PoC local deve oferecer um entrypoint operacional simples na raiz",
+      "mistake": "A entrega da PoC dependia de comandos manuais separados para backend e frontend.",
+      "rule": "Entregas de PoC devem incluir launchers (ex: .bat ou .sh) para subir a stack completa.",
+      "scope": {
+        "task_kinds": [
+          "impl",
+          "qa"
+        ]
+      },
+      "enforcement": {
+        "mode": "require_step",
+        "applies_to": "acceptance_gate"
+      }
+    },
+    {
+      "lesson_id": "LES-0007",
+      "status": "active",
+      "created_at": "2026-03-07T06:30:00Z",
+      "title": "Documentacao final de PoC deve ser multidimensional e organizada por audiencia",
+      "mistake": "Misturar criterios de aceite, runbook e limitacoes em um unico documento dificulta a auditoria.",
+      "rule": "Dividir a documentacao em: checklist de aceite, runbook operacional, limitacoes conhecidas e relatorio de fumaca (smoke report).",
+      "scope": {
+        "task_kinds": [
+          "qa"
+        ]
+      },
+      "enforcement": {
+        "mode": "require_step",
+        "applies_to": "acceptance_gate"
+      }
+    },
+    {
+      "lesson_id": "LES-0010",
+      "status": "active",
+      "created_at": "2026-03-07T11:20:00Z",
+      "title": "Roadmaps concluidos devem manter integridade total para auditoria",
+      "mistake": "Ao sincronizar o roadmap final, os campos de metadados das tarefas (description, depends_on, etc) foram removidos para simplificacao.",
+      "rule": "A imutabilidade de tarefas 'done' tambem se aplica a sua estrutura descritiva. Roadmaps concluidos devem preservar todos os campos originais para permitir auditoria posterior.",
+      "scope": {
+        "task_kinds": [
+          "spec",
+          "impl",
+          "qa"
+        ]
+      },
+      "enforcement": {
+        "mode": "reject",
+        "applies_to": "workflow_gate"
+      }
+    },
+    {
+      "lesson_id": "LES-0011",
+      "status": "active",
+      "created_at": "2026-03-07T11:22:00Z",
+      "title": "Inconsistencias de projecao exigem reconciliacao manual via Activity Log",
+      "mistake": "Falhas recorrentes de replace cirurgico indicam que a projecao materializada (roadmap.json) divergiu da fonte da verdade (activity.jsonl).",
+      "rule": "Diante de erros persistentes de sincronizacao, o agente deve reprocessar o log de atividades completo para reconstruir a projecao, garantindo a monotonicidade e a integridade do estado final.",
+      "scope": {
+        "task_kinds": [
+          "spec",
+          "impl",
+          "qa"
+        ]
+      },
+      "enforcement": {
+        "mode": "require_step",
+        "applies_to": "verification_gate"
+      }
+    },
+    {
+      "lesson_id": "LES-0012",
+      "status": "active",
+      "created_at": "2026-03-07T10:40:00Z",
+      "title": "CLIs de agente no Windows devem receber prompts grandes via stdin e com flags validas do subcomando",
+      "mistake": "O executor tentou passar o envelope completo pela linha de comando e reutilizou flags do comando-raiz em codex exec, causando command line too long e argumento invalido.",
+      "rule": "Ao integrar CLIs de agentes no Windows, resolver o executavel real, usar stdin para prompts grandes e validar flags contra o subcomando especifico antes da execucao.",
+      "scope": {
+        "task_kinds": [
+          "impl",
+          "qa"
+        ]
+      },
+      "enforcement": {
+        "mode": "require_step",
+        "applies_to": "verification_gate"
+      }
+    },
+    {
+      "lesson_id": "LES-0013",
+      "status": "active",
+      "created_at": "2026-03-07T10:40:00Z",
+      "title": "Prompt de execucao supervisionada deve incorporar o init canonico do projeto",
+      "mistake": "A engine de runs usava prompt minimo hardcoded e ignorava .roadmap/init.yaml, o que fazia o agente perder contexto operacional ESAA.",
+      "rule": "Sempre que houver init canonico do projeto, ele deve compor o prompt-base da execucao supervisionada antes das instrucoes da task.",
+      "scope": {
+        "task_kinds": [
+          "spec",
+          "impl",
+          "qa"
+        ]
+      },
+      "enforcement": {
+        "mode": "require_step",
+        "applies_to": "workflow_gate"
+      }
+    },
+    {
+      "lesson_id": "LES-0014",
+      "status": "active",
+      "created_at": "2026-03-07T10:40:00Z",
+      "title": "Sistemas auditaveis precisam permitir leitura operacional direta dos artefatos gerados",
+      "mistake": "A UI listava artefatos, mas nao permitia abrir arquivos relevantes nem navegar por diretorios do projeto para inspecionar evidencias como reports.",
+      "rule": "Quando a auditoria depende de documentos gerados, a interface deve oferecer leitura segura do conteudo e navegacao por diretorios do projeto, com renderizacao adequada para Markdown e texto/codigo.",
+      "scope": {
+        "task_kinds": [
+          "impl",
+          "qa"
+        ]
+      },
+      "enforcement": {
+        "mode": "require_step",
+        "applies_to": "acceptance_gate"
+      }
+    },
+    {
+      "lesson_id": "LES-0015",
+      "status": "active",
+      "created_at": "2026-03-07T10:40:00Z",
+      "title": "Execucao manual de task deve distinguir proxima elegivel de retomada explicita",
+      "mistake": "O mesmo criterio de elegibilidade de selecao automatica foi aplicado a retomada manual, bloqueando tasks em in_progress e impedindo regressao operacional para todo.",
+      "rule": "Selecao automatica continua restrita a todo; ja a retomada manual pode aceitar in_progress. A UI tambem deve expor mutacoes auditaveis de status quando o operador precisar corrigir a trilha.",
+      "scope": {
+        "task_kinds": [
+          "spec",
+          "impl",
+          "qa"
+        ]
+      },
+      "enforcement": {
+        "mode": "require_step",
+        "applies_to": "workflow_gate"
+      }
+    },
+    {
+      "lesson_id": "LES-0016",
+      "status": "active",
+      "created_at": "2026-03-07T07:42:45Z",
+      "title": "Runs ativas devem persistir durante navegacao interna do mesmo projeto",
+      "mistake": "A tela de execucao guardava a sessao apenas em estado local e a limpava ao desmontar, fazendo o operador perder a run ao sair da pagina.",
+      "rule": "Estado de run em andamento, logs e erro operacional devem viver no escopo do projeto e sobreviver a mudancas de rota internas; a limpeza deve ocorrer apenas ao trocar de projeto ou encerrar a run.",
+      "scope": {
+        "task_kinds": [
+          "impl",
+          "qa"
+        ]
+      },
+      "enforcement": {
+        "mode": "require_step",
+        "applies_to": "acceptance_gate"
+      }
+    },
+    {
+      "lesson_id": "LES-0017",
+      "status": "active",
+      "created_at": "2026-03-07T07:42:45Z",
+      "title": "Dashboards operacionais precisam oferecer remediacao, nao apenas leitura",
+      "mistake": "As telas de Issues e Integridade mostravam o estado, mas o operador nao conseguia resolver o problema pela propria interface.",
+      "rule": "Quando a UI expuser um desvio operacional recorrente, ela deve oferecer a acao canônica correspondente (por exemplo issue.resolve ou repair integrity) ou indicar claramente o passo executavel equivalente.",
+      "scope": {
+        "task_kinds": [
+          "impl",
+          "qa"
+        ]
+      },
+      "enforcement": {
+        "mode": "require_step",
+        "applies_to": "acceptance_gate"
+      }
+    },
+    {
+      "lesson_id": "LES-0018",
+      "status": "active",
+      "created_at": "2026-03-07T07:42:45Z",
+      "title": "Validacao de integridade deve distinguir schema artifact de projection instance",
+      "mistake": "O validator tratou roadmap.schema.json como se fosse uma instancia de roadmap, gerando falso positivo de integridade e mascarando o problema real de hash stale no roadmap.",
+      "rule": "Artefatos *.schema.json devem ser validados como fontes de regra, nao como instancias do documento alvo. Alertas de integridade devem separar erro de parse/schema de mismatch de metadata projetada.",
+      "scope": {
+        "task_kinds": [
+          "impl",
+          "qa"
+        ]
+      },
+      "enforcement": {
+        "mode": "require_step",
+        "applies_to": "verification_gate"
+      }
+    },
+    {
+      "lesson_id": "LES-0019",
+      "status": "active",
+      "created_at": "2026-03-07T07:42:45Z",
+      "title": "Cada CLI de agente exige contrato de execucao proprio para modo headless com escrita",
+      "mistake": "Claude e Gemini foram integrados com invocacoes genericas, sem considerar flags especificas de permissao, autoaprovacao, sandbox e entrada por stdin de cada CLI.",
+      "rule": "Adapters de agentes devem ser validados individualmente no ambiente real. Para cada CLI, definir explicitamente o modo headless, a politica de permissao/escrita e o mecanismo de envio do prompt antes de liberar execucao supervisionada.",
+      "scope": {
+        "task_kinds": [
+          "impl",
+          "qa"
+        ]
+      },
+      "enforcement": {
+        "mode": "require_step",
+        "applies_to": "verification_gate"
+      }
+    },
+    {
+      "lesson_id": "LES-0020",
+      "status": "active",
+      "created_at": "2026-03-07T07:42:45Z",
+      "title": "Selects nativos em areas criticas precisam de reset visual especifico",
+      "mistake": "Aplicar apenas a classe generica ao select nao foi suficiente; o controle nativo manteve fundo branco no topbar mesmo dentro do tema dark.",
+      "rule": "Selects nativos usados em superfícies de destaque devem receber regras especificas de appearance, background e options no proprio contexto visual onde aparecem.",
+      "scope": {
+        "task_kinds": [
+          "impl"
+        ]
+      },
+      "enforcement": {
+        "mode": "require_step",
+        "applies_to": "acceptance_gate"
+      }
+    }
+  ],
+  "indexes": {
+    "by_task_kind": {
+      "spec": [
+        "LES-0001",
+        "LES-0002",
+        "LES-0003",
+        "LES-0005",
+        "LES-0010",
+        "LES-0011",
+        "LES-0013",
+        "LES-0015"
+      ],
+      "impl": [
+        "LES-0001",
+        "LES-0002",
+        "LES-0003",
+        "LES-0004",
+        "LES-0005",
+        "LES-0006",
+        "LES-0010",
+        "LES-0011",
+        "LES-0012",
+        "LES-0013",
+        "LES-0014",
+        "LES-0015",
+        "LES-0016",
+        "LES-0017",
+        "LES-0018",
+        "LES-0019",
+        "LES-0020"
+      ],
+      "qa": [
+        "LES-0001",
+        "LES-0002",
+        "LES-0003",
+        "LES-0005",
+        "LES-0006",
+        "LES-0007",
+        "LES-0010",
+        "LES-0011",
+        "LES-0012",
+        "LES-0013",
+        "LES-0014",
+        "LES-0015",
+        "LES-0016",
+        "LES-0017",
+        "LES-0018",
+        "LES-0019"
+      ]
+    },
+    "by_enforcement_applies_to": {
+      "workflow_gate": [
+        "LES-0001",
+        "LES-0005",
+        "LES-0010",
+        "LES-0013",
+        "LES-0015"
+      ],
+      "output_contract": [
+        "LES-0002",
+        "LES-0003"
+      ],
+      "verification_gate": [
+        "LES-0004",
+        "LES-0011",
+        "LES-0012",
+        "LES-0018",
+        "LES-0019"
+      ],
+      "acceptance_gate": [
+        "LES-0006",
+        "LES-0007",
+        "LES-0014",
+        "LES-0016",
+        "LES-0017",
+        "LES-0020"
+      ]
+    }
+  }
+}

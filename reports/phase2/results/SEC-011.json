@@ -1,0 +1,90 @@
+{
+  "task_id": "SEC-011",
+  "domain": "dependencies_supply_chain",
+  "checks_total": 6,
+  "checks_pass": 5,
+  "checks_fail": 0,
+  "checks_partial": 1,
+  "checks_na": 0,
+  "worst_severity": "MEDIUM",
+  "results": [
+    {
+      "check_id": "DS-001",
+      "check_name": "Dependências com vulnerabilidades conhecidas",
+      "status": "partial",
+      "severity_if_fail": "MEDIUM",
+      "evidence": {
+        "files": ["frontend/package.json", "frontend/package-lock.json"],
+        "lines": [],
+        "commands_output": ["2 moderate vulnerabilities: esbuild (<=0.24.2), vite (0.11.0 - 6.1.6). CVE-346 (CVSS 5.3)"],
+        "description": "2 vulnerabilidades moderadas no frontend. Ferramentas de auditoria para backend não disponíveis no ambiente."
+      },
+      "remediation": "Atualizar vite para >= 7.3.1 no frontend."
+    },
+    {
+      "check_id": "DS-002",
+      "check_name": "Dependências abandonadas",
+      "status": "pass",
+      "severity_if_fail": "MEDIUM",
+      "evidence": {
+        "files": ["frontend/package.json", "backend/requirements.txt"],
+        "lines": [],
+        "commands_output": [],
+        "description": "Dependências principais como React, FastAPI, Pydantic são ativas e bem-mantidas."
+      },
+      "remediation": ""
+    },
+    {
+      "check_id": "DS-003",
+      "check_name": "Typosquatting packages",
+      "status": "pass",
+      "severity_if_fail": "CRITICAL",
+      "evidence": {
+        "files": ["frontend/package.json", "backend/requirements.txt"],
+        "lines": [],
+        "commands_output": [],
+        "description": "Todos os nomes de dependências diretas são legítimos."
+      },
+      "remediation": ""
+    },
+    {
+      "check_id": "DS-004",
+      "check_name": "Dependências sem lockfile",
+      "status": "pass",
+      "severity_if_fail": "MEDIUM",
+      "evidence": {
+        "files": ["frontend/package-lock.json", "backend/requirements.txt"],
+        "lines": [],
+        "commands_output": [],
+        "description": "Frontend possui package-lock.json. Backend utiliza pinning em requirements.txt."
+      },
+      "remediation": "Considerar uso de poetry no backend."
+    },
+    {
+      "check_id": "DS-005",
+      "check_name": "Dependências externas não auditadas",
+      "status": "pass",
+      "severity_if_fail": "LOW",
+      "evidence": {
+        "files": ["frontend/package-lock.json"],
+        "lines": [],
+        "commands_output": [],
+        "description": "Sem scripts de postinstall suspeitos. Transitividades comuns em Node.js."
+      },
+      "remediation": ""
+    },
+    {
+      "check_id": "DS-006",
+      "check_name": "Build não reproduzível",
+      "status": "pass",
+      "severity_if_fail": "LOW",
+      "evidence": {
+        "files": ["backend/requirements.txt", "frontend/package-lock.json"],
+        "lines": [],
+        "commands_output": [],
+        "description": "Pinning e lockfile garantem reprodutibilidade básica de dependências."
+      },
+      "remediation": ""
+    }
+  ]
+}

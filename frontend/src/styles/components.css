@@ -1,0 +1,201 @@
+/* ============================================================
+   ESAA Supervisor — Component Layer
+   ============================================================ */
+
+.catalog-summary-card,
+.chart-card,
+.panel-card,
+.context-card,
+.data-grid-container,
+.run-artifacts-card,
+.drawer,
+.event-modal {
+  background: linear-gradient(180deg, var(--color-bg-panel), var(--color-bg-panel-strong));
+  border: 1px solid var(--color-border);
+}
+
+.catalog-summary-card,
+.chart-card,
+.panel-card,
+.context-card,
+.data-grid-container,
+.run-artifacts-card {
+  border-radius: var(--radius-2xl);
+}
+
+.catalog-summary-card,
+.chart-card,
+.panel-card,
+.context-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.catalog-summary-card::before,
+.chart-card::before,
+.panel-card::before,
+.context-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.28), transparent);
+  pointer-events: none;
+}
+
+.btn-primary-ds,
+.btn-secondary-ds,
+.btn-danger-ds,
+.drawer-close,
+.sidebar-toggle-btn,
+.btn-icon,
+.activity-timeline-item,
+.context-card {
+  transition:
+    transform var(--transition-fast),
+    border-color var(--transition-fast),
+    background var(--transition-fast),
+    color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.btn-primary-ds,
+.btn-secondary-ds,
+.btn-danger-ds {
+  min-height: 38px;
+  border-radius: var(--radius-full);
+}
+
+.btn-primary-ds {
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-strong));
+  box-shadow: 0 10px 20px rgba(60, 141, 240, 0.22);
+}
+
+.btn-primary-ds:hover:not(:disabled),
+.btn-secondary-ds:hover:not(:disabled),
+.btn-danger-ds:hover:not(:disabled),
+.drawer-close:hover,
+.sidebar-toggle-btn:hover,
+.btn-icon:hover,
+.activity-timeline-item:hover,
+.context-card:hover {
+  transform: translateY(-1px);
+}
+
+.btn-secondary-ds {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.btn-danger-ds {
+  background: rgba(255, 107, 107, 0.06);
+}
+
+.status-badge,
+.kind-badge,
+.integrity-badge,
+.severity-chip,
+.sidebar-nav-badge,
+.topbar-badge-consistent,
+.topbar-badge-mismatch,
+.topbar-badge-running {
+  border: 1px solid transparent;
+  letter-spacing: 0.02em;
+}
+
+.status-badge,
+.kind-badge,
+.integrity-badge,
+.severity-chip {
+  min-height: 24px;
+}
+
+.kind-badge {
+  background: rgba(255,255,255,0.04);
+  border-color: var(--color-border);
+}
+
+.topbar-badge-consistent,
+.topbar-badge-mismatch,
+.topbar-badge-running {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+}
+
+.sidebar-nav-item {
+  min-height: 42px;
+  border-radius: var(--radius-xl);
+}
+
+.sidebar-nav-item.active {
+  box-shadow: inset 0 0 0 1px rgba(99, 179, 255, 0.08);
+}
+
+.data-grid {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-grid thead th {
+  background: rgba(255,255,255,0.02);
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+}
+
+.data-grid tbody td {
+  padding: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.data-grid tbody tr {
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.data-grid tbody tr:hover,
+.data-grid tbody tr.row-selected {
+  background: rgba(99, 179, 255, 0.06);
+}
+
+.filters-bar {
+  margin-bottom: var(--space-5);
+  gap: var(--space-3);
+}
+
+.filter-input-ds,
+.filter-select-ds {
+  min-height: 42px;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border);
+  background: rgba(255,255,255,0.03);
+  color: var(--color-text-primary);
+  padding: 0 var(--space-4);
+  outline: none;
+}
+
+.filter-input-ds:focus,
+.filter-select-ds:focus {
+  border-color: var(--color-border-focus);
+  box-shadow: 0 0 0 4px var(--color-glow);
+}
+
+.drawer,
+.event-modal {
+  border-radius: 24px;
+}
+
+.drawer-header,
+.event-modal-header,
+.panel-card-header {
+  border-bottom-color: var(--color-border);
+}
+
+.drawer-section-content,
+.panel-card-body {
+  color: var(--color-text-secondary);
+}

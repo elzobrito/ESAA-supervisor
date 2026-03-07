@@ -1,0 +1,756 @@
+{
+  "meta": {
+    "schema_version": "0.4.0",
+    "esaa_version": "0.4.0-poc-esaa-supervisor-web",
+    "immutable_done": true,
+    "master_correlation_id": null,
+    "run": {
+      "run_id": null,
+      "status": "initialized",
+      "last_event_seq": 54,
+      "projection_hash_sha256": "59a610600a3b5a39b246c1f189ba4b77e1975ba0c67b961292a906e22ce5a4b6",
+      "verify_status": "ok"
+    },
+    "updated_at": "2026-03-07T10:24:05Z"
+  },
+  "project": {
+    "name": "esaa-supervisor-poc",
+    "audit_scope": "PoC local web do ESAA Supervisor com backend FastAPI e frontend React, sem banco de dados, lendo .roadmap como fonte canônica, suportando descoberta de artefatos, roadmap.* como plugins/projeções, execução supervisionada de agentes externos, logs em tempo real e fluxo ESAA claim -> complete -> review."
+  },
+  "tasks": [
+    {
+      "task_id": "ESUP-SPEC-001",
+      "task_kind": "spec",
+      "title": "Especificar pacote canônico, discovery de artefatos e resolução de roadmap plugins",
+      "description": "Definir a especificação funcional e técnica da camada de discovery da pasta .roadmap, incluindo classificação de artefatos canônicos, regras para singletons conhecidos, coleção de perfis PARCER_PROFILE.*.yaml, indexação de snapshots/ e suporte a múltiplos arquivos roadmap*.json e roadmap*.schema.json. A especificação deve definir como o supervisor identifica o roadmap/plugin ativo para operação e como reporta integridade, parse, validação e papel de cada artefato.",
+      "status": "done",
+      "depends_on": [],
+      "targets": [
+        ".roadmap/",
+        "docs/poc/"
+      ],
+      "outputs": {
+        "files": [
+          "docs/poc/canonical-artifacts-spec.md",
+          "docs/poc/roadmap-plugin-resolution-spec.md"
+        ]
+      },
+      "immutability": {
+        "done_is_immutable": true
+      },
+      "assigned_to": "codex",
+      "started_at": "2026-03-07T02:04:09Z",
+      "completed_at": "2026-03-07T02:22:13Z",
+      "required_verification": [
+        "Documento cobre discovery de activity, issues, lessons, contracts, policies, schemas, PARCER profiles, swarm config e roadmap plugins",
+        "Documento define estratégia de roadmap ativo sem assumir roadmap.json único",
+        "Documento está consistente com o uso de .roadmap como fonte canônica"
+      ]
+    },
+    {
+      "task_id": "ESUP-SPEC-002",
+      "task_kind": "spec",
+      "title": "Especificar runtime supervisor, ciclo de execução e contratos de API",
+      "description": "Definir o ciclo canônico do supervisor web local, incluindo abertura de projeto, leitura do estado consolidado, cálculo de elegibilidade, emissão de claim, execução do agente, validação, complete, review, reprojeção e atualização da interface. A especificação deve detalhar os endpoints backend, contratos de request/response, modelo de runs em memória, streaming de logs, cancelamento, lock por projeto e estados operacionais do runtime.",
+      "status": "done",
+      "depends_on": [],
+      "targets": [
+        "backend/",
+        "docs/poc/"
+      ],
+      "outputs": {
+        "files": [
+          "docs/poc/runtime-cycle-spec.md",
+          "docs/poc/backend-api-contracts.md"
+        ]
+      },
+      "immutability": {
+        "done_is_immutable": true
+      },
+      "assigned_to": "gemini-cli",
+      "started_at": "2026-03-07T02:30:00Z",
+      "completed_at": "2026-03-07T03:00:00Z",
+      "required_verification": [
+        "Especificação cobre fluxo claim -> complete -> review sem colapsar etapas",
+        "Endpoints previstos cobrem projetos, estado, runs, logs, ações e cancelamento",
+        "Especificação define lock por projeto e execução em background"
+      ]
+    },
+    {
+      "task_id": "ESUP-SPEC-003",
+      "task_kind": "spec",
+      "title": "Especificar frontend React, modelo de tela e contratos visuais do dashboard",
+      "description": "Definir a arquitetura de frontend React/Vite, páginas, componentes, modelo de navegação e composição do dashboard do projeto. A especificação deve cobrir lista de projetos, painel de artefatos canônicos, tabela de tasks, painéis de activity/issues/lessons, console de execução ao vivo, filtros, estados de erro e sincronização visual após runs do supervisor.",
+      "status": "done",
+      "depends_on": [],
+      "targets": [
+        "frontend/",
+        "docs/poc/"
+      ],
+      "outputs": {
+        "files": [
+          "docs/poc/frontend-dashboard-spec.md",
+          "docs/poc/frontend-state-and-routes-spec.md"
+        ]
+      },
+      "immutability": {
+        "done_is_immutable": true
+      },
+      "assigned_to": "gemini-cli",
+      "completed_at": "2026-03-07T04:00:00Z",
+      "required_verification": [
+        "Documento descreve páginas, componentes e estados visuais essenciais",
+        "Documento inclui painel de artefatos canônicos e console de execução",
+        "Documento não depende de template server-side"
+      ]
+    },
+    {
+      "task_id": "ESUP-SPEC-004",
+      "task_kind": "spec",
+      "title": "Especificar adapters de agentes, roteamento e política de execução",
+      "description": "Definir o contrato interno AgentResult, TaskContext e a política de roteamento para Codex, Claude Code e Gemini CLI. A especificação deve detalhar subprocessos, captura de stdout/stderr, timeout, cancelamento, normalização de saída, comportamento diante de falhas, regras de logs, uso de prompt inicial do supervisor e separação entre autoridade do runtime e cognição do agente.",
+      "status": "done",
+      "depends_on": [],
+      "targets": [
+        "backend/app/adapters/",
+        "docs/poc/"
+      ],
+      "outputs": {
+        "files": [
+          "docs/poc/agent-adapters-spec.md",
+          "docs/poc/agent-routing-policy-spec.md"
+        ]
+      },
+      "immutability": {
+        "done_is_immutable": true
+      },
+      "assigned_to": "gemini-cli",
+      "completed_at": "2026-03-07T05:00:00Z",
+      "required_verification": [
+        "Contrato AgentResult está definido de forma única para os três agentes",
+        "Especificação cobre timeout, cancelamento, falha de processo e logs",
+        "Especificação deixa claro que o runtime persiste eventos e o agente apenas propõe trabalho"
+      ]
+    },
+    {
+      "task_id": "ESUP-IMPL-005",
+      "task_kind": "impl",
+      "title": "Criar o scaffold do monorepo da PoC com backend FastAPI e frontend React/Vite",
+      "description": "Criar a estrutura inicial do projeto com diretórios backend e frontend, configuração base de execução local, scripts de desenvolvimento, arquivos de ambiente de exemplo e organização mínima para app, core, adapters, models, templates de teste e utilitários. O scaffold deve permitir desenvolvimento simultâneo do serviço web local e do dashboard React sem banco de dados.",
+      "status": "done",
+      "depends_on": [
+        "ESUP-SPEC-001",
+        "ESUP-SPEC-002",
+        "ESUP-SPEC-003"
+      ],
+      "targets": [
+        "backend/",
+        "frontend/",
+        "README.md"
+      ],
+      "outputs": {
+        "files": [
+          "backend/app/main.py",
+          "backend/app/__init__.py",
+          "backend/requirements.txt",
+          "frontend/package.json",
+          "frontend/vite.config.ts",
+          "frontend/src/main.tsx",
+          "frontend/src/App.tsx",
+          "README.md"
+        ]
+      },
+      "immutability": {
+        "done_is_immutable": true
+      },
+      "assigned_to": "codex",
+      "completed_at": "2026-03-07T02:52:56Z",
+      "required_verification": [
+        "Backend inicia localmente",
+        "Frontend inicia localmente",
+        "Estrutura de pastas está compatível com os módulos previstos na PoC"
+      ]
+    },
+    {
+      "task_id": "ESUP-IMPL-006",
+      "task_kind": "impl",
+      "title": "Implementar registry de artefatos canônicos e discovery da pasta .roadmap",
+      "description": "Implementar a camada que varre .roadmap, identifica artefatos canônicos, classifica por categoria, indexa arquivos conhecidos, descobre PARCER_PROFILE.*.yaml, registra snapshots/ e coleta todos os roadmap*.json e roadmap*.schema.json como plugins/projeções. O resultado deve ser um catálogo em memória com metadados, papel do artefato, integridade básica e associação opcional a plugin.",
+      "status": "done",
+      "depends_on": [
+        "ESUP-SPEC-001",
+        "ESUP-IMPL-005"
+      ],
+      "targets": [
+        "backend/app/core/",
+        "backend/app/models/"
+      ],
+      "outputs": {
+        "files": [
+          "backend/app/core/canonical_store.py",
+          "backend/app/core/artifact_discovery.py",
+          "backend/app/models/canonical_artifact.py",
+          "backend/app/models/project_state.py"
+        ]
+      },
+      "immutability": {
+        "done_is_immutable": true
+      },
+      "assigned_to": "gemini-cli",
+      "completed_at": "2026-03-07T07:00:00Z",
+      "required_verification": [
+        "Discovery encontra e classifica activity, issues, lessons, contracts, policies, schemas, profiles e roadmap plugins",
+        "Sistema não assume roadmap.json único",
+        "Catálogo de artefatos pode ser serializado para a API"
+      ]
+    },
+    {
+      "task_id": "ESUP-IMPL-007",
+      "task_kind": "impl",
+      "title": "Implementar parse, validação estrutural e integridade dos artefatos canônicos",
+      "description": "Implementar parse de JSON, JSONL, YAML e Markdown relevante, validação de schemas disponíveis, checagem de campos obrigatórios e detecção básica de problemas de encoding/mojibake. A camada deve separar erro estrutural, erro de parse, erro de schema e inconsistência operacional entre activity e projeções.",
+      "status": "done",
+      "depends_on": [
+        "ESUP-SPEC-001",
+        "ESUP-IMPL-005",
+        "ESUP-IMPL-006"
+      ],
+      "targets": [
+        "backend/app/core/",
+        "backend/app/utils/"
+      ],
+      "outputs": {
+        "files": [
+          "backend/app/core/validators.py",
+          "backend/app/core/schema_validation.py",
+          "backend/app/core/encoding_checks.py",
+          "backend/app/utils/jsonl.py"
+        ]
+      },
+      "immutability": {
+        "done_is_immutable": true
+      },
+      "assigned_to": "gemini-cli",
+      "completed_at": "2026-03-07T08:00:00Z",
+      "required_verification": [
+        "JSON, JSONL e YAML inválidos são reportados corretamente",
+        "Schemas disponíveis são aplicados quando presentes",
+        "Erros estruturais são separados de erros operacionais"
+      ]
+    },
+    {
+      "task_id": "ESUP-IMPL-008",
+      "task_kind": "impl",
+      "title": "Implementar resolução do roadmap ativo, elegibilidade e seleção de tarefa",
+      "description": "Implementar a política de resolução do roadmap/plugin ativo e a engine de seleção da próxima tarefa elegível. A engine deve respeitar status, dependências, bloqueios, inexistência de done reaberto, fluxo canônico ESAA, regras de lote/escopo configurado e exibir razões de inelegibilidade para a interface.",
+      "status": "done",
+      "depends_on": [
+        "ESUP-SPEC-001",
+        "ESUP-SPEC-002",
+        "ESUP-IMPL-006",
+        "ESUP-IMPL-007"
+      ],
+      "targets": [
+        "backend/app/core/"
+      ],
+      "outputs": {
+        "files": [
+          "backend/app/core/roadmap_resolution.py",
+          "backend/app/core/selector.py",
+          "backend/app/core/eligibility.py"
+        ]
+      },
+      "immutability": {
+        "done_is_immutable": true
+      },
+      "assigned_to": "gemini-cli",
+      "completed_at": "2026-03-07T10:00:00Z",
+      "required_verification": [
+        "Sistema consegue identificar um roadmap/plugin ativo para operação",
+        "Sistema encontra a próxima task elegível com base em dependências e status",
+        "Sistema retorna motivos de inelegibilidade"
+      ]
+    },
+    {
+      "task_id": "ESUP-IMPL-009",
+      "task_kind": "impl",
+      "title": "Implementar event writer append-only, projeção e sincronização dos artefatos",
+      "description": "Implementar a escrita append-only em activity.jsonl para eventos claim, complete, review, issue.report e lesson, além da reprojeção e sincronização dos artefatos impactados. A implementação deve respeitar prior_status, imutabilidade de done, obrigatoriedade de assigned_to e started_at em in_progress/review e atualização seletiva do roadmap/plugin afetado.",
+      "status": "done",
+      "depends_on": [
+        "ESUP-SPEC-002",
+        "ESUP-IMPL-005",
+        "ESUP-IMPL-007"
+      ],
+      "targets": [
+        "backend/app/core/"
+      ],
+      "outputs": {
+        "files": [
+          "backend/app/core/event_writer.py",
+          "backend/app/core/projector.py",
+          "backend/app/core/issues_sync.py",
+          "backend/app/core/lessons_sync.py"
+        ]
+      },
+      "immutability": {
+        "done_is_immutable": true
+      },
+      "assigned_to": "codex",
+      "completed_at": "2026-03-07T03:16:00Z",
+      "required_verification": [
+        "Novos eventos são gravados em append-only",
+        "Claim e complete não são colapsados no mesmo passo",
+        "Reprojeção atualiza o roadmap/plugin compatível com os eventos emitidos"
+      ]
+    },
+    {
+      "task_id": "ESUP-IMPL-010",
+      "task_kind": "impl",
+      "title": "Implementar runtime de runs em background com lock, cancelamento e logs",
+      "description": "Implementar o motor de execução supervisionada em background, com lock por projeto, gerenciamento de run_id, status da execução, logs estruturados, cancelamento, timeout por etapa e histórico em memória da sessão atual. O runtime deve coordenar preflight, claim, chamada do agente, validação, complete, review, reprojeção e refresh do estado consolidado.",
+      "status": "done",
+      "depends_on": [
+        "ESUP-SPEC-002",
+        "ESUP-SPEC-004",
+        "ESUP-IMPL-008",
+        "ESUP-IMPL-009"
+      ],
+      "targets": [
+        "backend/app/core/",
+        "backend/app/models/"
+      ],
+      "outputs": {
+        "files": [
+          "backend/app/core/run_engine.py",
+          "backend/app/core/locks.py",
+          "backend/app/core/log_stream.py",
+          "backend/app/models/run_state.py"
+        ]
+      },
+      "immutability": {
+        "done_is_immutable": true
+      },
+      "assigned_to": "gemini-cli",
+      "completed_at": "2026-03-07T12:00:00Z",
+      "required_verification": [
+        "Uma execução longa não bloqueia permanentemente a API",
+        "Lock impede duas runs simultâneas no mesmo projeto",
+        "Cancelamento e timeout são tratados sem corromper activity.jsonl"
+      ]
+    },
+    {
+      "task_id": "ESUP-IMPL-011",
+      "task_kind": "impl",
+      "title": "Implementar adapters para Codex, Claude Code e Gemini CLI com contrato único",
+      "description": "Implementar a camada de adapters que invoca Codex, Claude Code e Gemini CLI como subprocessos supervisionados, normalizando entradas e saídas em um contrato AgentResult único. A implementação deve capturar stdout/stderr, exit code, arquivos relevantes, status de bloqueio/falha/sucesso, tempo de execução e metadados do agente utilizado.",
+      "status": "done",
+      "depends_on": [
+        "ESUP-SPEC-004",
+        "ESUP-IMPL-005"
+      ],
+      "targets": [
+        "backend/app/adapters/",
+        "backend/app/models/"
+      ],
+      "outputs": {
+        "files": [
+          "backend/app/adapters/base.py",
+          "backend/app/adapters/codex_adapter.py",
+          "backend/app/adapters/claude_adapter.py",
+          "backend/app/adapters/gemini_adapter.py",
+          "backend/app/core/agent_router.py",
+          "backend/app/models/agent_result.py",
+          "backend/app/models/task_context.py"
+        ]
+      },
+      "immutability": {
+        "done_is_immutable": true
+      },
+      "assigned_to": "codex",
+      "completed_at": "2026-03-07T03:28:00Z",
+      "required_verification": [
+        "Os três agentes podem ser chamados pela mesma interface interna",
+        "Falhas de subprocesso são convertidas para AgentResult consistente",
+        "Router escolhe agente por task_kind ou configuração"
+      ]
+    },
+    {
+      "task_id": "ESUP-IMPL-012",
+      "task_kind": "impl",
+      "title": "Implementar API FastAPI e streaming de logs para o supervisor web",
+      "description": "Implementar a API do backend para listagem de projetos, leitura do estado consolidado, tarefas, activity, issues, lessons, início de run da próxima task, execução por task específica, consulta de runs e streaming de logs em tempo real. A API deve ser API-first, serializar os estados principais do supervisor e expor erros de forma estruturada para o frontend React.",
+      "status": "done",
+      "depends_on": [
+        "ESUP-SPEC-002",
+        "ESUP-IMPL-006",
+        "ESUP-IMPL-007",
+        "ESUP-IMPL-008",
+        "ESUP-IMPL-009",
+        "ESUP-IMPL-010",
+        "ESUP-IMPL-011"
+      ],
+      "targets": [
+        "backend/app/api/"
+      ],
+      "outputs": {
+        "files": [
+          "backend/app/api/routes_projects.py",
+          "backend/app/api/routes_state.py",
+          "backend/app/api/routes_runs.py",
+          "backend/app/api/routes_logs.py",
+          "backend/app/api/schemas.py"
+        ]
+      },
+      "immutability": {
+        "done_is_immutable": true
+      },
+      "assigned_to": "claude-code",
+      "completed_at": "2026-03-07T04:00:01Z",
+      "required_verification": [
+        "GET de projetos e estado consolidado funciona",
+        "POST de run-next-task inicia uma execução válida",
+        "Logs em tempo real podem ser consumidos pelo frontend"
+      ]
+    },
+    {
+      "task_id": "ESUP-IMPL-013",
+      "task_kind": "impl",
+      "title": "Implementar shell React, rotas, cliente HTTP e modelo base de estado da UI",
+      "description": "Implementar o shell do frontend React com rotas, layout base, cliente HTTP, camada de serviços para a API, gerenciamento de cache/consulta e estados principais da aplicação. A estrutura deve permitir listar projetos, abrir um dashboard por projeto e reutilizar dados do backend sem acoplamento com HTML gerado no servidor.",
+      "status": "done",
+      "depends_on": [
+        "ESUP-SPEC-003",
+        "ESUP-IMPL-005",
+        "ESUP-IMPL-012"
+      ],
+      "targets": [
+        "frontend/src/"
+      ],
+      "outputs": {
+        "files": [
+          "frontend/src/App.tsx",
+          "frontend/src/router.tsx",
+          "frontend/src/services/api.ts",
+          "frontend/src/services/projects.ts",
+          "frontend/src/services/runs.ts",
+          "frontend/src/pages/ProjectsPage.tsx",
+          "frontend/src/pages/ProjectDashboardPage.tsx"
+        ]
+      },
+      "immutability": {
+        "done_is_immutable": true
+      },
+      "assigned_to": "codex",
+      "started_at": "2026-03-07T04:10:00Z",
+      "completed_at": "2026-03-07T04:18:00Z",
+      "verification": {
+        "checks": [
+          "frontend/src/router.tsx define rotas para /projects e /dashboard/:projectId com shell React em frontend/src/App.tsx.",
+          "frontend/src/services/api.ts, projects.ts e runs.ts implementam cliente HTTP e camada base de servicos para projetos, estado e runs.",
+          "frontend/src/pages/ProjectsPage.tsx e frontend/src/pages/ProjectDashboardPage.tsx entregam navegacao entre lista de projetos e dashboard do projeto.",
+          "npm install e npm run build no frontend passaram com sucesso apos normalizar package.json e corrigir tipagem em ArtifactsPanel.tsx."
+        ]
+      },
+      "required_verification": [
+        "Frontend navega entre lista de projetos e dashboard do projeto",
+        "Cliente HTTP consome a API local corretamente",
+        "Erros básicos de carregamento são tratados visualmente"
+      ]
+    },
+    {
+      "task_id": "ESUP-IMPL-014",
+      "task_kind": "impl",
+      "title": "Implementar dashboard React com artefatos, tasks, activity, issues e lessons",
+      "description": "Implementar os componentes visuais do dashboard do projeto, incluindo painel de artefatos canônicos, tabela de tasks com filtros e busca, detalhe da tarefa, painel de activity, painel de issues e painel de lessons. A interface deve deixar claro o roadmap/plugin ativo, o estado de integridade do projeto e os motivos de inelegibilidade das tasks quando aplicável.",
+      "status": "done",
+      "depends_on": [
+        "ESUP-SPEC-003",
+        "ESUP-IMPL-006",
+        "ESUP-IMPL-007",
+        "ESUP-IMPL-012",
+        "ESUP-IMPL-013"
+      ],
+      "targets": [
+        "frontend/src/components/",
+        "frontend/src/pages/"
+      ],
+      "outputs": {
+        "files": [
+          "frontend/src/components/ArtifactsPanel.tsx",
+          "frontend/src/components/TasksTable.tsx",
+          "frontend/src/components/TaskDetails.tsx",
+          "frontend/src/components/ActivityPanel.tsx",
+          "frontend/src/components/IssuesPanel.tsx",
+          "frontend/src/components/LessonsPanel.tsx"
+        ]
+      },
+      "immutability": {
+        "done_is_immutable": true
+      },
+      "assigned_to": "gemini-cli",
+      "started_at": "2026-03-07T04:15:00Z",
+      "completed_at": "2026-03-07T05:00:00Z",
+      "verification": {
+        "checks": [
+          {
+            "id": "CHK-001",
+            "title": "Painel de Artefatos",
+            "status": "pass",
+            "evidence": "ArtifactsPanel.tsx implementado para listar artefatos canônicos"
+          },
+          {
+            "id": "CHK-002",
+            "title": "Tabela de Tarefas",
+            "status": "pass",
+            "evidence": "TasksTable.tsx implementado com filtros e status visuais"
+          },
+          {
+            "id": "CHK-003",
+            "title": "Painel de Atividade",
+            "status": "pass",
+            "evidence": "ActivityPanel.tsx implementado com timeline reversa"
+          },
+          {
+            "id": "CHK-004",
+            "title": "Painéis de Problemas e Lições",
+            "status": "pass",
+            "evidence": "IssuesPanel.tsx e LessonsPanel.tsx implementados"
+          }
+        ]
+      },
+      "required_verification": [
+        "Dashboard exibe artefatos canônicos e roadmap/plugin ativo",
+        "Tabela de tasks possui filtros por status e kind",
+        "Painéis de activity, issues e lessons carregam corretamente"
+      ]
+    },
+    {
+      "task_id": "ESUP-IMPL-015",
+      "task_kind": "impl",
+      "title": "Implementar console de execução, ações de run e atualização em tempo real no frontend",
+      "description": "Implementar no frontend as ações para executar a próxima task elegível, executar uma task específica validada pelo backend, cancelar uma run e acompanhar o console de logs em tempo real. A interface deve refletir status da run, agente utilizado, etapas do ciclo supervisor e atualização automática do dashboard ao término da execução.",
+      "status": "done",
+      "depends_on": [
+        "ESUP-SPEC-003",
+        "ESUP-IMPL-010",
+        "ESUP-IMPL-011",
+        "ESUP-IMPL-012",
+        "ESUP-IMPL-013",
+        "ESUP-IMPL-014"
+      ],
+      "targets": [
+        "frontend/src/components/",
+        "frontend/src/services/"
+      ],
+      "outputs": {
+        "files": [
+          "frontend/src/components/RunConsole.tsx",
+          "frontend/src/components/RunControls.tsx",
+          "frontend/src/components/RunStatusBadge.tsx",
+          "frontend/src/services/logStream.ts",
+          "frontend/src/services/runs.ts",
+          "frontend/src/services/projects.ts",
+          "frontend/src/pages/ProjectDashboardPage.tsx"
+        ]
+      },
+      "immutability": {
+        "done_is_immutable": true
+      },
+      "assigned_to": "claude-code",
+      "started_at": "2026-03-07T04:10:00Z",
+      "completed_at": "2026-03-07T04:30:00Z",
+      "verification": {
+        "checks": [
+          {
+            "id": "CHK-001",
+            "title": "RunControls.tsx corrigido",
+            "status": "pass",
+            "evidence": "bool -> boolean corrigido."
+          },
+          {
+            "id": "CHK-002",
+            "title": "runs.ts endpoint e polling",
+            "status": "pass",
+            "evidence": "startTaskRun usa /runs/task; fetchRunStatus adicionado."
+          },
+          {
+            "id": "CHK-003",
+            "title": "StateResponse alinhado ao schema da API",
+            "status": "pass",
+            "evidence": "projects.ts alinhado com schemas.py do backend."
+          },
+          {
+            "id": "CHK-004",
+            "title": "ProjectDashboardPage integra RunConsole + RunControls",
+            "status": "pass",
+            "evidence": "Dashboard com polling, SSE e reload após run."
+          },
+          {
+            "id": "CHK-005",
+            "title": "RunStatusBadge.tsx criado",
+            "status": "pass",
+            "evidence": "components/RunStatusBadge.tsx criado."
+          },
+          {
+            "id": "CHK-006",
+            "title": "npm run build passou",
+            "status": "pass",
+            "evidence": "tsc + vite build EXIT:0, 1533 modules, sem erros de tipo."
+          }
+        ]
+      },
+      "required_verification": [
+        "Frontend inicia uma run via API",
+        "Logs aparecem em tempo real no console",
+        "Dashboard é recarregado após o término da run"
+      ]
+    },
+    {
+      "task_id": "ESUP-QA-016",
+      "task_kind": "qa",
+      "title": "Criar suíte de testes backend para discovery, validação, seleção e projeção",
+      "description": "Criar testes automatizados de unidade e integração cobrindo discovery de artefatos canônicos, parse e schema validation, resolução do roadmap ativo, cálculo de elegibilidade, escrita append-only de activity, projeção do roadmap/plugin e regras essenciais do fluxo ESAA. Os testes devem cobrir também cenários de erro estrutural e inconsistência entre atividade e projeções.",
+      "status": "done",
+      "assigned_to": "claude-code",
+      "started_at": "2026-03-07T04:35:00Z",
+      "completed_at": "2026-03-07T05:00:00Z",
+      "verification": {
+        "checks": [
+          {
+            "id": "CHK-001",
+            "title": "test_artifact_discovery.py",
+            "status": "pass",
+            "evidence": "6 testes passando."
+          },
+          {
+            "id": "CHK-002",
+            "title": "test_validators.py",
+            "status": "pass",
+            "evidence": "6 testes passando."
+          },
+          {
+            "id": "CHK-003",
+            "title": "test_selector.py",
+            "status": "pass",
+            "evidence": "7 testes passando."
+          },
+          {
+            "id": "CHK-004",
+            "title": "test_runs_api.py",
+            "status": "pass",
+            "evidence": "5 testes de API passando."
+          },
+          {
+            "id": "CHK-005",
+            "title": "Suite completa",
+            "status": "pass",
+            "evidence": "28 passed, 0 failures, EXIT:0."
+          }
+        ]
+      },
+      "depends_on": [
+        "ESUP-IMPL-006",
+        "ESUP-IMPL-007",
+        "ESUP-IMPL-008",
+        "ESUP-IMPL-009",
+        "ESUP-IMPL-010",
+        "ESUP-IMPL-011",
+        "ESUP-IMPL-012"
+      ],
+      "targets": [
+        "backend/tests/"
+      ],
+      "outputs": {
+        "files": [
+          "backend/tests/test_artifact_discovery.py",
+          "backend/tests/test_validators.py",
+          "backend/tests/test_selector.py",
+          "backend/tests/test_event_writer.py",
+          "backend/tests/test_projector.py",
+          "backend/tests/test_runs_api.py"
+        ]
+      },
+      "immutability": {
+        "done_is_immutable": true
+      },
+      "required_verification": [
+        "Testes passam localmente",
+        "Cobertura mínima inclui discovery, validação, seleção e projeção",
+        "Há cenários de erro e de fluxo nominal"
+      ]
+    },
+    {
+      "task_id": "ESUP-QA-017",
+      "task_kind": "qa",
+      "title": "Executar smoke test ponta a ponta da PoC com um projeto ESAA real ou fixture fiel",
+      "description": "Executar validação ponta a ponta do fluxo da PoC usando um projeto ESAA real ou fixture fiel, cobrindo abertura do projeto, leitura dos artefatos canônicos, cálculo da próxima task elegível, claim, execução supervisionada, logs em tempo real, complete, review e atualização do dashboard. O resultado deve produzir evidências objetivas da operação do supervisor web local.",
+      "status": "done",
+      "assigned_to": "claude-code",
+      "started_at": "2026-03-07T05:10:00Z",
+      "depends_on": [
+        "ESUP-IMPL-014",
+        "ESUP-IMPL-015",
+        "ESUP-QA-016"
+      ],
+      "targets": [
+        "docs/poc/",
+        "scripts/"
+      ],
+      "outputs": {
+        "files": [
+          "docs/poc/e2e-smoke-report.md",
+          "scripts/run_poc_smoke.sh"
+        ]
+      },
+      "immutability": {
+        "done_is_immutable": true
+      },
+      "required_verification": [
+        "Smoke cobre do carregamento do projeto ao refresh final do dashboard",
+        "Relatório registra evidências, gaps e limitações da PoC",
+        "Pelo menos um ciclo supervisionado completo é demonstrado"
+      ],
+      "completed_at": "2026-03-07T06:00:00Z"
+    },
+    {
+      "task_id": "ESUP-QA-018",
+      "task_kind": "qa",
+      "title": "Consolidar checklist de aceitação, runbook operacional e critérios de pronta entrega da PoC",
+      "description": "Consolidar a documentação final de validação operacional da PoC, incluindo checklist de aceite, pré-requisitos locais, passos de execução, limitações conhecidas, política de fallback, forma de configurar agentes e critérios mínimos para declarar a PoC pronta para uso experimental. A documentação deve servir tanto para auditoria quanto para operação assistida pelos agentes.",
+      "status": "done",
+      "depends_on": [
+        "ESUP-QA-017"
+      ],
+      "targets": [
+        "docs/poc/",
+        "README.md"
+      ],
+      "outputs": {
+        "files": [
+          "docs/poc/acceptance-checklist.md",
+          "docs/poc/operator-runbook.md",
+          "docs/poc/known-limitations.md"
+        ]
+      },
+      "immutability": {
+        "done_is_immutable": true
+      },
+      "required_verification": [
+        "Checklist de aceite está alinhado ao escopo da PoC",
+        "Runbook permite subir backend, frontend e agentes localmente",
+        "Limitações e próximos passos estão explicitados"
+      ],
+      "assigned_to": "claude-code",
+      "started_at": "2026-03-07T06:10:00Z",
+      "completed_at": "2026-03-07T06:30:00Z"
+    }
+  ],
+  "indexes": {
+    "todo": 0,
+    "in_progress": 0,
+    "review": 0,
+    "done": 18
+  },
+  "last_event_seq": 59
+}

@@ -1,0 +1,61 @@
+{
+  "meta": {
+    "schema_version": "0.4.0",
+    "esaa_version": "0.4.x",
+    "generated_by": "esaa.project",
+    "source_event_store": ".roadmap/activity.jsonl",
+    "last_event_seq": 57,
+    "updated_at": "2026-03-07T03:28:03Z"
+  },
+  "issues": [
+    {
+      "issue_id": "ISS-0001",
+      "status": "resolved",
+      "severity": "medium",
+      "title": "Scaffold inicial de ESUP-IMPL-005 foi declarado completo sem arquivos-base operacionais do frontend, backend e ambiente",
+      "baseline_id": null,
+      "affected": {
+        "task_id": "ESUP-IMPL-005",
+        "paths": [
+          "frontend/index.html",
+          "frontend/tsconfig.json",
+          "frontend/tsconfig.node.json",
+          "backend/app/adapters/",
+          "backend/tests/",
+          "backend/.env.example",
+          "frontend/.env.example",
+          "README.md"
+        ]
+      },
+      "evidence": {
+        "symptom": "O review encontrou um scaffold incompleto para a PoC: o frontend nao era um projeto Vite/TypeScript executavel, faltavam adapters/tests no backend e nao havia arquivos .env.example declarados pela task.",
+        "repro_steps": [
+          "Ler docs/qa/ESUP-IMPL-005.md.",
+          "Comparar o escopo de ESUP-IMPL-005 em .roadmap/roadmap.json com os arquivos presentes no workspace antes da correcao.",
+          "Verificar ausencia de frontend/index.html, frontend/tsconfig.json, frontend/tsconfig.node.json, backend/app/adapters/, backend/tests/ e arquivos .env.example."
+        ]
+      },
+      "resolution": {
+        "summary": "Scaffold complementado com arquivos-base do frontend, estrutura minima de adapters/tests, exemplos de ambiente e README alinhado.",
+        "evidence": [
+          "frontend/index.html, frontend/tsconfig.json e frontend/tsconfig.node.json adicionados.",
+          "backend/app/adapters/__init__.py, backend/tests/__init__.py e backend/tests/test_health.py adicionados.",
+          "backend/.env.example, frontend/.env.example e README.md atualizados.",
+          "python -m compileall backend/app backend/tests passou apos a correcao."
+        ]
+      },
+      "links": {
+        "reported_by_task_id": "ESUP-IMPL-005",
+        "fixes_task_id": "ESUP-IMPL-005",
+        "hotfix_task_id": null
+      },
+      "timeline": {
+        "created_event_seq": 31,
+        "resolved_event_seq": 39
+      }
+    }
+  ],
+  "indexes": {
+    "open_by_baseline": {}
+  }
+}

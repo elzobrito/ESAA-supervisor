@@ -1,0 +1,956 @@
+{
+  "meta": {
+    "schema_version": "0.5.0",
+    "esaa_version": "0.5.0-ui-redesign-esaa-supervisor",
+    "immutable_done": true,
+    "master_correlation_id": null,
+    "run": {
+      "run_id": null,
+      "status": "initialized",
+      "last_event_seq": 111,
+      "projection_hash_sha256": "5e2a90185663fe5b596f378747524aebad83e8b5f28d4730db8f13aa214ac9cc",
+      "verify_status": "ok"
+    },
+    "updated_at": "2026-03-07T11:15:00Z"
+  },
+  "project": {
+    "name": "esaa-supervisor-ui-redesign",
+    "audit_scope": "Redesign da interface do ESAA Supervisor com foco em arquitetura visual, melhoria de UX operacional, dashboard executivo, navegação colapsável estilo app shell, gráficos úteis, drawers, modais, console dock e reorganização das telas em visão geral, tarefas, execução, atividade, integridade e artefatos."
+  },
+  "tasks": [
+    {
+      "task_id": "UIR-SPEC-001",
+      "task_kind": "spec",
+      "title": "Especificar arquitetura da informação e navegação do redesign",
+      "description": "Definir a arquitetura da informação do ESAA Supervisor, reorganizando a aplicação em rotas e seções claras: visão geral, tarefas, execução, atividade, integridade, issues, lessons, artefatos e configuração. A especificação deve descrever o novo app shell com topbar, sidebar colapsável e áreas contextuais, eliminando o modelo atual de página longa com excesso de scroll.",
+      "status": "done",
+      "depends_on": [],
+      "targets": [
+        "frontend/src/",
+        "docs/ui-redesign/"
+      ],
+      "outputs": {
+        "files": [
+          "docs/ui-redesign/information-architecture.md",
+          "docs/ui-redesign/navigation-map.md"
+        ]
+      },
+      "immutability": {
+        "done_is_immutable": true
+      },
+      "planning": {
+        "complexity": "high",
+        "planned_agent": "agent-spec",
+        "preferred_runner": "claude-code",
+        "routing_reason": "Define a espinha dorsal da navegação e da organização conceitual do produto.",
+        "fallback_runners": [
+          "codex",
+          "gemini-cli"
+        ],
+        "planning_notes": "Base estrutural do redesign; precisa de boa visão sistêmica."
+      },
+      "required_verification": [
+        "Documento define rotas e seções operacionais do sistema",
+        "Documento substitui a home longa por arquitetura baseada em telas",
+        "Documento inclui sidebar colapsável para liberar espaço de conteúdo"
+      ],
+      "assigned_to": "claude-code",
+      "completed_at": "2026-03-07T08:21:00Z"
+    },
+    {
+      "task_id": "UIR-SPEC-002",
+      "task_kind": "spec",
+      "title": "Especificar app shell, sidebar colapsável e comportamento responsivo",
+      "description": "Definir o app shell principal da aplicação, incluindo topbar fixa, sidebar esquerda em modo expandido e colapsado, comportamento de ocultar menu para priorizar o conteúdo e regras responsivas para desktop e viewport menores. A especificação deve detalhar a interação de abrir/fechar menu, persistência de preferência e impacto no grid principal.",
+      "status": "done",
+      "depends_on": [],
+      "targets": [
+        "frontend/src/components/",
+        "docs/ui-redesign/"
+      ],
+      "outputs": {
+        "files": [
+          "docs/ui-redesign/app-shell-spec.md",
+          "docs/ui-redesign/responsive-behavior-spec.md"
+        ]
+      },
+      "immutability": {
+        "done_is_immutable": true
+      },
+      "planning": {
+        "complexity": "high",
+        "planned_agent": "agent-spec",
+        "preferred_runner": "claude-code",
+        "routing_reason": "É a peça crítica para o comportamento de layout inspirado no menu recolhível.",
+        "fallback_runners": [
+          "codex",
+          "gemini-cli"
+        ],
+        "planning_notes": "Precisa especificar estados, persistência e impacto no grid."
+      },
+      "required_verification": [
+        "Especificação inclui modo expandido e colapsado da sidebar",
+        "Especificação prevê ganho de largura útil no conteúdo principal",
+        "Especificação define comportamento consistente para desktop e tela reduzida"
+      ],
+      "assigned_to": "claude-code",
+      "completed_at": "2026-03-07T08:21:00Z"
+    },
+    {
+      "task_id": "UIR-SPEC-003",
+      "task_kind": "spec",
+      "title": "Especificar visão geral executiva com KPIs e gráficos operacionais",
+      "description": "Definir a nova tela inicial do projeto com KPIs, resumos de status, gráficos úteis e painéis curtos para leitura rápida do estado do projeto. A tela deve responder em poucos segundos o que está acontecendo no projeto, o que está bloqueado, qual é a próxima tarefa elegível e qual o estado da integridade geral.",
+      "status": "done",
+      "depends_on": [],
+      "targets": [
+        "frontend/src/pages/",
+        "docs/ui-redesign/"
+      ],
+      "outputs": {
+        "files": [
+          "docs/ui-redesign/overview-dashboard-spec.md",
+          "docs/ui-redesign/charts-and-kpis-spec.md"
+        ]
+      },
+      "immutability": {
+        "done_is_immutable": true
+      },
+      "planning": {
+        "complexity": "medium",
+        "planned_agent": "agent-spec",
+        "preferred_runner": "codex",
+        "routing_reason": "Há forte componente estrutural, mas escopo de especificação é bem delimitado.",
+        "fallback_runners": [
+          "claude-code",
+          "gemini-cli"
+        ],
+        "planning_notes": "Foco em KPI, gráficos e leitura rápida do estado."
+      },
+      "assigned_to": "codex",
+      "started_at": "2026-03-07T01:40:00Z",
+      "completed_at": "2026-03-07T01:40:00Z",
+      "verification": {
+        "checks": [
+          "Documento define cards KPI principais e regras de leitura executiva da tela inicial.",
+          "Documento define ao menos dois graficos operacionais uteis e seu papel na operacao.",
+          "Documento define paineis de proxima tarefa, problemas em aberto e atividade recente resumida."
+        ]
+      },
+      "required_verification": [
+        "Documento define cards KPI principais",
+        "Documento define ao menos dois gráficos operacionais úteis",
+        "Documento define painéis de próximas tarefas, problemas e atividade resumida"
+      ]
+    },
+    {
+      "task_id": "UIR-SPEC-004",
+      "task_kind": "spec",
+      "title": "Especificar experiência da tela de tarefas com grid e drawer lateral",
+      "description": "Definir a experiência principal da tela de tarefas with tabela/data grid, filtros, busca, ordenação, badges de status, ações por linha e drawer lateral de detalhes da task. A especificação deve eliminar o fluxo atual de detalhes dispersos na página e adotar inspeção contextual sem perda de foco.",
+      "status": "done",
+      "depends_on": [],
+      "targets": [
+        "frontend/src/components/",
+        "docs/ui-redesign/"
+      ],
+      "outputs": {
+        "files": [
+          "docs/ui-redesign/tasks-grid-spec.md",
+          "docs/ui-redesign/task-detail-drawer-spec.md"
+        ]
+      },
+      "immutability": {
+        "done_is_immutable": true
+      },
+      "planning": {
+        "complexity": "medium",
+        "planned_agent": "agent-spec",
+        "preferred_runner": "codex",
+        "routing_reason": "É uma especificação operacional importante, porém com componentes conhecidos de UX.",
+        "fallback_runners": [
+          "claude-code",
+          "gemini-cli"
+        ],
+        "planning_notes": "Definir colunas, filtros, ações e detalhe contextual."
+      },
+      "assigned_to": "codex",
+      "started_at": "2026-03-07T01:47:00Z",
+      "completed_at": "2026-03-07T01:47:00Z",
+      "verification": {
+        "checks": [
+          "Documento define colunas, filtros, busca e ordenacao da grid de tasks.",
+          "Documento define drawer lateral de detalhes com secoes de resumo, elegibilidade, atividade e outputs.",
+          "Documento descreve acoes contextuais sem exigir navegacao longa para inspecao."
+        ]
+      },
+      "required_verification": [
+        "Documento define colunas e filtros da grid de tasks",
+        "Documento define drawer lateral de detalhes com abas ou seções",
+        "Documento descreve ações contextuais sem exigir navegação longa"
+      ]
+    },
+    {
+      "task_id": "UIR-SPEC-005",
+      "task_kind": "spec",
+      "title": "Especificar superfícies complementares: modais, drawer, console dock e catálogo de artefatos",
+      "description": "Definir as superfícies complementares da nova UI, incluindo modais para integridade e payloads, drawers para detalhes rápidos, console dock para execução ao vivo e tela dedicada de catálogo de artefatos canônicos. A especificação deve retirar artefatos da área central da home e colocá-los em uma experiência adequada de inventário e inspeção.",
+      "status": "done",
+      "depends_on": [],
+      "targets": [
+        "frontend/src/components/",
+        "docs/ui-redesign/"
+      ],
+      "outputs": {
+        "files": [
+          "docs/ui-redesign/surfaces-spec.md",
+          "docs/ui-redesign/artifacts-catalog-spec.md",
+          "docs/ui-redesign/run-console-dock-spec.md"
+        ]
+      },
+      "immutability": {
+        "done_is_immutable": true
+      },
+      "planning": {
+        "complexity": "medium",
+        "planned_agent": "agent-spec",
+        "preferred_runner": "codex",
+        "routing_reason": "Especificação de padrões UI reutilizáveis com escopo relativamente controlado.",
+        "fallback_runners": [
+          "claude-code",
+          "gemini-cli"
+        ],
+        "planning_notes": "Inclui padrões de superfícies complementares e catálogo dedicado."
+      },
+      "assigned_to": "codex",
+      "started_at": "2026-03-07T01:54:00Z",
+      "completed_at": "2026-03-07T01:54:00Z",
+      "verification": {
+        "checks": [
+          "Documento define uso coordenado de modais, drawers e console dock inferior.",
+          "Documento move artefatos para catalogo dedicado de inventario e inspecao.",
+          "Documento especifica console de execucao acoplado a experiencia operacional do supervisor."
+        ]
+      },
+      "required_verification": [
+        "Documento define uso de modais, drawers e dock inferior",
+        "Documento move artefatos para catálogo dedicado",
+        "Documento especifica console de execução acoplado à UX operacional"
+      ]
+    },
+    {
+      "task_id": "UIR-SPEC-006",
+      "task_kind": "spec",
+      "title": "Especificar sistema visual, tokens e linguagem de design elegante",
+      "description": "Definir o sistema visual do redesign com tipografia, espaçamentos, grid, cores, estados, badges, cards, ícones e padrões de interação. O objetivo é transformar a interface em um dashboard elegante, sóbrio e legível, com menor ruído visual, melhor hierarquia e aparência profissional sem perder densidade operacional.",
+      "status": "done",
+      "depends_on": [],
+      "targets": [
+        "frontend/src/",
+        "docs/ui-redesign/"
+      ],
+      "outputs": {
+        "files": [
+          "docs/ui-redesign/design-system-spec.md",
+          "docs/ui-redesign/ui-tokens-spec.md"
+        ]
+      },
+      "immutability": {
+        "done_is_immutable": true
+      },
+      "planning": {
+        "complexity": "high",
+        "planned_agent": "agent-spec",
+        "preferred_runner": "claude-code",
+        "routing_reason": "Vai pautar todo o refinamento visual do redesign e exige coerência sistêmica.",
+        "fallback_runners": [
+          "codex",
+          "gemini-cli"
+        ],
+        "planning_notes": "Fundação visual do produto; não deve ficar fragmentada."
+      },
+      "required_verification": [
+        "Documento define escala de espaçamento e tipografia",
+        "Documento define paleta e estados visuais de sucesso, alerta e erro",
+        "Documento define regras para cards, badges, tabelas e painéis"
+      ],
+      "assigned_to": "claude-code",
+      "completed_at": "2026-03-07T08:21:00Z"
+    },
+    {
+      "task_id": "UIR-IMPL-007",
+      "task_kind": "impl",
+      "title": "Implementar novo app shell com topbar e sidebar colapsável",
+      "description": "Implementar o novo shell da aplicação substituindo a estrutura atual por topbar, sidebar navegável e modo colapsável para liberar espaço no conteúdo, inspirado no comportamento de ocultar o menu lateral quando o usuário quer priorizar a área principal. O estado da sidebar deve ser reaproveitável e aplicável em todas as rotas principais.",
+      "status": "done",
+      "depends_on": [
+        "UIR-SPEC-001",
+        "UIR-SPEC-002",
+        "UIR-SPEC-006"
+      ],
+      "targets": [
+        "frontend/src/components/",
+        "frontend/src/pages/",
+        "frontend/src/"
+      ],
+      "outputs": {
+        "files": [
+          "frontend/src/components/layout/AppShell.tsx",
+          "frontend/src/components/layout/TopBar.tsx",
+          "frontend/src/components/layout/SidebarNav.tsx",
+          "frontend/src/components/layout/SidebarToggle.tsx",
+          "frontend/src/styles/app-shell.css"
+        ]
+      },
+      "immutability": {
+        "done_is_immutable": true
+      },
+      "planning": {
+        "complexity": "high",
+        "planned_agent": "agent-impl",
+        "preferred_runner": "claude-code",
+        "routing_reason": "É a maior mudança estrutural de layout e navegação da aplicação.",
+        "fallback_runners": [
+          "codex",
+          "gemini-cli"
+        ],
+        "planning_notes": "Implementação crítica do comportamento de esconder/revelar menu."
+      },
+      "required_verification": [
+        "Sidebar pode ser expandida e colapsada",
+        "Conteúdo principal ganha largura útil quando a sidebar é recolhida",
+        "Navegação funciona de forma consistente em todas as rotas"
+      ],
+      "assigned_to": "claude-code",
+      "completed_at": "2026-03-07T08:21:00Z"
+    },
+    {
+      "task_id": "UIR-IMPL-008",
+      "task_kind": "impl",
+      "title": "Implementar nova página Visão Geral com KPIs, resumo e gráficos",
+      "description": "Implementar a nova página inicial do projeto com cards KPI, gráficos operacionais, resumo da integridade, próximas tarefas elegíveis, problemas em aberto e atividade recente resumida. A página deve virar a entrada principal do dashboard, substituindo a lógica atual de rolagem longa com excesso de painéis concorrentes.",
+      "status": "done",
+      "depends_on": [
+        "UIR-SPEC-003",
+        "UIR-SPEC-006",
+        "UIR-IMPL-007"
+      ],
+      "targets": [
+        "frontend/src/pages/",
+        "frontend/src/components/dashboard/"
+      ],
+      "outputs": {
+        "files": [
+          "frontend/src/pages/OverviewPage.tsx",
+          "frontend/src/components/dashboard/KpiCard.tsx",
+          "frontend/src/components/dashboard/OverviewCharts.tsx",
+          "frontend/src/components/dashboard/NextEligibleTasksCard.tsx",
+          "frontend/src/components/dashboard/OpenProblemsCard.tsx",
+          "frontend/src/components/dashboard/RecentActivitySummary.tsx"
+        ]
+      },
+      "immutability": {
+        "done_is_immutable": true
+      },
+      "planning": {
+        "complexity": "high",
+        "planned_agent": "agent-impl",
+        "preferred_runner": "claude-code",
+        "routing_reason": "Combina layout, síntese operacional e integração visual de múltiplos blocos centrais.",
+        "fallback_runners": [
+          "codex",
+          "gemini-cli"
+        ],
+        "planning_notes": "Tela executiva principal do produto."
+      },
+      "assigned_to": "codex",
+      "started_at": "2026-03-07T03:40:00Z",
+      "completed_at": "2026-03-07T03:40:00Z",
+      "verification": {
+        "checks": [
+          "OverviewPage.tsx integra KpiCard, OverviewCharts, NextEligibleTasksCard, OpenProblemsCard e RecentActivitySummary.",
+          "A pagina exibe KPIs, graficos operacionais e resumos de elegibilidade, problemas e atividade recente.",
+          "npm run build do frontend passou com a nova visao geral e o shell redesenhado."
+        ]
+      },
+      "required_verification": [
+        "Página exibe KPIs principais do projeto",
+        "Página exibe gráficos operacionais úteis e não decorativos",
+        "Página resume elegibilidade, problemas e atividade recente sem exigir scroll excessivo"
+      ]
+    },
+    {
+      "task_id": "UIR-IMPL-009",
+      "task_kind": "impl",
+      "title": "Implementar gráficos operacionais e componentes de visualização",
+      "description": "Implementar os gráficos operacionais do redesign, incluindo distribuição de tasks por status, tasks por tipo, atividade por tempo e distribuição por agente/runner quando houver dados. Os gráficos devem ser claros, leves e integrados ao tema visual, servindo como apoio real à operação e não apenas decoração.",
+      "status": "done",
+      "depends_on": [
+        "UIR-SPEC-003",
+        "UIR-SPEC-006",
+        "UIR-IMPL-008"
+      ],
+      "targets": [
+        "frontend/src/components/charts/"
+      ],
+      "outputs": {
+        "files": [
+          "frontend/src/components/charts/TaskStatusChart.tsx",
+          "frontend/src/components/charts/TaskKindChart.tsx",
+          "frontend/src/components/charts/ActivityTimelineChart.tsx",
+          "frontend/src/components/charts/AgentLoadChart.tsx"
+        ]
+      },
+      "immutability": {
+        "done_is_immutable": true
+      },
+      "planning": {
+        "complexity": "medium",
+        "planned_agent": "agent-impl",
+        "preferred_runner": "codex",
+        "routing_reason": "Escopo técnico bem delimitado em componentes de visualização especializados.",
+        "fallback_runners": [
+          "claude-code",
+          "gemini-cli"
+        ],
+        "planning_notes": "Pode ser executado isoladamente após a visão geral."
+      },
+      "required_verification": [
+        "Charts renderizam corretamente com dados reais da API",
+        "Charts são legíveis em desktop padrão",
+        "Charts mantêm coerência visual com o restante do dashboard"
+      ],
+      "assigned_to": "codex",
+      "started_at": "2026-03-07T08:31:00Z",
+      "completed_at": "2026-03-07T08:44:00Z",
+      "verification": {
+        "checks": [
+          "frontend/src/components/charts/TaskStatusChart.tsx e TaskKindChart.tsx renderizam distribuicoes de status e tipo a partir de state.tasks.",
+          "frontend/src/components/charts/ActivityTimelineChart.tsx e AgentLoadChart.tsx consomem state.activity e ownership real para visualizacoes operacionais.",
+          "frontend/src/components/dashboard/OverviewCharts.tsx integra os quatro charts na overview e npm run build permanece verde."
+        ]
+      }
+    },
+    {
+      "task_id": "UIR-IMPL-010",
+      "task_kind": "impl",
+      "title": "Refatorar a tela de tarefas para data grid com filtros, busca e drawer de detalhes",
+      "description": "Refatorar completamente a experiência de tarefas para uma tela dedicada com data grid, filtros por status e tipo, busca textual, ordenação, badges semânticos e drawer lateral de detalhes. O detalhe da task deve mostrar descrição, dependências, outputs, eventos relacionados, elegibilidade, agente e ações contextuais.",
+      "status": "done",
+      "depends_on": [
+        "UIR-SPEC-004",
+        "UIR-SPEC-006",
+        "UIR-IMPL-007"
+      ],
+      "targets": [
+        "frontend/src/pages/",
+        "frontend/src/components/tasks/"
+      ],
+      "outputs": {
+        "files": [
+          "frontend/src/pages/TasksPage.tsx",
+          "frontend/src/components/tasks/TasksDataGrid.tsx",
+          "frontend/src/components/tasks/TasksFiltersBar.tsx",
+          "frontend/src/components/tasks/TaskStatusBadge.tsx",
+          "frontend/src/components/tasks/TaskDetailDrawer.tsx"
+        ]
+      },
+      "immutability": {
+        "done_is_immutable": true
+      },
+      "planning": {
+        "complexity": "high",
+        "planned_agent": "agent-impl",
+        "preferred_runner": "claude-code",
+        "routing_reason": "É o coração operacional do supervisor e exige alto cuidado em UX e densidade de informação.",
+        "fallback_runners": [
+          "codex",
+          "gemini-cli"
+        ],
+        "planning_notes": "Principal superfície de trabalho contínuo."
+      },
+      "assigned_to": "codex",
+      "started_at": "2026-03-07T03:45:00Z",
+      "completed_at": "2026-03-07T03:45:00Z",
+      "verification": {
+        "checks": [
+          "TasksPage.tsx entrega tela dedicada com busca, filtros por status/tipo e grid operacional.",
+          "TasksDataGrid, TasksFiltersBar, TaskStatusBadge e TaskDetailDrawer implementam a experiencia de grid com drawer lateral.",
+          "A tela de tarefas compila e preserva o contexto sem navegacao longa."
+        ]
+      },
+      "required_verification": [
+        "Tela de tarefas possui busca e filtros funcionais",
+        "Drawer lateral abre detalhes sem remover o usuário da tela",
+        "Status e elegibilidade ficam claros na grid e no detalhe"
+      ]
+    },
+    {
+      "task_id": "UIR-IMPL-011",
+      "task_kind": "impl",
+      "title": "Implementar catálogo dedicado de artefatos canônicos",
+      "description": "Mover a visualização completa dos artefatos canônicos para uma tela dedicada de catálogo, com filtros por categoria, estado de integridade, origem, tipo e papel no sistema. A home e outras telas devem manter apenas resumos de integridade, deixando a inspeção detalhada dos artefatos para uma experiência própria e menos intrusiva.",
+      "status": "done",
+      "assigned_to": "codex",
+      "started_at": "2026-03-07T09:00:00Z",
+      "depends_on": [
+        "UIR-SPEC-005",
+        "UIR-SPEC-006",
+        "UIR-IMPL-007"
+      ],
+      "targets": [
+        "frontend/src/pages/",
+        "frontend/src/components/artifacts/"
+      ],
+      "outputs": {
+        "files": [
+          "frontend/src/pages/ArtifactsPage.tsx",
+          "frontend/src/components/artifacts/ArtifactsCatalogTable.tsx",
+          "frontend/src/components/artifacts/ArtifactTypeFilter.tsx",
+          "frontend/src/components/artifacts/ArtifactDetailDrawer.tsx"
+        ]
+      },
+      "immutability": {
+        "done_is_immutable": true
+      },
+      "planning": {
+        "complexity": "medium",
+        "planned_agent": "agent-impl",
+        "preferred_runner": "codex",
+        "routing_reason": "Refatoração importante, porém com escopo visual e funcional mais contido.",
+        "fallback_runners": [
+          "claude-code",
+          "gemini-cli"
+        ],
+        "planning_notes": "Remove pressão visual da home e organiza inventário."
+      },
+      "required_verification": [
+        "Artefatos deixam de ocupar espaço dominante na tela principal",
+        "Catálogo permite filtrar e inspecionar artefatos por categoria",
+        "Detalhe de artefato pode ser aberto sem sair do catálogo"
+      ],
+      "completed_at": "2026-03-07T09:14:00Z",
+      "verification": {
+        "checks": [
+          "frontend/src/pages/ArtifactsPage.tsx migrou de painel resumido para catalogo dedicado com filtros e selecao de artefato.",
+          "frontend/src/components/artifacts/ArtifactsCatalogTable.tsx, ArtifactTypeFilter.tsx e ArtifactDetailDrawer.tsx entregam a superficie detalhada exigida.",
+          "npm run build no frontend passou apos a integracao do catalogo com o redesign."
+        ]
+      }
+    },
+    {
+      "task_id": "UIR-IMPL-012",
+      "task_kind": "impl",
+      "title": "Implementar timeline de atividade com modal de payload e contexto",
+      "description": "Implementar a tela de atividade e a timeline melhorada com ícones, cores por tipo de evento, actor, task_id, timestamp e resumo semântico. Ao selecionar um evento, o usuário deve conseguir abrir um modal ou drawer com payload, interpretação, impacto e vínculos com task e run.",
+      "status": "done",
+      "depends_on": [
+        "UIR-SPEC-005",
+        "UIR-SPEC-006",
+        "UIR-IMPL-007"
+      ],
+      "targets": [
+        "frontend/src/pages/",
+        "frontend/src/components/activity/"
+      ],
+      "outputs": {
+        "files": [
+          "frontend/src/pages/ActivityPage.tsx",
+          "frontend/src/components/activity/ActivityTimeline.tsx",
+          "frontend/src/components/activity/ActivityItem.tsx",
+          "frontend/src/components/activity/EventPayloadModal.tsx"
+        ]
+      },
+      "immutability": {
+        "done_is_immutable": true
+      },
+      "planning": {
+        "complexity": "medium",
+        "planned_agent": "agent-impl",
+        "preferred_runner": "codex",
+        "routing_reason": "Demanda componentes compostos e boa modelagem de eventos, mas é modular.",
+        "fallback_runners": [
+          "claude-code",
+          "gemini-cli"
+        ],
+        "planning_notes": "Foco em inspeção semântica e modal de payload."
+      },
+      "required_verification": [
+        "Timeline diferencia claim, complete, review, issue e lesson",
+        "Usuário pode abrir payload de evento em modal ou drawer",
+        "Timeline suporta leitura rápida e inspeção aprofundada"
+      ],
+      "assigned_to": "codex",
+      "started_at": "2026-03-07T09:20:00Z",
+      "completed_at": "2026-03-07T09:33:00Z",
+      "verification": {
+        "checks": [
+          "frontend/src/pages/ActivityPage.tsx e frontend/src/components/activity/* entregam timeline clicável com leitura rápida e inspeção aprofundada.",
+          "backend/app/api/schemas.py e backend/app/api/routes_state.py expõem task_id, prior_status e payload no contrato de activity para o modal.",
+          "python -m compileall backend/app e npm run build no frontend passaram após a integração."
+        ]
+      }
+    },
+    {
+      "task_id": "UIR-IMPL-013",
+      "task_kind": "impl",
+      "title": "Implementar console dock de execução e tela dedicada de runs",
+      "description": "Implementar uma experiência de execução mais forte, com console dock recolhível na base da aplicação e uma tela dedicada de execução/runs. O console deve mostrar logs ao vivo, agente atual, task corrente, etapas do ciclo supervisor, artefatos tocados, estado da run e atalhos para detalhes complementares.",
+      "status": "done",
+      "depends_on": [
+        "UIR-SPEC-005",
+        "UIR-SPEC-006",
+        "UIR-IMPL-007"
+      ],
+      "targets": [
+        "frontend/src/pages/",
+        "frontend/src/components/runs/"
+      ],
+      "outputs": {
+        "files": [
+          "frontend/src/pages/RunsPage.tsx",
+          "frontend/src/components/runs/RunConsoleDock.tsx",
+          "frontend/src/components/runs/RunStepsTimeline.tsx",
+          "frontend/src/components/runs/RunArtifactsPanel.tsx",
+          "frontend/src/components/runs/RunHeader.tsx"
+        ]
+      },
+      "immutability": {
+        "done_is_immutable": true
+      },
+      "planning": {
+        "complexity": "high",
+        "planned_agent": "agent-impl",
+        "preferred_runner": "claude-code",
+        "routing_reason": "Mistura layout avançado, fluxo operacional e múltiplas superfícies complementares.",
+        "fallback_runners": [
+          "codex",
+          "gemini-cli"
+        ],
+        "planning_notes": "Elemento diferenciador do supervisor como cockpit operacional."
+      },
+      "assigned_to": "codex",
+      "started_at": "2026-03-07T03:50:00Z",
+      "completed_at": "2026-03-07T03:50:00Z",
+      "verification": {
+        "checks": [
+          "RunsPage.tsx, RunConsoleDock, RunStepsTimeline, RunArtifactsPanel e RunHeader implementam a base da experiencia de runs.",
+          "O shell redesenhado suporta superficie dedicada de execucao e console dock integrado.",
+          "npm run build do frontend passou com a nova tela de runs e componentes de execucao."
+        ]
+      },
+      "required_verification": [
+        "Console dock pode ser expandido e recolhido",
+        "Logs ao vivo permanecem legíveis sem poluir a tela principal",
+        "Tela de runs mostra estado da execução e detalhes complementares"
+      ]
+    },
+    {
+      "task_id": "UIR-IMPL-014",
+      "task_kind": "impl",
+      "title": "Refatorar painéis de problemas e lições para experiência contextual",
+      "description": "Refatorar a experiência de problemas em aberto e lições aprendidas com cards mais úteis, severidade, contexto, impacto e abertura de detalhe em drawer ou modal. O objetivo é transformar esses blocos em superfícies acionáveis, em vez de apenas listas longas e passivas na lateral da dashboard.",
+      "status": "done",
+      "depends_on": [
+        "UIR-SPEC-005",
+        "UIR-SPEC-006",
+        "UIR-IMPL-008"
+      ],
+      "targets": [
+        "frontend/src/components/issues/",
+        "frontend/src/components/lessons/"
+      ],
+      "outputs": {
+        "files": [
+          "frontend/src/components/issues/OpenProblemsPanel.tsx",
+          "frontend/src/components/issues/IssueDetailModal.tsx",
+          "frontend/src/components/lessons/LessonsPanel.tsx",
+          "frontend/src/components/lessons/LessonDetailDrawer.tsx"
+        ]
+      },
+      "immutability": {
+        "done_is_immutable": true
+      },
+      "planning": {
+        "complexity": "medium",
+        "planned_agent": "agent-impl",
+        "preferred_runner": "codex",
+        "routing_reason": "Refatoração contextual com escopo razoavelmente controlado.",
+        "fallback_runners": [
+          "claude-code",
+          "gemini-cli"
+        ],
+        "planning_notes": "Melhora experiência de inspeção e ação contextual."
+      },
+      "required_verification": [
+        "Problemas em aberto exibem severidade e impacto",
+        "Lições aprendidas podem ser abertas com mais contexto",
+        "Blocos deixam de ser listas estáticas e passam a ser interativos"
+      ],
+      "assigned_to": "codex",
+      "started_at": "2026-03-07T09:40:00Z",
+      "completed_at": "2026-03-07T09:52:00Z",
+      "verification": {
+        "checks": [
+          "frontend/src/components/issues/OpenProblemsPanel.tsx e IssueDetailModal.tsx exibem severidade, impacto e contexto em superfície interativa.",
+          "frontend/src/components/lessons/LessonsPanel.tsx e LessonDetailDrawer.tsx transformam lições em cards acionáveis com detalhe contextual.",
+          "npm run build no frontend passou após a integração nas páginas de issues e lessons."
+        ]
+      }
+    },
+    {
+      "task_id": "UIR-IMPL-015",
+      "task_kind": "impl",
+      "title": "Aplicar design system, refinamento visual e consistência do tema",
+      "description": "Aplicar o design system definido nas specs para unificar tipografia, espaçamentos, badges, cards, tabelas, botões, painéis, overlays e paleta visual. O objetivo é elevar a qualidade percebida do produto e transformá-lo em um dashboard elegante, consistente e profissional.",
+      "status": "done",
+      "depends_on": [
+        "UIR-SPEC-006",
+        "UIR-IMPL-007",
+        "UIR-IMPL-008",
+        "UIR-IMPL-010",
+        "UIR-IMPL-011",
+        "UIR-IMPL-012",
+        "UIR-IMPL-013",
+        "UIR-IMPL-014"
+      ],
+      "targets": [
+        "frontend/src/styles/",
+        "frontend/src/components/"
+      ],
+      "outputs": {
+        "files": [
+          "frontend/src/styles/tokens.css",
+          "frontend/src/styles/theme.css",
+          "frontend/src/styles/components.css"
+        ]
+      },
+      "immutability": {
+        "done_is_immutable": true
+      },
+      "planning": {
+        "complexity": "high",
+        "planned_agent": "agent-impl",
+        "preferred_runner": "claude-code",
+        "routing_reason": "Exige coerência transversal e refinamento global de todos os componentes do redesign.",
+        "fallback_runners": [
+          "codex",
+          "gemini-cli"
+        ],
+        "planning_notes": "Melhor deixar com runner forte em consistência visual global."
+      },
+      "required_verification": [
+        "Layout apresenta hierarquia visual clara e consistente",
+        "Componentes compartilham linguagem visual unificada",
+        "Sidebar, topbar, cards, drawers e modais seguem o mesmo sistema"
+      ],
+      "assigned_to": "codex",
+      "started_at": "2026-03-07T10:00:00Z",
+      "completed_at": "2026-03-07T10:16:00Z",
+      "verification": {
+        "checks": [
+          "frontend/src/styles/tokens.css, theme.css e components.css concentram o design system e os refinamentos visuais transversais do redesign.",
+          "frontend/src/main.tsx passou a carregar explicitamente as novas camadas de tema e componentes.",
+          "npm run build no frontend passou após a consolidação do sistema visual."
+        ]
+      }
+    },
+    {
+      "task_id": "UIR-QA-016",
+      "task_kind": "qa",
+      "title": "Validar usabilidade operacional do redesign com checklist heurístico",
+      "description": "Executar uma validação heurística e operacional do redesign cobrindo navegação, descoberta de informação, clareza das ações principais, redução de scroll, eficiência da tela de tarefas, uso do drawer lateral, console dock, catálogo de artefatos e comportamento da sidebar colapsável. O resultado deve gerar um checklist objetivo com gaps e aprovações.",
+      "status": "done",
+      "depends_on": [
+        "UIR-IMPL-008",
+        "UIR-IMPL-010",
+        "UIR-IMPL-011",
+        "UIR-IMPL-012",
+        "UIR-IMPL-013",
+        "UIR-IMPL-014",
+        "UIR-IMPL-015"
+      ],
+      "targets": [
+        "docs/ui-redesign/",
+        "frontend/tests/"
+      ],
+      "outputs": {
+        "files": [
+          "docs/ui-redesign/usability-checklist.md",
+          "docs/ui-redesign/heuristic-review-report.md"
+        ]
+      },
+      "immutability": {
+        "done_is_immutable": true
+      },
+      "planning": {
+        "complexity": "medium",
+        "planned_agent": "agent-qa",
+        "preferred_runner": "codex",
+        "routing_reason": "Checklist heurístico e validação operacional exigem estrutura, mas não são a parte mais complexa do redesign.",
+        "fallback_runners": [
+          "claude-code",
+          "gemini-cli"
+        ],
+        "planning_notes": "Avaliar usabilidade, navegação e clareza de ação."
+      },
+      "required_verification": [
+        "Checklist cobre navegação, tarefas, execução, atividade e integridade",
+        "Há validação explícita do menu colapsável e ganho de espaço",
+        "Relatório aponta problemas remanescentes e ações corretivas"
+      ],
+      "assigned_to": "codex",
+      "started_at": "2026-03-07T10:20:00Z",
+      "completed_at": "2026-03-07T10:28:00Z",
+      "verification": {
+        "checks": [
+          "docs/ui-redesign/usability-checklist.md cobre navegacao, tarefas, execucao, atividade, artefatos e integridade.",
+          "docs/ui-redesign/heuristic-review-report.md registra aprovacoes e gap remanescente com acao corretiva para a tela de runs.",
+          "npm run build no frontend passou durante a validacao de QA."
+        ]
+      }
+    },
+    {
+      "task_id": "UIR-QA-017",
+      "task_kind": "qa",
+      "title": "Executar testes visuais e de regressão do redesign nas rotas principais",
+      "description": "Executar testes visuais e de regressão cobrindo as rotas principais do redesign: visão geral, tarefas, atividade, artefatos e execução. Os testes devem verificar consistência estrutural, estados vazios, estados com dados, overlays, abertura de drawers e modais e comportamento com sidebar expandida e colapsada.",
+      "status": "done",
+      "depends_on": [
+        "UIR-IMPL-007",
+        "UIR-IMPL-008",
+        "UIR-IMPL-010",
+        "UIR-IMPL-011",
+        "UIR-IMPL-012",
+        "UIR-IMPL-013",
+        "UIR-IMPL-015"
+      ],
+      "targets": [
+        "frontend/tests/",
+        "docs/ui-redesign/"
+      ],
+      "outputs": {
+        "files": [
+          "frontend/tests/ui-redesign.spec.ts",
+          "docs/ui-redesign/visual-regression-report.md"
+        ]
+      },
+      "immutability": {
+        "done_is_immutable": true
+      },
+      "planning": {
+        "complexity": "low",
+        "planned_agent": "agent-qa",
+        "preferred_runner": "gemini-cli",
+        "routing_reason": "Escopo de QA relativamente direto, focado em regressão visual e estados.",
+        "fallback_runners": [
+          "codex",
+          "claude-code"
+        ],
+        "planning_notes": "Boa candidata para runner simples e objetivo."
+      },
+      "required_verification": [
+        "Rotas principais renderizam corretamente",
+        "Drawers, modais e console dock não quebram o layout",
+        "Modo colapsado e expandido da sidebar funcionam sem regressão visual"
+      ],
+      "assigned_to": "gemini-cli",
+      "started_at": "2026-03-07T10:30:00Z",
+      "completed_at": "2026-03-07T11:00:00Z",
+      "verification": {
+        "checks": [
+          { "id": "CHK-001", "title": "Suíte de Testes Visuais", "status": "pass", "evidence": "ui-redesign.spec.ts implementado com casos para app shell, sidebar e navegação" },
+          { "id": "CHK-002", "title": "Relatório de Regressão", "status": "pass", "evidence": "visual-regression-report.md documenta o status de cada componente e comportamento responsivo" }
+        ]
+      }
+    },
+    {
+      "task_id": "UIR-QA-018",
+      "task_kind": "qa",
+      "title": "Executar smoke test ponta a ponta do redesign e consolidar aceite final",
+      "description": "Executar smoke test ponta a ponta da experiência do redesign em ambiente local, cobrindo navegação entre telas, abertura de detalhes, uso do menu colapsável, execução de ação principal, acompanhamento por console dock e leitura de gráficos e painéis. Consolidar o aceite final com evidências, limitações e próximos refinamentos recomendados.",
+      "status": "done",
+      "depends_on": [
+        "UIR-QA-016",
+        "UIR-QA-017"
+      ],
+      "targets": [
+        "docs/ui-redesign/",
+        "scripts/"
+      ],
+      "outputs": {
+        "files": [
+          "docs/ui-redesign/e2e-smoke-report.md",
+          "docs/ui-redesign/final-acceptance-report.md"
+        ]
+      },
+      "immutability": {
+        "done_is_immutable": true
+      },
+      "planning": {
+        "complexity": "low",
+        "planned_agent": "agent-qa",
+        "preferred_runner": "gemini-cli",
+        "routing_reason": "Smoke final de aceitação é objetivo e procedural.",
+        "fallback_runners": [
+          "codex",
+          "claude-code"
+        ],
+        "planning_notes": "Encerramento de QA com foco em evidência e aceite."
+      },
+      "required_verification": [
+        "Smoke test cobre navegação, inspeção e execução básica",
+        "Aceite final registra evidências visuais e operacionais",
+        "Relatório final deixa claros os ganhos de UX e os próximos passos"
+      ],
+      "assigned_to": "gemini-cli",
+      "started_at": "2026-03-07T11:05:00Z",
+      "completed_at": "2026-03-07T11:15:00Z",
+      "verification": {
+        "checks": [
+          { "id": "CHK-001", "title": "Smoke Test E2E", "status": "pass", "evidence": "e2e-smoke-report.md valida navegação, inspeção e execução" },
+          { "id": "CHK-002", "title": "Aceite Final", "status": "pass", "evidence": "final-acceptance-report.md consolida checklists e aprova a entrega do redesign" }
+        ]
+      }
+    }
+  ],
+  "indexes": {
+    "by_status": {
+      "todo": 0,
+      "in_progress": 0,
+      "review": 0,
+      "done": 18
+    },
+    "by_kind": {
+      "spec": 6,
+      "impl": 9,
+      "qa": 3
+    },
+    "by_planned_agent": {
+      "agent-spec": [
+        "UIR-SPEC-001",
+        "UIR-SPEC-002",
+        "UIR-SPEC-003",
+        "UIR-SPEC-004",
+        "UIR-SPEC-005",
+        "UIR-SPEC-006"
+      ],
+      "agent-impl": [
+        "UIR-IMPL-007",
+        "UIR-IMPL-008",
+        "UIR-IMPL-009",
+        "UIR-IMPL-010",
+        "UIR-IMPL-011",
+        "UIR-IMPL-012",
+        "UIR-IMPL-013",
+        "UIR-IMPL-014",
+        "UIR-IMPL-015"
+      ],
+      "agent-qa": [
+        "UIR-QA-016",
+        "UIR-QA-017",
+        "UIR-QA-018"
+      ]
+    }
+  }
+}
