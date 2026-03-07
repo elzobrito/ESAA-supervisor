@@ -280,4 +280,4 @@ Before publishing publicly, it is still worth deciding:
 
 ## License
 
-Choose and add the appropriate license before publishing the repository.
+MIT
