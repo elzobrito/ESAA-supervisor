@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
 import { extractErrorMessage } from '../../services/api';
-import { resetTaskToTodo } from '../../services/projects';
+import { resetTaskToTodo, submitTaskReview } from '../../services/projects';
 import type { TaskSummary } from '../../services/projects';
 import { TaskStatusBadge } from './TaskStatusBadge';
 
@@ -26,6 +26,23 @@ export function TaskDetailDrawer({ projectId, task, open, onClose, onTaskUpdated
     setMutationError(null);
     try {
       await resetTaskToTodo(projectId, task.task_id, task.roadmap_id);
+      await onTaskUpdated();
+      onClose();
+    } catch (error) {
+      setMutationError(extractErrorMessage(error));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleReviewDecision = async (decision: 'approve' | 'reject') => {
+    setIsSubmitting(true);
+    setMutationError(null);
+    try {
+      await submitTaskReview(projectId, task.task_id, {
+        decision,
+        roadmapId: task.roadmap_id,
+      });
       await onTaskUpdated();
       onClose();
     } catch (error) {
@@ -88,6 +105,26 @@ export function TaskDetailDrawer({ projectId, task, open, onClose, onTaskUpdated
           {mutationError ? <p className="error-text">{mutationError}</p> : null}
         </div>
         <div className="drawer-footer">
+          {task.status === 'review' ? (
+            <>
+              <button
+                className="btn-primary-ds"
+                type="button"
+                onClick={() => void handleReviewDecision('approve')}
+                disabled={isSubmitting}
+              >
+                Aprovar review
+              </button>
+              <button
+                className="btn-danger-ds"
+                type="button"
+                onClick={() => void handleReviewDecision('reject')}
+                disabled={isSubmitting}
+              >
+                Rejeitar review
+              </button>
+            </>
+          ) : null}
           <button
             className="btn-secondary-ds"
             type="button"

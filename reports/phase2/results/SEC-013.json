@@ -1,0 +1,90 @@
+{
+  "task_id": "SEC-013",
+  "domain": "authorization",
+  "checks_total": 6,
+  "checks_pass": 0,
+  "checks_fail": 6,
+  "checks_partial": 0,
+  "checks_na": 0,
+  "worst_severity": "CRITICAL",
+  "results": [
+    {
+      "check_id": "AZ-001",
+      "check_name": "Controle de acesso ausente",
+      "status": "fail",
+      "severity_if_fail": "CRITICAL",
+      "evidence": {
+        "files": [
+          "backend/app/api/routes_tasks.py",
+          "backend/app/api/routes_projects.py",
+          "backend/app/api/routes_runs.py"
+        ],
+        "description": "Nenhum endpoint do backend possui middleware de autenticação ou autorização. Rotas de modificação de estado são públicas."
+      },
+      "remediation": "Implementar middleware de autenticação (JWT/Session) em todas as rotas da API."
+    },
+    {
+      "check_id": "AZ-002",
+      "check_name": "IDOR (Insecure Direct Object Reference)",
+      "status": "fail",
+      "severity_if_fail": "CRITICAL",
+      "evidence": {
+        "files": [
+          "backend/app/api/routes_projects.py"
+        ],
+        "description": "Endpoints /browse e /open permitem navegar e abrir qualquer diretório do sistema de arquivos do servidor como um projeto ESAA."
+      },
+      "remediation": "Restringir o escopo de navegação a um diretório de dados específico (sandboxing)."
+    },
+    {
+      "check_id": "AZ-003",
+      "check_name": "Verificação de permissão apenas no frontend",
+      "status": "fail",
+      "severity_if_fail": "CRITICAL",
+      "evidence": {
+        "files": [
+          "frontend/src/components/tasks/TaskDetailDrawer.tsx"
+        ],
+        "description": "Ações críticas como 'reset' e 'review' estão disponíveis sem qualquer verificação de papel ou permissão no backend ou frontend."
+      },
+      "remediation": "Implementar lógica de autorização no backend e refletir roles no frontend para controle de UI."
+    },
+    {
+      "check_id": "AZ-004",
+      "check_name": "Admin routes expostas",
+      "status": "fail",
+      "severity_if_fail": "HIGH",
+      "evidence": {
+        "files": [
+          "backend/app/api/routes_tasks.py",
+          "backend/app/api/routes_runs.py"
+        ],
+        "description": "Rotas operacionais administrativas estão em paths previsíveis e sem proteção de acesso."
+      },
+      "remediation": "Proteger rotas operacionais com controle de acesso baseado em roles (RBAC)."
+    },
+    {
+      "check_id": "AZ-005",
+      "check_name": "Escopo de permissões mal definido",
+      "status": "fail",
+      "severity_if_fail": "MEDIUM",
+      "evidence": {
+        "description": "O sistema não possui definição de papéis (Roles) ou permissões granulares."
+      },
+      "remediation": "Definir matriz de permissões (ex: Admin, Operator, Auditor) e implementar enforcement."
+    },
+    {
+      "check_id": "AZ-006",
+      "check_name": "Ações sensíveis sem confirmação",
+      "status": "fail",
+      "severity_if_fail": "LOW",
+      "evidence": {
+        "files": [
+          "frontend/src/components/tasks/TaskDetailDrawer.tsx"
+        ],
+        "description": "Ações de regressão de estado e aprovação de review ocorrem instantaneamente após o clique, sem diálogo de confirmação."
+      },
+      "remediation": "Adicionar steps de confirmação no frontend para todas as ações mutativas críticas."
+    }
+  ]
+}

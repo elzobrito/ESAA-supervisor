@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+﻿from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 from app.models.run_state import RunStatus
@@ -151,6 +151,11 @@ class TaskResetRequest(BaseModel):
     roadmap_id: Optional[str] = "roadmap.json"
 
 
+class TaskReviewRequest(BaseModel):
+    decision: str
+    roadmap_id: Optional[str] = "roadmap.json"
+
+
 class TaskMutationResponse(BaseModel):
     task_id: str
     roadmap_id: str
@@ -273,3 +278,4 @@ class EligibilityEntry(BaseModel):
 class EligibilityReportResponse(BaseModel):
     eligible_count: int
     tasks: List[EligibilityEntry] = []
+

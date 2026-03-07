@@ -7,11 +7,11 @@
     "run": {
       "run_id": null,
       "status": "initialized",
-      "last_event_seq": 54,
-      "projection_hash_sha256": "59a610600a3b5a39b246c1f189ba4b77e1975ba0c67b961292a906e22ce5a4b6",
+      "last_event_seq": 155,
+      "projection_hash_sha256": "71d84536ad15c320d2bd2367984750c255fb5e98f4d76c0b647c6a9cbfd06126",
       "verify_status": "ok"
     },
-    "updated_at": "2026-03-07T10:24:05Z"
+    "updated_at": "2026-03-07T11:30:58Z"
   },
   "project": {
     "name": "esaa-supervisor-poc",
@@ -750,7 +750,18 @@
     "todo": 0,
     "in_progress": 0,
     "review": 0,
-    "done": 18
+    "done": 18,
+    "by_status": {
+      "todo": 0,
+      "in_progress": 0,
+      "review": 0,
+      "done": 18
+    },
+    "by_kind": {
+      "spec": 4,
+      "impl": 11,
+      "qa": 3
+    }
   },
   "last_event_seq": 59
 }

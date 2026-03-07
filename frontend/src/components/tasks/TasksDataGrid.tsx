@@ -5,9 +5,11 @@ interface TasksDataGridProps {
   tasks: TaskSummary[];
   selectedTaskId: string | null;
   onSelectTask: (taskId: string) => void;
+  onRunTask: (task: TaskSummary) => void;
+  runningTaskRef: string | null;
 }
 
-export function TasksDataGrid({ tasks, selectedTaskId, onSelectTask }: TasksDataGridProps) {
+export function TasksDataGrid({ tasks, selectedTaskId, onSelectTask, onRunTask, runningTaskRef }: TasksDataGridProps) {
   return (
     <div className="data-grid-container">
       <table className="data-grid">
@@ -19,6 +21,7 @@ export function TasksDataGrid({ tasks, selectedTaskId, onSelectTask }: TasksData
             <th>Status</th>
             <th>Agente</th>
             <th>Elegibilidade</th>
+            <th>Ações</th>
           </tr>
         </thead>
         <tbody>
@@ -46,6 +49,19 @@ export function TasksDataGrid({ tasks, selectedTaskId, onSelectTask }: TasksData
               </td>
               <td>{task.assigned_to || '-'}</td>
               <td>{task.is_eligible ? 'Sim' : 'Não'}</td>
+              <td>
+                {task.status === 'todo' && (
+                  <button
+                    className="btn-primary-ds"
+                    type="button"
+                    disabled={runningTaskRef === task.task_ref}
+                    onClick={(e) => { e.stopPropagation(); onRunTask(task); }}
+                    style={{ fontSize: '0.75rem', padding: '4px 12px', minHeight: 'unset' }}
+                  >
+                    {runningTaskRef === task.task_ref ? 'Iniciando...' : 'Executar'}
+                  </button>
+                )}
+              </td>
             </tr>
           ))}
         </tbody>

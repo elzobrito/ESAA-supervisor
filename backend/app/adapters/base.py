@@ -39,6 +39,9 @@ class BaseAgentAdapter(ABC):
     def build_stdin(self, context: TaskContext, prompt: str) -> str | None:
         return None
 
+    def sanitize_outputs(self, stdout: str, stderr: str) -> tuple[str, str]:
+        return stdout, stderr
+
     def run(self, context: TaskContext, prompt: str, log_callback: LogCallback | None = None) -> AgentResult:
         started = time.perf_counter()
         command = self._prepare_command(self.build_command(context, prompt))
@@ -58,8 +61,7 @@ class BaseAgentAdapter(ABC):
                 env=merged_env,
                 check=False,
             )
-            stdout = completed.stdout or ""
-            stderr = completed.stderr or ""
+            stdout, stderr = self.sanitize_outputs(completed.stdout or "", completed.stderr or "")
             self._emit_logs(stdout, stderr, log_callback)
             duration_ms = int((time.perf_counter() - started) * 1000)
             metadata_extras = self._extract_metadata_extras(raw_output=self._merge_output(stdout, stderr), stdout=stdout, stderr=stderr)
@@ -73,8 +75,7 @@ class BaseAgentAdapter(ABC):
                 metadata_extras=metadata_extras,
             )
         except subprocess.TimeoutExpired as exc:
-            stdout = exc.stdout or ""
-            stderr = exc.stderr or ""
+            stdout, stderr = self.sanitize_outputs(exc.stdout or "", exc.stderr or "")
             self._emit_logs(stdout, stderr, log_callback)
             duration_ms = int((time.perf_counter() - started) * 1000)
             return self._issue_result(

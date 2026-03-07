@@ -4,8 +4,8 @@
     "esaa_version": "0.4.x",
     "generated_by": "esaa.project",
     "source_event_store": ".roadmap/activity.jsonl",
-    "last_event_seq": 149,
-    "updated_at": "2026-03-07T08:21:36Z"
+    "last_event_seq": 160,
+    "updated_at": "2026-03-07T12:12:00Z"
   },
   "issues": [
     {
@@ -109,7 +109,7 @@
     },
     {
       "issue_id": "ISS-RUN-492EEC5C",
-      "status": "open",
+      "status": "resolved",
       "severity": "medium",
       "title": "Agent reported issue while executing SEC-001",
       "baseline_id": null,
@@ -117,20 +117,25 @@
         "task_id": "SEC-001"
       },
       "evidence": "Agent command not found: codex",
-      "resolution": null,
+      "resolution": {
+        "summary": "Issue resolved manually via supervisor UI after operational verification.",
+        "evidence": [
+          "Resolved manually from the Issues page after operator review."
+        ]
+      },
       "links": {
         "reported_by_task_id": "SEC-001",
-        "fixes_task_id": null,
+        "fixes_task_id": "SEC-001",
         "hotfix_task_id": null
       },
       "timeline": {
         "created_event_seq": 115,
-        "resolved_event_seq": null
+        "resolved_event_seq": 150
       }
     },
     {
       "issue_id": "ISS-RUN-CE035C2F",
-      "status": "open",
+      "status": "resolved",
       "severity": "medium",
       "title": "Agent reported issue while executing SEC-001",
       "baseline_id": null,
@@ -138,20 +143,25 @@
         "task_id": "SEC-001"
       },
       "evidence": "codex exited with code 1",
-      "resolution": null,
+      "resolution": {
+        "summary": "Issue resolved manually via supervisor UI after operational verification.",
+        "evidence": [
+          "Resolved manually from the Issues page after operator review."
+        ]
+      },
       "links": {
         "reported_by_task_id": "SEC-001",
-        "fixes_task_id": null,
+        "fixes_task_id": "SEC-001",
         "hotfix_task_id": null
       },
       "timeline": {
         "created_event_seq": 116,
-        "resolved_event_seq": null
+        "resolved_event_seq": 151
       }
     },
     {
       "issue_id": "ISS-RUN-B3C387E0",
-      "status": "open",
+      "status": "resolved",
       "severity": "medium",
       "title": "Agent reported issue while executing SEC-001",
       "baseline_id": null,
@@ -159,20 +169,25 @@
         "task_id": "SEC-001"
       },
       "evidence": "Agent requested issue reporting from manual review flow.",
-      "resolution": null,
+      "resolution": {
+        "summary": "Issue resolved manually via supervisor UI after operational verification.",
+        "evidence": [
+          "Resolved manually from the Issues page after operator review."
+        ]
+      },
       "links": {
         "reported_by_task_id": "SEC-001",
-        "fixes_task_id": null,
+        "fixes_task_id": "SEC-001",
         "hotfix_task_id": null
       },
       "timeline": {
         "created_event_seq": 117,
-        "resolved_event_seq": null
+        "resolved_event_seq": 152
       }
     },
     {
       "issue_id": "ISS-RUN-71BF6720",
-      "status": "open",
+      "status": "resolved",
       "severity": "medium",
       "title": "Agent reported issue while executing SEC-001",
       "baseline_id": null,
@@ -180,20 +195,25 @@
         "task_id": "SEC-001"
       },
       "evidence": "Agent requested issue reporting from manual review flow.",
-      "resolution": null,
+      "resolution": {
+        "summary": "Issue resolved manually via supervisor UI after operational verification.",
+        "evidence": [
+          "Resolved manually from the Issues page after operator review."
+        ]
+      },
       "links": {
         "reported_by_task_id": "SEC-001",
-        "fixes_task_id": null,
+        "fixes_task_id": "SEC-001",
         "hotfix_task_id": null
       },
       "timeline": {
         "created_event_seq": 118,
-        "resolved_event_seq": null
+        "resolved_event_seq": 153
       }
     },
     {
       "issue_id": "ISS-RUN-051833A0",
-      "status": "open",
+      "status": "resolved",
       "severity": "medium",
       "title": "Agent reported issue while executing SEC-001",
       "baseline_id": null,
@@ -201,15 +221,20 @@
         "task_id": "SEC-001"
       },
       "evidence": "Agent requested issue reporting from manual review flow.",
-      "resolution": null,
+      "resolution": {
+        "summary": "Issue resolved manually via supervisor UI after operational verification.",
+        "evidence": [
+          "Resolved manually from the Issues page after operator review."
+        ]
+      },
       "links": {
         "reported_by_task_id": "SEC-001",
-        "fixes_task_id": null,
+        "fixes_task_id": "SEC-001",
         "hotfix_task_id": null
       },
       "timeline": {
         "created_event_seq": 125,
-        "resolved_event_seq": null
+        "resolved_event_seq": 154
       }
     },
     {
@@ -410,7 +435,7 @@
     },
     {
       "issue_id": "ISS-RUN-9BA8B158",
-      "status": "open",
+      "status": "resolved",
       "severity": "medium",
       "title": "Agent reported issue while executing SEC-011",
       "baseline_id": null,
@@ -418,15 +443,20 @@
         "task_id": "SEC-011"
       },
       "evidence": "Agent requested issue reporting from manual review flow.",
-      "resolution": null,
+      "resolution": {
+        "summary": "Issue resolved manually via supervisor UI after operational verification.",
+        "evidence": [
+          "Resolved manually from the Issues page after operator review."
+        ]
+      },
       "links": {
         "reported_by_task_id": "SEC-011",
-        "fixes_task_id": null,
+        "fixes_task_id": "SEC-011",
         "hotfix_task_id": null
       },
       "timeline": {
         "created_event_seq": 149,
-        "resolved_event_seq": null
+        "resolved_event_seq": 155
       }
     },
     {
@@ -488,6 +518,112 @@
       },
       "timeline": {
         "created_event_seq": null,
+        "resolved_event_seq": null
+      }
+    },
+    {
+      "issue_id": "ISS-0014",
+      "status": "resolved",
+      "severity": "medium",
+      "title": "Chat do projeto expirava em 10s e nao permitia excluir sessoes anteriores",
+      "baseline_id": null,
+      "affected": {
+        "paths": [
+          "frontend/src/services/chat.ts",
+          "frontend/src/pages/ChatPage.tsx",
+          "backend/app/api/routes_chat.py",
+          "backend/app/core/chat_store.py"
+        ]
+      },
+      "evidence": {
+        "symptom": "Conversas com agentes longos falhavam com timeout of 10000ms exceeded e o operador nao tinha como remover sessoes antigas do historico do projeto."
+      },
+      "resolution": {
+        "summary": "As chamadas de chat passaram a usar timeout dedicado mais alto e a superficie ganhou exclusao de sessoes no backend e na UI.",
+        "evidence": [
+          "Mensagens de chat agora usam timeout de 180s.",
+          "A tela de chat permite excluir sessoes pela lista e pela conversa ativa."
+        ]
+      },
+      "timeline": {
+        "created_event_seq": null,
+        "resolved_event_seq": null
+      }
+    },
+    {
+      "issue_id": "ISS-0015",
+      "status": "resolved",
+      "severity": "medium",
+      "title": "Gemini CLI no Windows emitia stacktrace AttachConsole failed mesmo com resposta valida",
+      "baseline_id": null,
+      "affected": {
+        "paths": [
+          "backend/app/adapters/base.py",
+          "backend/app/adapters/gemini_adapter.py"
+        ]
+      },
+      "evidence": {
+        "symptom": "O gemini-cli retornava proposta valida em stdout, mas o node-pty interno adicionava ruído recorrente em stderr com AttachConsole failed, poluindo o console e induzindo leitura errada de falha."
+      },
+      "resolution": {
+        "summary": "O pipeline dos adapters passou a permitir sanitizacao de stdout/stderr e o adapter do Gemini filtra ruído conhecido do node-pty no Windows sem ocultar erros reais.",
+        "evidence": [
+          "Runs do Gemini preservam a resposta valida do agente sem repetir o stacktrace benigno do conpty_console_list_agent.js."
+        ]
+      },
+      "timeline": {
+        "created_event_seq": null,
+        "resolved_event_seq": null
+      }
+    },
+    {
+      "issue_id": "ISS-0016",
+      "status": "resolved",
+      "severity": "medium",
+      "title": "Review de task foi entregue com contrato incompleto e helper inexistente",
+      "baseline_id": null,
+      "affected": {
+        "paths": [
+          "backend/app/api/routes_tasks.py",
+          "backend/app/api/schemas.py",
+          "frontend/src/services/projects.ts",
+          "frontend/src/components/tasks/TaskDetailDrawer.tsx",
+          "frontend/src/pages/RunsPage.tsx"
+        ]
+      },
+      "evidence": {
+        "symptom": "A feature de aprovar/rejeitar task em review introduziu import de schema inexistente, uso de EventWriter.now_iso() sem suporte real e corrupção do client projects.ts."
+      },
+      "resolution": {
+        "summary": "O schema TaskReviewRequest foi adicionado, o endpoint passou a usar utc_now_iso(), o service projects.ts foi restaurado e a UI de review foi integrada com contrato consistente.",
+        "evidence": [
+          "backend/app compila sem erro.",
+          "frontend volta a buildar com submitTaskReview funcional."
+        ]
+      },
+      "timeline": {
+        "created_event_seq": null,
+        "resolved_event_seq": null
+      }
+    },
+    {
+      "issue_id": "ISS-RUN-7352CB40",
+      "status": "open",
+      "severity": "medium",
+      "title": "Agent reported issue while executing SEC-012",
+      "baseline_id": null,
+      "affected": {
+        "task_id": "SEC-012"
+      },
+      "evidence": "Agent requested issue reporting from manual review flow.",
+      "resolution": null,
+      "links": {
+        "reported_by_task_id": "SEC-012",
+        "fixes_task_id": null,
+        "hotfix_task_id": null
+      },
+      "timeline": {
+        "created_event_seq": 158,
         "resolved_event_seq": null
       }
     }

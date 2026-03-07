@@ -1,0 +1,93 @@
+{
+  "task_id": "SEC-012",
+  "domain": "authentication",
+  "checks_total": 8,
+  "checks_pass": 0,
+  "checks_fail": 8,
+  "checks_partial": 0,
+  "checks_na": 0,
+  "worst_severity": "CRITICAL",
+  "results": [
+    {
+      "check_id": "AU-001",
+      "check_name": "Senhas armazenadas em texto plano",
+      "status": "fail",
+      "severity_if_fail": "CRITICAL",
+      "evidence": {
+        "files": ["backend/app/main.py", "reports/phase1/attack-surface-inventory.md"],
+        "description": "Ausencia total de banco de dados de usuarios e camada de autenticacao."
+      },
+      "remediation": "Implementar armazenamento seguro com bcrypt/argon2."
+    },
+    {
+      "check_id": "AU-002",
+      "check_name": "Hash de senha inseguro",
+      "status": "fail",
+      "severity_if_fail": "HIGH",
+      "evidence": {
+        "description": "Nao ha implementacao de hash de senhas no sistema."
+      },
+      "remediation": "Adicionar biblioteca passlib ou similar para hashing seguro."
+    },
+    {
+      "check_id": "AU-003",
+      "check_name": "Ausencia de MFA",
+      "status": "fail",
+      "severity_if_fail": "MEDIUM",
+      "evidence": {
+        "description": "MFA nao implementado."
+      },
+      "remediation": "Integrar TOTP/2FA."
+    },
+    {
+      "check_id": "AU-004",
+      "check_name": "Reset de senha inseguro",
+      "status": "fail",
+      "severity_if_fail": "HIGH",
+      "evidence": {
+        "description": "Fluxo de reset de senha inexistente."
+      },
+      "remediation": "Implementar fluxo de reset com tokens seguros e expiracao."
+    },
+    {
+      "check_id": "AU-005",
+      "check_name": "Sessoes sem expiração",
+      "status": "fail",
+      "severity_if_fail": "HIGH",
+      "evidence": {
+        "description": "O sistema nao possui controle de sessao ou expiracao."
+      },
+      "remediation": "Implementar sessoes com TTL e cookies HttpOnly/Secure."
+    },
+    {
+      "check_id": "AU-006",
+      "check_name": "Ausência de proteção contra brute force",
+      "status": "fail",
+      "severity_if_fail": "HIGH",
+      "evidence": {
+        "description": "Nenhum rate limiting configurado nos endpoints da API."
+      },
+      "remediation": "Adicionar middleware de rate limiting (ex: slowapi)."
+    },
+    {
+      "check_id": "AU-007",
+      "check_name": "Tokens permanentes",
+      "status": "fail",
+      "severity_if_fail": "HIGH",
+      "evidence": {
+        "description": "Ausencia de tokens de autenticacao."
+      },
+      "remediation": "Utilizar JWT com tempo de expiracao curto e refresh tokens."
+    },
+    {
+      "check_id": "AU-008",
+      "check_name": "Session fixation",
+      "status": "fail",
+      "severity_if_fail": "HIGH",
+      "evidence": {
+        "description": "Sem gerenciamento de sessao."
+      },
+      "remediation": "Regenerar ID de sessao apos login."
+    }
+  ]
+}

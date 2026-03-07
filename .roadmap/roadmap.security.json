@@ -7,11 +7,11 @@
     "run": {
       "run_id": null,
       "status": "initialized",
-      "last_event_seq": 149,
-      "projection_hash_sha256": "f51a3f1008e9c6ed224049002ab91264ba583db919d7b3cf2214f1bbc4756170",
+      "last_event_seq": 160,
+      "projection_hash_sha256": "374ca41c0168c89c6a298c9722e0c91225d5f7be0f26b618abf8ea0abb2deadd",
       "verify_status": "ok"
     },
-    "updated_at": "2026-03-07T10:55:07Z"
+    "updated_at": "2026-03-07T12:09:47Z"
   },
   "project": {
     "name": "PARCER Security Audit",
@@ -180,7 +180,7 @@
       "task_kind": "impl",
       "title": "Auditar Autenticação",
       "description": "Avaliar hash de senhas, MFA, reset de senha, expiração de sessão, brute force, tokens permanentes e session fixation. Playbook: authentication (AU-001 a AU-008).",
-      "status": "todo",
+      "status": "done",
       "depends_on": [
         "SEC-003"
       ],
@@ -199,14 +199,17 @@
       },
       "immutability": {
         "done_is_immutable": true
-      }
+      },
+      "assigned_to": "gemini-cli",
+      "started_at": "2026-03-07T11:35:19Z",
+      "completed_at": "2026-03-07T12:09:35Z"
     },
     {
       "task_id": "SEC-013",
       "task_kind": "impl",
       "title": "Auditar Autorização",
       "description": "Verificar controle de acesso, IDOR, permissões só no frontend, admin routes, escopo de permissões e ações sem confirmação. Playbook: authorization (AZ-001 a AZ-006).",
-      "status": "todo",
+      "status": "in_progress",
       "depends_on": [
         "SEC-012"
       ],
@@ -225,7 +228,9 @@
       },
       "immutability": {
         "done_is_immutable": true
-      }
+      },
+      "assigned_to": "gemini-cli",
+      "started_at": "2026-03-07T12:09:47Z"
     },
     {
       "task_id": "SEC-014",
@@ -717,10 +722,10 @@
   ],
   "indexes": {
     "by_status": {
-      "todo": 21,
-      "in_progress": 0,
+      "todo": 19,
+      "in_progress": 1,
       "review": 0,
-      "done": 5
+      "done": 6
     },
     "by_kind": {
       "spec": 5,

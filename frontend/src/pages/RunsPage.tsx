@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { extractErrorMessage } from '../services/api';
 import { useProject } from '../services/projectContext';
+import { submitTaskReview } from '../services/projects';
 import { subscribeToLogs, type LogEntry } from '../services/logStream';
 import { cancelRun, fetchRunStatus, startNextRun, startTaskRun, submitRunDecision, type RunState } from '../services/runs';
 import { RunConsoleDock } from '../components/runs/RunConsoleDock';
@@ -228,6 +229,19 @@ export function RunsPage() {
     };
   }, [pollRun, run, setLogs, setRunError, state, stopPolling]);
 
+  const handleReviewDecision = useCallback(async (decision: 'approve' | 'reject') => {
+    if (!state || !selectedTask) return;
+    try {
+      await submitTaskReview(state.project.id, selectedTask.task_id, {
+        decision,
+        roadmapId: selectedTask.roadmap_id
+      });
+      await reload();
+    } catch (err) {
+      setRunError(extractErrorMessage(err));
+    }
+  }, [reload, selectedTask, state]);
+
   const handleRunNext = useCallback(async () => {
     if (!state || state.roadmap_mode === 'aggregate') {
       return;
@@ -287,8 +301,8 @@ export function RunsPage() {
     }
   }, [pollRun, run, selectedAction, state]);
 
-  if (isLoading) return <div className="state-loading">Carregando execução...</div>;
-  if (error || !state) return <div className="state-error">{error || 'Projeto indisponível.'}</div>;
+  if (isLoading) return <div className="state-loading">Carregando execuÃ§Ã£o...</div>;
+  if (error || !state) return <div className="state-error">{error || 'Projeto indisponÃ­vel.'}</div>;
 
   return (
     <section className="runs-page">
@@ -305,7 +319,7 @@ export function RunsPage() {
             >
               {availableAgents.map((agent) => (
                 <option key={agent.agent_id} value={agent.agent_id} disabled={!agent.available}>
-                  {agent.label}{agent.available ? '' : ' (indisponível)'}
+                  {agent.label}{agent.available ? '' : ' (indisponÃ­vel)'}
                 </option>
               ))}
             </select>
@@ -320,7 +334,7 @@ export function RunsPage() {
               disabled={isRunning || runnableTasks.length === 0}
             >
               {runnableTasks.length === 0 ? (
-                <option value="">Nenhuma task disponível</option>
+                <option value="">Nenhuma task disponÃ­vel</option>
               ) : (
                 runnableTasks.map((task) => (
                   <option key={`${task.roadmap_id}:${task.task_id}`} value={task.task_id}>
@@ -335,7 +349,7 @@ export function RunsPage() {
             <span className="run-control-label">Roadmap</span>
             <div className="run-control-static">
               {state.roadmap_mode === 'aggregate'
-                ? 'Selecione um roadmap específico no topo para executar'
+                ? 'Selecione um roadmap especÃ­fico no topo para executar'
                 : selectedTask?.roadmap_label ?? state.available_roadmaps.find((item) => item.roadmap_id === state.selected_roadmap_id)?.label ?? 'Principal'}
             </div>
           </div>
@@ -346,7 +360,7 @@ export function RunsPage() {
             Executar task selecionada
           </button>
           <button className="btn-secondary-ds" onClick={() => void handleRunNext()} disabled={isRunning || !canRunNext}>
-            Executar próxima elegível
+            Executar prÃ³xima elegÃ­vel
           </button>
           <button className="btn-danger-ds" onClick={() => void handleCancel()} disabled={!isRunning}>
             Cancelar run
@@ -358,13 +372,13 @@ export function RunsPage() {
 
         {state.roadmap_mode === 'aggregate' ? (
           <p className="run-help-text">
-            A execução fica desabilitada no modo agregado. Escolha um roadmap específico no seletor do topo.
+            A execuÃ§Ã£o fica desabilitada no modo agregado. Escolha um roadmap especÃ­fico no seletor do topo.
           </p>
         ) : null}
         {selectedAgent ? (
           <p className={`run-help-text ${selectedAgent.available ? 'run-help-ok' : 'run-help-error'}`}>
             Agente selecionado: <strong>{selectedAgent.label}</strong> via <code>{selectedAgent.command}</code>
-            {selectedAgent.available ? ' disponível no ambiente.' : ' não encontrado no ambiente.'}
+            {selectedAgent.available ? ' disponÃ­vel no ambiente.' : ' nÃ£o encontrado no ambiente.'}
           </p>
         ) : null}
 
@@ -373,16 +387,16 @@ export function RunsPage() {
             <div>
               <div className="task-id-cell">{selectedTask.task_id}</div>
               <strong>{selectedTask.title}</strong>
-              <p>{selectedTask.description || 'Sem descrição adicional.'}</p>
+              <p>{selectedTask.description || 'Sem descriÃ§Ã£o adicional.'}</p>
             </div>
             <div className="run-task-preview-meta">
               <span className={`status-badge ${selectedTask.status}`}>{selectedTask.status}</span>
               <span className={`kind-badge`}>{selectedTask.task_kind}</span>
               <span className={selectedTask.is_eligible ? 'task-eligible-hint' : 'task-blocked-hint'}>
                 {selectedTask.is_eligible
-                  ? 'Elegível para execução'
+                  ? 'ElegÃ­vel para execuÃ§Ã£o'
                   : selectedTask.status === 'in_progress'
-                    ? 'Task já iniciada: a tela permite retomar a execução.'
+                    ? 'Task jÃ¡ iniciada: a tela permite retomar a execuÃ§Ã£o.'
                     : selectedTask.ineligibility_reasons.join(' | ')}
               </span>
             </div>
@@ -418,7 +432,7 @@ export function RunsPage() {
                   <span>{run.roadmap_id ?? state.selected_roadmap_id}</span>
                 </div>
                 <div>
-                  <strong>Início</strong>
+                  <strong>InÃ­cio</strong>
                   <span>{new Date(run.started_at).toLocaleString()}</span>
                 </div>
                 <div>
@@ -445,7 +459,7 @@ export function RunsPage() {
                       <span>{tokenUsage.input ?? 'n/d'}</span>
                     </div>
                     <div>
-                      <strong>Saída</strong>
+                      <strong>SaÃ­da</strong>
                       <span>{tokenUsage.output ?? 'n/d'}</span>
                     </div>
                     <div>
@@ -463,7 +477,7 @@ export function RunsPage() {
                           <div className="decision-history-meta">
                             <span>total: {item.total ?? 'n/d'}</span>
                             <span>entrada: {item.input ?? 'n/d'}</span>
-                            <span>saída: {item.output ?? 'n/d'}</span>
+                            <span>saÃ­da: {item.output ?? 'n/d'}</span>
                             {item.costUsd !== undefined ? <span>custo: ${item.costUsd.toFixed(6)}</span> : null}
                           </div>
                         </div>
@@ -473,11 +487,11 @@ export function RunsPage() {
                 </div>
               ) : null}
               <div className="run-json-card">
-                <div className="run-json-title">Payload bruto disponível hoje</div>
+                <div className="run-json-title">Payload bruto disponÃ­vel hoje</div>
                 <pre className="event-payload-pre">{JSON.stringify(run, null, 2)}</pre>
               </div>
               <div className="run-json-card">
-                <div className="run-json-title">Histórico de decisões</div>
+                <div className="run-json-title">HistÃ³rico de decisÃµes</div>
                 {run.decision_history && run.decision_history.length > 0 ? (
                   <div className="decision-history-list">
                     {run.decision_history.map((entry, index) => (
@@ -489,7 +503,7 @@ export function RunsPage() {
                         <div className="decision-history-meta">
                           {entry.proposed_action ? <span>proposta: {entry.proposed_action}</span> : null}
                           {entry.selected_action ? <span>escolha: {entry.selected_action}</span> : null}
-                          {entry.decision ? <span>decisão: {entry.decision}</span> : null}
+                          {entry.decision ? <span>decisÃ£o: {entry.decision}</span> : null}
                           {entry.actor ? <span>ator: {entry.actor}</span> : null}
                         </div>
                         {entry.notes ? <p>{entry.notes}</p> : null}
@@ -497,27 +511,45 @@ export function RunsPage() {
                     ))}
                   </div>
                 ) : (
-                  <p className="panel-empty">Nenhuma decisão manual registrada ainda.</p>
+                  <p className="panel-empty">Nenhuma decisÃ£o manual registrada ainda.</p>
                 )}
               </div>
             </div>
           ) : (
-            <p className="panel-empty">Nenhuma run iniciada nesta sessão.</p>
+            <p className="panel-empty">Nenhuma run iniciada nesta sessÃ£o.</p>
           )}
         </section>
 
         <section className="run-result-card">
-          <h3 className="run-steps-title">Decisão manual</h3>
+          <h3 className="run-steps-title">DecisÃ£o manual</h3>
+          {selectedTask?.status === 'review' ? (
+            <div className="run-decision-stack">
+              <div className="run-warning-box run-warning-neutral">
+                <strong>Tarefa em RevisÃ£o</strong>
+                <p>
+                  O trabalho tÃ©cnico foi concluÃ­do. VocÃª deseja aprovar a entrega ou rejeitar para uma nova execuÃ§Ã£o?
+                </p>
+              </div>
+              <div className="run-actions">
+                <button className="btn-primary-ds" onClick={() => void handleReviewDecision('approve')}>
+                  Aprovar (Mover para Done)
+                </button>
+                <button className="btn-secondary-ds" onClick={() => void handleReviewDecision('reject')}>
+                  Rejeitar (Voltar para Todo)
+                </button>
+              </div>
+            </div>
+          ) : null}
           {isWaitingDecision ? (
             <div className="run-decision-stack">
               <div className="run-warning-box run-warning-neutral">
                 <strong>Aguardando sua escolha</strong>
                 <p>
-                  O agente retornou uma proposta. Escolha a ação final e continue a execução.
+                  O agente retornou uma proposta. Escolha a aÃ§Ã£o final e continue a execuÃ§Ã£o.
                 </p>
               </div>
               <label className="run-control-field">
-                <span className="run-control-label">Ação a aplicar</span>
+                <span className="run-control-label">AÃ§Ã£o a aplicar</span>
                 <select
                   className="filter-select-ds"
                   value={selectedAction}
@@ -532,7 +564,7 @@ export function RunsPage() {
               </label>
               <div className="run-actions">
                 <button className="btn-primary-ds" onClick={() => void handleDecision('apply')}>
-                  Aplicar ação e continuar
+                  Aplicar aÃ§Ã£o e continuar
                 </button>
                 <button className="btn-secondary-ds" onClick={() => void handleDecision('reject')}>
                   Rejeitar proposta
@@ -543,7 +575,7 @@ export function RunsPage() {
             <div className="run-warning-box run-warning-neutral">
               <strong>Fluxo manual</strong>
               <p>
-                Quando o agente devolver uma proposta, a run vai pausar aqui em <code>waiting_input</code> para você escolher a ação.
+                Quando o agente devolver uma proposta, a run vai pausar aqui em <code>waiting_input</code> para vocÃª escolher a aÃ§Ã£o.
               </p>
             </div>
           )}

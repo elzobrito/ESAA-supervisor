@@ -32,6 +32,15 @@ function summarizeTokenUsage(metadata: Record<string, unknown> | undefined): str
   return `$${cost?.toFixed(6)}`;
 }
 
+function formatElapsedSeconds(totalSeconds: number): string {
+  if (totalSeconds < 60) {
+    return `${totalSeconds}s`;
+  }
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}m ${seconds}s`;
+}
+
 export function ChatPage() {
   const { state, isLoading, error } = useProject();
   const [sessions, setSessions] = useState<ChatSession[]>([]);
@@ -45,6 +54,8 @@ export function ChatPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [pendingMessage, setPendingMessage] = useState<{ content: string; createdAt: string } | null>(null);
+  const [waitingElapsedSeconds, setWaitingElapsedSeconds] = useState(0);
 
   const availableAgents = state?.available_agents ?? [];
   const availableTasks = useMemo(
@@ -100,6 +111,21 @@ export function ChatPage() {
     }
   }, [availableTasks, selectedTaskId]);
 
+  useEffect(() => {
+    if (!isSending || !pendingMessage) {
+      setWaitingElapsedSeconds(0);
+      return;
+    }
+    const updateElapsed = () => {
+      const startedAt = new Date(pendingMessage.createdAt).getTime();
+      const elapsed = Math.max(0, Math.floor((Date.now() - startedAt) / 1000));
+      setWaitingElapsedSeconds(elapsed);
+    };
+    updateElapsed();
+    const timer = window.setInterval(updateElapsed, 1000);
+    return () => window.clearInterval(timer);
+  }, [isSending, pendingMessage]);
+
   async function handleCreateSession() {
     if (!state) {
       return;
@@ -130,15 +156,21 @@ export function ChatPage() {
     if (!state || !selectedSession || !draft.trim()) {
       return;
     }
+    const outgoingContent = draft.trim();
+    const optimisticCreatedAt = new Date().toISOString();
     setPageError(null);
+    setDraft('');
+    setPendingMessage({ content: outgoingContent, createdAt: optimisticCreatedAt });
     setIsSending(true);
     try {
-      const detail = await sendChatMessage(state.project.id, selectedSession.session_id, draft.trim());
+      const detail = await sendChatMessage(state.project.id, selectedSession.session_id, outgoingContent);
       setSelectedSession(detail);
-      setDraft('');
+      setPendingMessage(null);
       const items = await fetchChatSessions(state.project.id);
       setSessions(items);
     } catch (err) {
+      setDraft(outgoingContent);
+      setPendingMessage(null);
       setPageError(extractErrorMessage(err));
     } finally {
       setIsSending(false);
@@ -176,6 +208,19 @@ export function ChatPage() {
 
   if (isLoading) return <div className="state-loading">Carregando chat...</div>;
   if (error || !state) return <div className="state-error">{error || 'Projeto indisponível.'}</div>;
+
+  const displayedMessages = selectedSession
+    ? [
+      ...selectedSession.messages,
+      ...(pendingMessage ? [{
+        message_id: 'pending-user-message',
+        role: 'user',
+        content: pendingMessage.content,
+        created_at: pendingMessage.createdAt,
+        metadata: {},
+      }] : []),
+    ]
+    : [];
 
   return (
     <section className="chat-page">
@@ -297,18 +342,28 @@ export function ChatPage() {
                     <span className="kind-badge">{selectedSession.mode}</span>
                     <span className="task-id-cell">{selectedSession.agent_id}</span>
                     {selectedSession.task_id ? <span className="task-id-cell">{selectedSession.task_id}</span> : null}
+                    {isSending && pendingMessage ? (
+                      <span className="chat-waiting-indicator">
+                        Aguardando resposta ha {formatElapsedSeconds(waitingElapsedSeconds)}
+                      </span>
+                    ) : null}
                   </div>
                   <div className="chat-messages">
-                    {selectedSession.messages.length === 0 ? (
+                    {displayedMessages.length === 0 ? (
                       <p className="panel-empty">Nenhuma mensagem ainda. Envie a primeira instrução.</p>
                     ) : (
-                      selectedSession.messages.map((message) => (
+                      displayedMessages.map((message) => (
                         <article key={message.message_id} className={`chat-message chat-message-${message.role}`}>
                           <div className="chat-message-top">
                             <strong>{message.role === 'assistant' ? selectedSession.agent_id : 'user'}</strong>
                             <span>{new Date(message.created_at).toLocaleString()}</span>
                             {message.role === 'assistant' ? (
                               <span>{summarizeTokenUsage(message.metadata) ?? 'sem telemetria de tokens'}</span>
+                            ) : null}
+                            {message.message_id === 'pending-user-message' ? (
+                              <span className="chat-message-pending-meta">
+                                enviada · aguardando resposta ha {formatElapsedSeconds(waitingElapsedSeconds)}
+                              </span>
                             ) : null}
                           </div>
                           <div className="chat-message-content markdown-body">
@@ -317,6 +372,20 @@ export function ChatPage() {
                         </article>
                       ))
                     )}
+                    {isSending && pendingMessage ? (
+                      <article className="chat-message chat-message-assistant chat-message-pending">
+                        <div className="chat-message-top">
+                          <strong>{selectedSession.agent_id}</strong>
+                          <span>processando</span>
+                          <span className="chat-message-pending-meta">
+                            sem resposta ainda · {formatElapsedSeconds(waitingElapsedSeconds)}
+                          </span>
+                        </div>
+                        <div className="chat-message-content">
+                          <p>O agente recebeu sua mensagem e a resposta ainda está em execução.</p>
+                        </div>
+                      </article>
+                    ) : null}
                   </div>
                   <div className="chat-composer">
                     <textarea

@@ -5,7 +5,7 @@
     "generated_by": "esaa.project",
     "source_event_store": ".roadmap/activity.jsonl",
     "last_event_seq": 114,
-    "updated_at": "2026-03-07T08:21:36Z"
+    "updated_at": "2026-03-07T12:12:00Z"
   },
   "lessons": [
     {
@@ -390,6 +390,78 @@
         "mode": "require_step",
         "applies_to": "verification_gate"
       }
+    },
+    {
+      "lesson_id": "LES-0024",
+      "status": "active",
+      "created_at": "2026-03-07T11:45:00Z",
+      "title": "Chats com agentes precisam de timeout operacional proprio e gestao do ciclo de vida das sessoes",
+      "mistake": "A interface reutilizou o timeout HTTP global de 10 segundos e nao oferecia exclusao de sessoes antigas, tornando o chat inutil para respostas longas e acumulando historico morto.",
+      "rule": "Superficies de chat com agentes devem usar timeout compatível com execucao real do modelo e expor criacao, retomada e exclusao de sessoes no proprio fluxo da UI.",
+      "scope": {
+        "task_kinds": [
+          "impl",
+          "qa"
+        ]
+      },
+      "enforcement": {
+        "mode": "require_step",
+        "applies_to": "acceptance_gate"
+      }
+    },
+    {
+      "lesson_id": "LES-0025",
+      "status": "active",
+      "created_at": "2026-03-07T11:45:00Z",
+      "title": "Adapters devem distinguir erro real de ruído conhecido do CLI no ambiente alvo",
+      "mistake": "O gemini-cli no Windows emitia stacktrace repetitivo do node-pty em stderr apesar de devolver resposta valida, e esse ruído aparecia como se a execucao estivesse falhando.",
+      "rule": "Ao integrar CLIs heterogeneos, o adapter deve sanitizar mensagens benignas e conhecidas do ambiente sem descartar a resposta valida nem esconder erros reais.",
+      "scope": {
+        "task_kinds": [
+          "impl",
+          "qa"
+        ]
+      },
+      "enforcement": {
+        "mode": "require_step",
+        "applies_to": "verification_gate"
+      }
+    },
+    {
+      "lesson_id": "LES-0026",
+      "status": "active",
+      "created_at": "2026-03-07T12:12:00Z",
+      "title": "Features cross-layer exigem fechamento completo de contrato antes do merge local",
+      "mistake": "A feature de review de task foi iniciada em partes do stack sem fechar schema, rota, client e UI ao mesmo tempo, causando backend quebrado e service do frontend corrompido.",
+      "rule": "Toda feature que cruza backend e frontend deve ser validada ponta a ponta antes de ser considerada pronta: schema compartilhado, rota, client, UI consumidora e build/compile final.",
+      "scope": {
+        "task_kinds": [
+          "impl",
+          "qa"
+        ]
+      },
+      "enforcement": {
+        "mode": "require_step",
+        "applies_to": "verification_gate"
+      }
+    },
+    {
+      "lesson_id": "LES-0027",
+      "status": "active",
+      "created_at": "2026-03-07T12:12:00Z",
+      "title": "Nao assumir helpers inexistentes em infraestrutura canônica",
+      "mistake": "O endpoint de review tentou usar EventWriter.now_iso(), mas o writer canônico só expunha utc_now_iso(), gerando falha 500 em runtime.",
+      "rule": "Antes de usar helpers de infraestrutura em caminhos de runtime, o agente deve verificar a API real do componente canônico no código, e não inferir métodos por nome.",
+      "scope": {
+        "task_kinds": [
+          "impl",
+          "qa"
+        ]
+      },
+      "enforcement": {
+        "mode": "require_step",
+        "applies_to": "verification_gate"
+      }
     }
   ],
   "indexes": {
@@ -424,7 +496,11 @@
         "LES-0020",
         "LES-0021",
         "LES-0022",
-        "LES-0023"
+        "LES-0023",
+        "LES-0024",
+        "LES-0025",
+        "LES-0026",
+        "LES-0027"
       ],
       "qa": [
         "LES-0001",
@@ -445,7 +521,11 @@
         "LES-0019",
         "LES-0021",
         "LES-0022",
-        "LES-0023"
+        "LES-0023",
+        "LES-0024",
+        "LES-0025",
+        "LES-0026",
+        "LES-0027"
       ]
     },
     "by_enforcement_applies_to": {
@@ -467,7 +547,10 @@
         "LES-0012",
         "LES-0018",
         "LES-0019",
-        "LES-0023"
+        "LES-0023",
+        "LES-0025",
+        "LES-0026",
+        "LES-0027"
       ],
       "acceptance_gate": [
         "LES-0006",
@@ -476,7 +559,8 @@
         "LES-0016",
         "LES-0017",
         "LES-0020",
-        "LES-0021"
+        "LES-0021",
+        "LES-0024"
       ]
     }
   }

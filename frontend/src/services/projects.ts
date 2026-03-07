@@ -97,8 +97,8 @@ export type StateResponse = {
     roadmap_id: string;
     label: string;
     task_count: number;
-      is_default: boolean;
-      is_consistent: boolean;
+    is_default: boolean;
+    is_consistent: boolean;
   }>;
   available_agents: Array<{
     agent_id: string;
@@ -136,31 +136,6 @@ export type IntegrityRepairResponse = {
   message: string;
 };
 
-const fallbackProjects: ProjectMetadata[] = [
-  {
-    id: 'esaa-supervisor-poc',
-    name: 'ESAA Supervisor PoC',
-    base_path: 'C:/xampp/htdocs/ESAA-supervisor',
-    is_active: true,
-  },
-];
-
-const fallbackState: StateResponse = {
-  project: { id: 'esaa-supervisor-poc', name: 'ESAA Supervisor PoC', base_path: '', is_active: true },
-  roadmap_mode: 'single',
-  selected_roadmap_id: 'roadmap.json',
-  available_roadmaps: [],
-  available_agents: [],
-  tasks: [],
-  open_issues: [],
-  lessons: [],
-  artifacts: [],
-  activity: [],
-  eligible_task_ids: [],
-  last_event_seq: 0,
-  is_consistent: true,
-};
-
 export async function fetchProjects(): Promise<ProjectMetadata[]> {
   const response = await api.get<ProjectMetadata[]>('/projects');
   return response.data;
@@ -196,6 +171,18 @@ export async function resetTaskToTodo(projectId: string, taskId: string, roadmap
   const response = await api.post<TaskMutationResponse>(`/projects/${projectId}/tasks/reset`, {
     task_id: taskId,
     roadmap_id: roadmapId,
+  });
+  return response.data;
+}
+
+export async function submitTaskReview(
+  projectId: string,
+  taskId: string,
+  options: { decision: 'approve' | 'reject'; roadmapId?: string },
+): Promise<TaskMutationResponse> {
+  const response = await api.post<TaskMutationResponse>(`/projects/${projectId}/tasks/${taskId}/review`, {
+    decision: options.decision,
+    roadmap_id: options.roadmapId,
   });
   return response.data;
 }

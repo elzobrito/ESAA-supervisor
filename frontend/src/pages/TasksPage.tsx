@@ -1,16 +1,23 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { TasksDataGrid } from '../components/tasks/TasksDataGrid';
 import { TaskDetailDrawer } from '../components/tasks/TaskDetailDrawer';
 import { TasksFiltersBar } from '../components/tasks/TasksFiltersBar';
+import { useShell } from '../components/layout/AppShell';
 import { useProject } from '../services/projectContext';
+import type { TaskSummary } from '../services/projects';
+import { startTaskRun } from '../services/runs';
 
 export function TasksPage() {
   const { state, isLoading, error, reload } = useProject();
+  const { setActiveRun, setActiveRunLogs, setActiveRunError } = useShell();
+  const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [kindFilter, setKindFilter] = useState('all');
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [runningTaskRef, setRunningTaskRef] = useState<string | null>(null);
 
   const kinds = useMemo(
     () => Array.from(new Set(state?.tasks.map((task) => task.task_kind).filter(Boolean) ?? [])),
@@ -33,6 +40,20 @@ export function TasksPage() {
     ?? state?.tasks.find((task) => task.task_ref === selectedTaskId)
     ?? null;
 
+  const handleRunTask = async (task: TaskSummary) => {
+    if (!state) return;
+    setRunningTaskRef(task.task_ref);
+    setActiveRunError(null);
+    setActiveRunLogs([]);
+    try {
+      const run = await startTaskRun(state.project.id, { taskId: task.task_id, roadmapId: task.roadmap_id });
+      setActiveRun(run);
+      navigate(`/projects/${state.project.id}/runs`);
+    } catch {
+      setRunningTaskRef(null);
+    }
+  };
+
   if (isLoading) return <div className="state-loading">Carregando tarefas...</div>;
   if (error || !state) return <div className="state-error">{error || 'Projeto indisponível.'}</div>;
 
@@ -48,7 +69,13 @@ export function TasksPage() {
         onStatusChange={setStatusFilter}
         onKindChange={setKindFilter}
       />
-      <TasksDataGrid tasks={filteredTasks} selectedTaskId={selectedTaskId} onSelectTask={setSelectedTaskId} />
+      <TasksDataGrid
+        tasks={filteredTasks}
+        selectedTaskId={selectedTaskId}
+        onSelectTask={setSelectedTaskId}
+        onRunTask={(task) => void handleRunTask(task)}
+        runningTaskRef={runningTaskRef}
+      />
       <TaskDetailDrawer
         projectId={state.project.id}
         task={selectedTask}

@@ -1776,6 +1776,18 @@ a:hover { text-decoration: underline; }
   gap: var(--space-2);
 }
 
+.chat-waiting-indicator,
+.chat-message-pending-meta {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-full);
+  background: rgba(99, 179, 255, 0.12);
+  color: var(--color-accent);
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+}
+
 .chat-messages {
   display: flex;
   flex-direction: column;
@@ -1799,6 +1811,11 @@ a:hover { text-decoration: underline; }
 
 .chat-message-assistant {
   border-color: rgba(255,255,255,0.08);
+}
+
+.chat-message-pending {
+  border-style: dashed;
+  background: rgba(255,255,255,0.03);
 }
 
 .chat-message-top {
