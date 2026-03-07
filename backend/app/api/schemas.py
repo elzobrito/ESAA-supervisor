@@ -1,7 +1,7 @@
 ﻿from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from datetime import datetime
-from app.models.run_state import RunStatus
+from app.models.run_state import RunExecutionMode, RunStatus
 
 
 class ProjectResponse(BaseModel):
@@ -133,12 +133,14 @@ class StateResponse(BaseModel):
 class RunStartRequest(BaseModel):
     agent_id: Optional[str] = "gemini-cli"
     roadmap_id: Optional[str] = "roadmap.json"
+    execution_mode: RunExecutionMode = RunExecutionMode.MANUAL
 
 
 class RunTaskRequest(BaseModel):
     task_id: str
     agent_id: Optional[str] = "gemini-cli"
     roadmap_id: Optional[str] = "roadmap.json"
+    execution_mode: RunExecutionMode = RunExecutionMode.MANUAL
 
 
 class RunDecisionRequest(BaseModel):
@@ -249,6 +251,7 @@ class RunResponse(BaseModel):
     task_id: str
     agent_id: str
     roadmap_id: Optional[str] = None
+    execution_mode: RunExecutionMode = RunExecutionMode.MANUAL
     status: RunStatus
     started_at: datetime
     ended_at: Optional[datetime] = None
@@ -260,11 +263,19 @@ class RunResponse(BaseModel):
     agent_result: Optional[Dict[str, Any]] = None
     decision_history: List[RunDecisionEntryResponse] = []
     logs: List[RunLogResponse] = []
+    completed_task_ids: List[str] = []
+    stop_after_current: bool = False
 
 
 class RunCancelResponse(BaseModel):
     run_id: str
     cancelled: bool
+    message: str
+
+
+class RunStopResponse(BaseModel):
+    run_id: str
+    stop_after_current: bool
     message: str
 
 

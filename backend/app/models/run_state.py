@@ -14,6 +14,12 @@ class RunStatus(str, Enum):
     DONE = "done"
     ERROR = "error"
 
+
+class RunExecutionMode(str, Enum):
+    MANUAL = "manual"
+    CONTINUOUS = "continuous"
+
+
 class RunLogEntry(BaseModel):
     timestamp: datetime = Field(default_factory=datetime.now)
     source: str  # stdout, stderr, system
@@ -35,6 +41,7 @@ class RunState(BaseModel):
     task_id: str
     agent_id: str
     roadmap_id: Optional[str] = None
+    execution_mode: RunExecutionMode = RunExecutionMode.MANUAL
     status: RunStatus = RunStatus.PREFLIGHT
     started_at: datetime = Field(default_factory=datetime.now)
     ended_at: Optional[datetime] = None
@@ -46,3 +53,5 @@ class RunState(BaseModel):
     agent_result: Optional[Dict[str, Any]] = None
     decision_history: List[RunDecisionEntry] = Field(default_factory=list)
     logs: List[RunLogEntry] = Field(default_factory=list)
+    completed_task_ids: List[str] = Field(default_factory=list)
+    stop_after_current: bool = False

@@ -209,7 +209,7 @@
       "task_kind": "impl",
       "title": "Auditar Autorização",
       "description": "Verificar controle de acesso, IDOR, permissões só no frontend, admin routes, escopo de permissões e ações sem confirmação. Playbook: authorization (AZ-001 a AZ-006).",
-      "status": "in_progress",
+      "status": "done",
       "depends_on": [
         "SEC-012"
       ],
@@ -230,7 +230,13 @@
         "done_is_immutable": true
       },
       "assigned_to": "gemini-cli",
-      "started_at": "2026-03-07T12:09:47Z"
+      "started_at": "2026-03-07T12:09:47Z",
+      "completed_at": "2026-03-07T13:45:00Z",
+      "verification": {
+        "checks": [
+          "Auditoria de autorizacao concluida. Identificadas falhas criticas em todos os dominios (AZ-001 a AZ-006)."
+        ]
+      }
     },
     {
       "task_id": "SEC-014",
@@ -723,9 +729,9 @@
   "indexes": {
     "by_status": {
       "todo": 19,
-      "in_progress": 1,
+      "in_progress": 0,
       "review": 0,
-      "done": 6
+      "done": 7
     },
     "by_kind": {
       "spec": 5,

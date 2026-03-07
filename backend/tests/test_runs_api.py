@@ -3,7 +3,7 @@ from fastapi.testclient import TestClient
 from unittest.mock import patch, MagicMock
 
 from app.main import app
-from app.models.run_state import RunState, RunStatus
+from app.models.run_state import RunExecutionMode, RunState, RunStatus
 from datetime import datetime
 
 client = TestClient(app)
@@ -78,7 +78,8 @@ def test_start_next_run_returns_run_response() -> None:
         started_at=datetime(2026, 3, 7, 4, 0, 0),
     )
     with patch("app.api.routes_runs.store") as mock_store, \
-         patch("app.api.routes_runs.RunEngine") as MockEngine:
+         patch("app.api.routes_runs.RunEngine") as MockEngine, \
+         patch("app.api.routes_runs._load_roadmap_variants", return_value={"roadmap.json": MOCK_ROADMAP}):
         _mock_store(mock_store)
         instance = MockEngine.return_value
         import asyncio
@@ -98,12 +99,41 @@ def test_start_next_run_returns_run_response() -> None:
     assert data["status"] == "preflight"
 
 
+def test_start_next_run_passes_execution_mode() -> None:
+    mock_run = RunState(
+        run_id="run-cont",
+        task_id="T-001",
+        agent_id="gemini-cli",
+        status=RunStatus.PREFLIGHT,
+        started_at=datetime(2026, 3, 7, 4, 0, 0),
+    )
+    with patch("app.api.routes_runs.store") as mock_store, \
+         patch("app.api.routes_runs.RunEngine") as MockEngine, \
+         patch("app.api.routes_runs._load_roadmap_variants", return_value={"roadmap.json": MOCK_ROADMAP}):
+        _mock_store(mock_store)
+        instance = MockEngine.return_value
+
+        async def fake_start(*args, **kwargs):
+            return mock_run
+
+        instance.start_run.side_effect = fake_start
+
+        response = client.post(
+            f"/api/v1/projects/{MOCK_PROJECT_ID}/runs/next",
+            json={"agent_id": "gemini-cli", "execution_mode": "continuous"},
+        )
+
+    assert response.status_code == 200
+    assert MockEngine.return_value.start_run.call_args.args[3] == RunExecutionMode.CONTINUOUS
+
+
 def test_start_next_run_422_when_no_eligible_task() -> None:
     no_task_state = MagicMock()
     no_task_state.roadmap = {"tasks": [], "indexes": {}}
     no_task_state.issues = {"issues": []}
 
-    with patch("app.api.routes_runs.store") as mock_store:
+    with patch("app.api.routes_runs.store") as mock_store, \
+         patch("app.api.routes_runs._load_roadmap_variants", return_value={"roadmap.json": {"tasks": []}}):
         mock_store.active_project = MOCK_PROJECT
         mock_store.get_state.return_value = no_task_state
 
@@ -135,3 +165,25 @@ def test_get_run_status_404_when_not_found() -> None:
             )
 
     assert response.status_code == 404
+
+
+def test_stop_after_current_activates_graceful_stop() -> None:
+    mock_run = RunState(
+        run_id="run-stop",
+        task_id="T-001",
+        agent_id="gemini-cli",
+        execution_mode=RunExecutionMode.CONTINUOUS,
+        status=RunStatus.RUNNING,
+        started_at=datetime(2026, 3, 7, 4, 0, 0),
+        stop_after_current=True,
+    )
+    with patch("app.api.routes_runs.store") as mock_store:
+        _mock_store(mock_store)
+        with patch("app.api.routes_runs.RunEngine.get_run_state", return_value=mock_run), \
+             patch("app.api.routes_runs.RunEngine.request_stop_after_current", return_value=mock_run):
+            response = client.post(
+                f"/api/v1/projects/{MOCK_PROJECT_ID}/runs/{mock_run.run_id}/stop-after-current"
+            )
+
+    assert response.status_code == 200
+    assert response.json()["stop_after_current"] is True

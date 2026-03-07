@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from app.api.schemas import RunResponse, RunStartRequest, RunTaskRequest, RunDecisionRequest, RunCancelResponse, EligibilityReportResponse, EligibilityEntry
+from app.api.schemas import RunResponse, RunStartRequest, RunTaskRequest, RunDecisionRequest, RunCancelResponse, RunStopResponse, EligibilityReportResponse, EligibilityEntry
 from app.core.selector import TaskSelector
 from app.core.run_engine import RunEngine
 from app.core.eligibility import EligibilityEngine
@@ -35,6 +35,7 @@ def _to_run_response(run_state) -> RunResponse:
         task_id=run_state.task_id,
         agent_id=run_state.agent_id,
         roadmap_id=run_state.roadmap_id,
+        execution_mode=run_state.execution_mode,
         status=run_state.status,
         started_at=run_state.started_at,
         ended_at=run_state.ended_at,
@@ -46,6 +47,8 @@ def _to_run_response(run_state) -> RunResponse:
         agent_result=run_state.agent_result,
         decision_history=[entry.model_dump(mode="json") for entry in run_state.decision_history],
         logs=[entry.model_dump(mode="json") for entry in run_state.logs],
+        completed_task_ids=run_state.completed_task_ids,
+        stop_after_current=run_state.stop_after_current,
     )
 
 
@@ -104,6 +107,7 @@ async def start_next_run(project_id: str, request: RunStartRequest):
             next_task["task_id"],
             request.agent_id,
             request.roadmap_id,
+            request.execution_mode,
             roadmap_dir=s.active_project.base_path,
             roadmap=roadmap,
             lessons=lessons,
@@ -137,6 +141,7 @@ async def start_task_run(project_id: str, request: RunTaskRequest):
             request.task_id,
             request.agent_id,
             request.roadmap_id,
+            request.execution_mode,
             roadmap_dir=s.active_project.base_path,
             roadmap=roadmap,
             lessons=lessons,
@@ -185,6 +190,29 @@ async def cancel_run(project_id: str, run_id: str):
         run_id=run_id,
         cancelled=cancelled,
         message="Cancellation requested" if cancelled else "Run could not be cancelled",
+    )
+
+
+@router.post("/{run_id}/stop-after-current", response_model=RunStopResponse)
+async def stop_after_current(project_id: str, run_id: str):
+    run_state = RunEngine.get_run_state(run_id)
+    if not run_state:
+        raise HTTPException(status_code=404, detail="Run not found")
+
+    from app.models.run_state import RunExecutionMode, RunStatus
+    if run_state.execution_mode != RunExecutionMode.CONTINUOUS:
+        raise HTTPException(status_code=409, detail="Graceful stop is only available for continuous runs")
+    if run_state.status in (RunStatus.DONE, RunStatus.ERROR, RunStatus.CANCELLED):
+        raise HTTPException(status_code=409, detail=f"Run already finished with status {run_state.status}")
+
+    updated = RunEngine.request_stop_after_current(run_id)
+    if not updated:
+        raise HTTPException(status_code=404, detail="Run not found")
+
+    return RunStopResponse(
+        run_id=run_id,
+        stop_after_current=updated.stop_after_current,
+        message="Run will stop after the current task finishes",
     )
 
 

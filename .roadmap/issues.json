@@ -5,7 +5,7 @@
     "generated_by": "esaa.project",
     "source_event_store": ".roadmap/activity.jsonl",
     "last_event_seq": 160,
-    "updated_at": "2026-03-07T12:12:00Z"
+    "updated_at": "2026-03-07T13:40:00Z"
   },
   "issues": [
     {
@@ -599,6 +599,36 @@
         "evidence": [
           "backend/app compila sem erro.",
           "frontend volta a buildar com submitTaskReview funcional."
+        ]
+      },
+      "timeline": {
+        "created_event_seq": null,
+        "resolved_event_seq": null
+      }
+    },
+    {
+      "issue_id": "ISS-0017",
+      "status": "resolved",
+      "severity": "medium",
+      "title": "Supervisor nao oferecia execucao sequencial continua nem parada graciosa ao fim da task atual",
+      "baseline_id": null,
+      "affected": {
+        "paths": [
+          "backend/app/core/run_engine.py",
+          "backend/app/api/routes_runs.py",
+          "backend/app/api/schemas.py",
+          "frontend/src/services/runs.ts",
+          "frontend/src/pages/RunsPage.tsx"
+        ]
+      },
+      "evidence": {
+        "symptom": "Toda run pausava para decisao manual em waiting_input e o operador so podia cancelar abruptamente a execucao, sem opcao de continuar automaticamente nem de encerrar a fila apenas apos concluir a task corrente."
+      },
+      "resolution": {
+        "summary": "Foi adicionado modo de execucao continua com autoaprovacao da proposta do agente e selecao automatica da proxima task elegivel, alem de um comando de parada graciosa para encerrar a sequencia depois da task atual.",
+        "evidence": [
+          "A API agora aceita execution_mode=continuous e expõe stop_after_current.",
+          "A UI de Runs passou a oferecer os modos Manual/Sequencial sem interrupcao e o botao Parar apos tarefa atual."
         ]
       },
       "timeline": {

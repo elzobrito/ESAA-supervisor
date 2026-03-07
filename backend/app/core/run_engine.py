@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 import uuid
 from datetime import datetime
@@ -11,7 +12,8 @@ from app.core.event_writer import EventWriter
 from app.core.locks import ProjectLock
 from app.core.log_stream import LogStreamer
 from app.core.projector import Projector
-from app.models.run_state import RunDecisionEntry, RunLogEntry, RunState, RunStatus
+from app.core.selector import TaskSelector
+from app.models.run_state import RunDecisionEntry, RunExecutionMode, RunLogEntry, RunState, RunStatus
 from app.models.task_context import ActiveLesson, TaskContext, TaskOutputs
 
 
@@ -30,6 +32,7 @@ class RunEngine:
         task_id: str,
         agent_id: str,
         roadmap_id: str | None = None,
+        execution_mode: RunExecutionMode = RunExecutionMode.MANUAL,
         roadmap_dir: str | None = None,
         roadmap: dict[str, Any] | None = None,
         lessons: list[dict[str, Any]] | None = None,
@@ -44,6 +47,7 @@ class RunEngine:
             task_id=task_id,
             agent_id=agent_id,
             roadmap_id=roadmap_id,
+            execution_mode=execution_mode,
             status=RunStatus.PREFLIGHT,
         )
         self._active_runs[run_id] = run_state
@@ -65,88 +69,94 @@ class RunEngine:
         run_state = self._active_runs[run_id]
 
         try:
-            self._log(run_id, "system", f"Starting preflight for task {run_state.task_id}...")
-            await asyncio.sleep(0.1)
-            self._ensure_not_cancelled(run_state)
+            while True:
+                self._log(run_id, "system", f"Starting preflight for task {run_state.task_id}...")
+                await asyncio.sleep(0.1)
+                self._ensure_not_cancelled(run_state)
 
-            task = self._find_task(roadmap, run_state.task_id) if roadmap else {
-                "task_id": run_state.task_id,
-                "task_kind": "impl",
-                "title": run_state.task_id,
-                "description": run_state.task_id,
-                "status": "todo",
-            }
-            if roadmap_dir:
-                self._claim_task(run_state, task=task, roadmap_dir=roadmap_dir)
-            self._ensure_not_cancelled(run_state)
-
-            run_state.status = RunStatus.RUNNING
-            self._log(run_id, "system", f"Invoking agent {run_state.agent_id}...")
-
-            context = self._build_context(task=task, roadmap_id=run_state.roadmap_id, lessons=lessons, roadmap_dir=roadmap_dir)
-            adapter = self.agent_router.get_adapter(run_state.agent_id)
-            result = await asyncio.to_thread(adapter.run, context, self._build_prompt(context), self._log_callback(run_id))
-
-            run_state.exit_code = result.metadata.exit_code
-            run_state.agent_result = result.model_dump(mode="json")
-            run_state.proposed_action = result.action
-            run_state.available_actions = ["claim", "complete", "issue.report"]
-            run_state.awaiting_decision = True
-            run_state.status = RunStatus.WAITING_INPUT
-            run_state.decision_history.append(
-                RunDecisionEntry(
-                    stage="proposal",
-                    proposed_action=result.action,
-                    actor=result.actor,
-                    notes="Agent returned a proposal and execution is paused for manual review.",
-                )
-            )
-            self._log(run_id, "system", f"Agent proposed action '{result.action}'. Awaiting manual decision.")
-
-            await self._wait_for_decision(run_id, run_state)
-            self._ensure_not_cancelled(run_state)
-
-            decision = self._decision_payloads.pop(run_id, {"decision": "reject"})
-            if decision.get("decision") != "apply":
-                run_state.decision_history.append(
-                    RunDecisionEntry(
-                        stage="decision",
-                        proposed_action=result.action,
-                        decision="reject",
-                        actor="user",
-                        notes="Manual reviewer rejected the proposal.",
-                    )
-                )
-                run_state.status = RunStatus.CANCELLED
-                run_state.error_message = "Agent proposal rejected by user"
-                run_state.awaiting_decision = False
-                run_state.ended_at = datetime.now()
-                self._log(run_id, "system", "Run stopped after manual rejection.")
-                return
-
-            selected_action = decision.get("selected_action") or result.action
-            run_state.status = RunStatus.SYNCING
-            run_state.awaiting_decision = False
-            run_state.proposed_action = selected_action
-            run_state.decision_history.append(
-                RunDecisionEntry(
-                    stage="decision",
-                    proposed_action=result.action,
-                    selected_action=selected_action,
-                    decision="apply",
-                    actor="user",
-                    notes="Manual reviewer approved continuation with the selected action.",
-                )
-            )
-            self._log(run_id, "system", f"Applying selected action '{selected_action}'...")
-
-            if roadmap_dir:
-                self._apply_selected_action(
-                    run_state=run_state,
-                    selected_action=selected_action,
+                current_roadmap = self._load_runtime_roadmap(
                     roadmap_dir=roadmap_dir,
-                    result=result.model_dump(mode="json"),
+                    roadmap_id=run_state.roadmap_id,
+                    fallback=roadmap,
                 )
+                task = self._find_task(current_roadmap, run_state.task_id) if current_roadmap else {
+                    "task_id": run_state.task_id,
+                    "task_kind": "impl",
+                    "title": run_state.task_id,
+                    "description": run_state.task_id,
+                    "status": "todo",
+                }
+                if roadmap_dir:
+                    self._claim_task(run_state, task=task, roadmap_dir=roadmap_dir)
+                    current_roadmap = self._load_runtime_roadmap(
+                        roadmap_dir=roadmap_dir,
+                        roadmap_id=run_state.roadmap_id,
+                        fallback=current_roadmap,
+                    )
+                    task = self._find_task(current_roadmap, run_state.task_id)
+                self._ensure_not_cancelled(run_state)
+
+                run_state.status = RunStatus.RUNNING
+                self._log(run_id, "system", f"Invoking agent {run_state.agent_id}...")
+
+                context = self._build_context(task=task, roadmap_id=run_state.roadmap_id, lessons=lessons, roadmap_dir=roadmap_dir)
+                adapter = self.agent_router.get_adapter(run_state.agent_id)
+                result = await asyncio.to_thread(adapter.run, context, self._build_prompt(context), self._log_callback(run_id))
+
+                run_state.exit_code = result.metadata.exit_code
+                run_state.agent_result = result.model_dump(mode="json")
+                run_state.proposed_action = result.action
+                run_state.available_actions = ["claim", "complete", "issue.report"]
+
+                selected_action = await self._resolve_selected_action(run_id, run_state, result.action, result.actor)
+                self._ensure_not_cancelled(run_state)
+                if selected_action is None:
+                    run_state.status = RunStatus.CANCELLED
+                    run_state.error_message = "Agent proposal rejected by user"
+                    run_state.awaiting_decision = False
+                    run_state.ended_at = datetime.now()
+                    self._log(run_id, "system", "Run stopped after manual rejection.")
+                    return
+
+                run_state.status = RunStatus.SYNCING
+                run_state.awaiting_decision = False
+                run_state.proposed_action = selected_action
+                self._log(run_id, "system", f"Applying selected action '{selected_action}'...")
+
+                if roadmap_dir:
+                    self._apply_selected_action(
+                        run_state=run_state,
+                        selected_action=selected_action,
+                        roadmap_dir=roadmap_dir,
+                        result=result.model_dump(mode="json"),
+                    )
+
+                if selected_action == "complete" and run_state.task_id not in run_state.completed_task_ids:
+                    run_state.completed_task_ids.append(run_state.task_id)
+
+                if run_state.execution_mode != RunExecutionMode.CONTINUOUS:
+                    break
+
+                if run_state.stop_after_current:
+                    self._log(run_id, "system", "Graceful stop requested. Continuous execution will stop after the current task.")
+                    break
+
+                next_task = self._select_next_task(
+                    roadmap_dir=roadmap_dir,
+                    roadmap_id=run_state.roadmap_id,
+                    current_task_id=run_state.task_id,
+                )
+                if not next_task:
+                    self._log(run_id, "system", "No further eligible tasks found. Continuous execution is complete.")
+                    break
+
+                run_state.task_id = next_task["task_id"]
+                run_state.agent_result = None
+                run_state.proposed_action = None
+                run_state.available_actions = []
+                run_state.exit_code = None
+                run_state.error_message = None
+                self._log(run_id, "system", f"Continuing automatically with next eligible task {run_state.task_id}.")
 
             run_state.status = RunStatus.DONE
             run_state.ended_at = datetime.now()
@@ -249,6 +259,126 @@ class RunEngine:
         if written:
             Projector(roadmap_dir, roadmap_id=run_state.roadmap_id or "roadmap.json").sync_to_disk(written)
             self._log(run_state.run_id, "system", f"Persisted {len(written)} event(s) for action '{selected_action}'.")
+
+    async def _resolve_selected_action(
+        self,
+        run_id: str,
+        run_state: RunState,
+        proposed_action: str,
+        actor: str,
+    ) -> str | None:
+        if run_state.execution_mode == RunExecutionMode.CONTINUOUS:
+            run_state.awaiting_decision = False
+            run_state.status = RunStatus.RUNNING
+            run_state.decision_history.append(
+                RunDecisionEntry(
+                    stage="proposal",
+                    proposed_action=proposed_action,
+                    actor=actor,
+                    notes="Agent returned a proposal and continuous mode auto-approved continuation.",
+                )
+            )
+            run_state.decision_history.append(
+                RunDecisionEntry(
+                    stage="decision",
+                    proposed_action=proposed_action,
+                    selected_action=proposed_action,
+                    decision="apply",
+                    actor="system",
+                    notes="Continuous mode applied the proposed action automatically.",
+                )
+            )
+            self._log(run_id, "system", f"Agent proposed action '{proposed_action}'. Continuous mode auto-approved continuation.")
+            return proposed_action
+
+        run_state.awaiting_decision = True
+        run_state.status = RunStatus.WAITING_INPUT
+        run_state.decision_history.append(
+            RunDecisionEntry(
+                stage="proposal",
+                proposed_action=proposed_action,
+                actor=actor,
+                notes="Agent returned a proposal and execution is paused for manual review.",
+            )
+        )
+        self._log(run_id, "system", f"Agent proposed action '{proposed_action}'. Awaiting manual decision.")
+
+        await self._wait_for_decision(run_id, run_state)
+        self._ensure_not_cancelled(run_state)
+
+        decision = self._decision_payloads.pop(run_id, {"decision": "reject"})
+        if decision.get("decision") != "apply":
+            run_state.decision_history.append(
+                RunDecisionEntry(
+                    stage="decision",
+                    proposed_action=proposed_action,
+                    decision="reject",
+                    actor="user",
+                    notes="Manual reviewer rejected the proposal.",
+                )
+            )
+            return None
+
+        selected_action = decision.get("selected_action") or proposed_action
+        run_state.decision_history.append(
+            RunDecisionEntry(
+                stage="decision",
+                proposed_action=proposed_action,
+                selected_action=selected_action,
+                decision="apply",
+                actor="user",
+                notes="Manual reviewer approved continuation with the selected action.",
+            )
+        )
+        return selected_action
+
+    @staticmethod
+    def _load_json(path: str) -> dict[str, Any]:
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+
+    def _load_runtime_roadmap(
+        self,
+        *,
+        roadmap_dir: str | None,
+        roadmap_id: str | None,
+        fallback: dict[str, Any],
+    ) -> dict[str, Any]:
+        if not roadmap_dir:
+            return fallback
+        roadmap_path = os.path.join(roadmap_dir, roadmap_id or "roadmap.json")
+        if not os.path.exists(roadmap_path):
+            return fallback
+        return self._load_json(roadmap_path)
+
+    def _load_open_issues(self, roadmap_dir: str | None) -> list[dict[str, Any]]:
+        if not roadmap_dir:
+            return []
+        issues_path = os.path.join(roadmap_dir, "issues.json")
+        if not os.path.exists(issues_path):
+            return []
+        payload = self._load_json(issues_path)
+        if isinstance(payload, dict):
+            issues = payload.get("issues", [])
+        else:
+            issues = payload
+        return [issue for issue in issues if issue.get("status") == "open"]
+
+    def _select_next_task(
+        self,
+        *,
+        roadmap_dir: str | None,
+        roadmap_id: str | None,
+        current_task_id: str,
+    ) -> Optional[dict[str, Any]]:
+        if not roadmap_dir:
+            return None
+        roadmap = self._load_runtime_roadmap(roadmap_dir=roadmap_dir, roadmap_id=roadmap_id, fallback={})
+        selector = TaskSelector(roadmap, self._load_open_issues(roadmap_dir))
+        next_task = selector.select_next_task()
+        if next_task and next_task.get("task_id") == current_task_id:
+            return None
+        return next_task
 
     def _build_context(
         self,
@@ -372,6 +502,22 @@ class RunEngine:
     @classmethod
     def get_run_state(cls, run_id: str) -> Optional[RunState]:
         return cls._active_runs.get(run_id)
+
+    @classmethod
+    def request_stop_after_current(cls, run_id: str) -> Optional[RunState]:
+        run_state = cls._active_runs.get(run_id)
+        if not run_state:
+            return None
+        run_state.stop_after_current = True
+        run_state.decision_history.append(
+            RunDecisionEntry(
+                stage="control",
+                decision="stop_after_current",
+                actor="user",
+                notes="Operator requested a graceful stop after the current task finishes.",
+            )
+        )
+        return run_state
 
     @classmethod
     def cancel_run(cls, project_id: str, run_id: str) -> bool:

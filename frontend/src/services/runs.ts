@@ -21,6 +21,7 @@ export type RunState = {
   task_id: string;
   agent_id: string;
   roadmap_id?: string | null;
+  execution_mode?: 'manual' | 'continuous';
   status: string;
   started_at: string;
   ended_at?: string | null;
@@ -32,22 +33,25 @@ export type RunState = {
   agent_result?: Record<string, unknown> | null;
   decision_history?: RunDecisionEntry[];
   logs?: RunLogEntry[];
+  completed_task_ids?: string[];
+  stop_after_current?: boolean;
 };
 
 export async function startNextRun(
   projectId: string,
-  options?: { agentId?: string; roadmapId?: string },
+  options?: { agentId?: string; roadmapId?: string; executionMode?: 'manual' | 'continuous' },
 ): Promise<RunState> {
   const response = await api.post<RunState>(`/projects/${projectId}/runs/next`, {
     agent_id: options?.agentId,
     roadmap_id: options?.roadmapId,
+    execution_mode: options?.executionMode,
   });
   return response.data;
 }
 
 export async function startTaskRun(
   projectId: string,
-  options: string | { taskId: string; agentId?: string; roadmapId?: string },
+  options: string | { taskId: string; agentId?: string; roadmapId?: string; executionMode?: 'manual' | 'continuous' },
 ): Promise<RunState> {
   const payload = typeof options === 'string'
     ? { task_id: options }
@@ -55,6 +59,7 @@ export async function startTaskRun(
         task_id: options.taskId,
         agent_id: options.agentId,
         roadmap_id: options.roadmapId,
+        execution_mode: options.executionMode,
       };
   const response = await api.post<RunState>(`/projects/${projectId}/runs/task`, {
     ...payload,
@@ -81,4 +86,8 @@ export async function submitRunDecision(
 
 export async function cancelRun(projectId: string, runId: string): Promise<void> {
   await api.delete(`/projects/${projectId}/runs/${runId}`);
+}
+
+export async function stopRunAfterCurrent(projectId: string, runId: string): Promise<void> {
+  await api.post(`/projects/${projectId}/runs/${runId}/stop-after-current`);
 }
