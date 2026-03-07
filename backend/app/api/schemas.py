@@ -180,6 +180,49 @@ class IntegrityRepairResponse(BaseModel):
     message: str
 
 
+class ChatCreateRequest(BaseModel):
+    agent_id: str
+    mode: str = "free"
+    task_id: Optional[str] = None
+    roadmap_id: Optional[str] = None
+    title: Optional[str] = None
+
+
+class ChatMessageCreateRequest(BaseModel):
+    content: str
+
+
+class ChatMessageResponse(BaseModel):
+    message_id: str
+    role: str
+    content: str
+    created_at: str
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+class ChatSessionResponse(BaseModel):
+    session_id: str
+    title: str
+    agent_id: str
+    mode: str
+    task_id: Optional[str] = None
+    roadmap_id: Optional[str] = None
+    created_at: str
+    updated_at: str
+    message_count: int = 0
+    last_message: Optional[str] = None
+
+
+class ChatSessionDetailResponse(ChatSessionResponse):
+    messages: List[ChatMessageResponse] = []
+
+
+class ChatSessionMutationResponse(BaseModel):
+    session_id: str
+    deleted: bool
+    message: str
+
+
 class RunLogResponse(BaseModel):
     timestamp: datetime
     source: str

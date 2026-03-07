@@ -2,6 +2,7 @@ import {
   Activity,
   AlertTriangle,
   BookOpen,
+  MessageSquare,
   LayoutDashboard,
   ListChecks,
   Package,
@@ -57,6 +58,11 @@ export function SidebarNav({
       label: 'Execução',
       badge: hasActiveRun ? 'AO VIVO' : null,
       badgeVariant: 'live',
+    },
+    {
+      to: `${base}/chat`,
+      icon: MessageSquare,
+      label: 'Chat',
     },
     {
       to: `${base}/activity`,

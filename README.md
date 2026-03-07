@@ -4,6 +4,8 @@ Local web supervisor for ESAA projects, built with FastAPI on the backend, React
 
 The application is designed to operate auditable roadmaps through the ESAA flow `claim -> complete -> review`, orchestrate agent executions (`codex`, `claude-code`, `gemini-cli`), and expose tasks, activity, artifacts, issues, lessons, and integrity checks through a single UI.
 
+Current project status: the canonical roadmap in `.roadmap/roadmap.json` has 18/18 tasks marked as `done`.
+
 ## Highlights
 
 - open ESAA projects directly from the local filesystem
@@ -14,6 +16,9 @@ The application is designed to operate auditable roadmaps through the ESAA flow 
 - browse project directories and read generated files from the UI
 - render Markdown artifacts in formatted mode and code/text files in expanded viewers
 - resolve issues, reset tasks to `todo`, and repair roadmap integrity from the interface
+- chat persistently with models inside the project, with free sessions or sessions linked to a specific task
+- track token usage across all agent executions in runs, activity timeline, and chat
+- preserve operational lessons in `.roadmap/lessons.json` to harden workflow, verification, acceptance, and output-contract gates
 
 ## Tech Stack
 
@@ -44,6 +49,7 @@ The application is designed to operate auditable roadmaps through the ESAA flow 
 - `.roadmap/issues.json`
 - `.roadmap/lessons.json`
 - `.roadmap/init.yaml`
+- `.roadmap/chat_sessions/*.json`
 
 ## Repository Layout
 
@@ -83,6 +89,28 @@ start-esaa-supervisor.bat
 - issue panel with resolve action
 - lessons panel
 - integrity panel with repair action
+- chat page with free and task-linked sessions
+
+### Chat
+
+- persistent chat by project stored in `.roadmap/chat_sessions/`
+- free sessions for open-ended exploration
+- task-linked sessions that load task context automatically
+- new session creation and message history browsable from the sidebar
+
+### Token Telemetry
+
+- token usage extracted from `codex`, `claude-code`, and `gemini-cli` outputs
+- displayed per execution in the runs console
+- attached to activity events under `agent_execution.token_usage`
+- shown per message in the chat surface when the agent returns usage data
+
+## Canonical Project State
+
+- roadmap status: 18/18 tasks `done`
+- issues ledger: 20 total, with 14 resolved and 6 still open
+- lessons ledger: 21 active lessons
+- canonical evidence lives under `.roadmap/`, especially `activity.jsonl`, `issues.json`, `lessons.json`, `roadmap.json`, and `chat_sessions/`
 
 ## Requirements
 
@@ -148,6 +176,7 @@ Frontend UI: `http://localhost:3000`
    - `Issues`
    - `Lessons`
    - `Integrity`
+   - `Chat`
 
 ## Agent Execution Notes
 
@@ -158,6 +187,15 @@ The adapters are tuned for local supervised execution:
 - `gemini-cli`: headless mode with `--approval-mode yolo`
 
 The backend exposes actual agent availability, and the UI disables unavailable agents accordingly.
+
+## Operational Lessons Captured
+
+The current lessons set in `.roadmap/lessons.json` formalizes the main operating constraints discovered during implementation and QA:
+
+- workflow gates enforce one action per invocation, serialized writes to `activity.jsonl`, explicit use of `.roadmap/init.yaml`, proper manual-resume semantics, and separation between free chat and task-linked chat
+- output-contract gates require `action=complete` when `file_updates` exist and make `prior_status` mandatory
+- verification gates cover scaffold completeness, projection rebuild from `activity.jsonl`, Windows CLI execution via `stdin`, schema-vs-instance integrity validation, per-agent headless contracts, and token telemetry persistence
+- acceptance gates require a root launcher, audience-oriented PoC documentation, readable artifact inspection, persistent runs across internal navigation, remediation actions in dashboards, hardened native select styling, and persistent per-project chat
 
 ## Validation
 
@@ -213,13 +251,14 @@ Short-term priorities:
 - improve multi-agent coordination around shared event stores
 - add richer run history and resume workflows
 - expand integrity diagnostics beyond roadmap hash mismatch
+- add agent model selector and cost estimates to the chat surface
 
 Medium-term directions:
 
 - stronger event-store locking and reconciliation tooling
-- more structured issue and lesson workflows
 - broader QA automation around roadmap projections and agent execution
 - packaging and deployment guidance beyond local PoC usage
+- export and reporting views for token usage across projects
 
 ## Known Limitations
 
@@ -227,6 +266,8 @@ Medium-term directions:
 - concurrent writes to a shared `activity.jsonl` still require operational discipline
 - the manual decision workflow exists, but its governance rules are still intentionally simple
 - the system is optimized for local supervision, not multi-user production deployment
+- 6 issues remain open in `.roadmap/issues.json`, concentrated in runtime escalations for `SEC-001` and `SEC-011`
+- the remaining open issues are historical run-level records around `codex` execution failure or manual issue-report requests; they do not change the fact that the canonical roadmap is fully completed, but they still require explicit operational closure for a clean ledger
 
 ## Open Source Readiness
 

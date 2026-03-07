@@ -196,6 +196,7 @@ class RunEngine:
             raise ValueError(f"Unsupported selected action: {selected_action}")
 
         payload = result.get("payload", {})
+        execution_metadata = self._build_execution_metadata(run_state=run_state, result=result)
         writer = EventWriter(roadmap_dir=roadmap_dir)
         events: list[dict[str, Any]] = []
 
@@ -208,6 +209,8 @@ class RunEngine:
                 "task_id": run_state.task_id,
                 "verification": {"checks": verification_checks},
             }
+            if execution_metadata:
+                complete_payload["agent_execution"] = execution_metadata
             if payload.get("error"):
                 complete_payload["fixes"] = payload["error"]
             events.extend(
@@ -237,6 +240,7 @@ class RunEngine:
                         "title": f"Agent reported issue while executing {run_state.task_id}",
                         "evidence": payload.get("error") or "Agent requested issue reporting from manual review flow.",
                         "affected": {"task_id": run_state.task_id},
+                        **({"agent_execution": execution_metadata} if execution_metadata else {}),
                     },
                 )
             )
@@ -275,6 +279,24 @@ class RunEngine:
                 "title": task.get("title", ""),
             },
         )
+
+    @staticmethod
+    def _build_execution_metadata(*, run_state: RunState, result: dict[str, Any]) -> dict[str, Any]:
+        metadata = result.get("metadata", {})
+        if not isinstance(metadata, dict):
+            return {}
+
+        execution: dict[str, Any] = {
+            "run_id": run_state.run_id,
+            "agent_id": run_state.agent_id,
+            "duration_ms": metadata.get("duration_ms"),
+            "exit_code": metadata.get("exit_code"),
+            "timed_out": metadata.get("timed_out", False),
+        }
+        token_usage = metadata.get("token_usage")
+        if isinstance(token_usage, dict) and token_usage:
+            execution["token_usage"] = token_usage
+        return {key: value for key, value in execution.items() if value is not None and value != {}}
 
     @staticmethod
     def _load_init_prompt(workspace_root: str | None) -> str:

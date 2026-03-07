@@ -36,6 +36,7 @@ class AgentMetadata(BaseModel):
     stderr: str = ""
     command: list[str] = Field(default_factory=list)
     timed_out: bool = False
+    token_usage: dict[str, Any] | None = None
 
 
 class AgentResult(BaseModel):

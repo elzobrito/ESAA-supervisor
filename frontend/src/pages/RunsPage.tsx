@@ -11,6 +11,75 @@ import { useShell } from '../components/layout/AppShell';
 
 const TERMINAL_STATUSES = new Set(['done', 'error', 'cancelled']);
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function getTokenUsage(run: RunState | null): {
+  total?: number;
+  input?: number;
+  output?: number;
+  totalCostUsd?: number;
+  byModel: Array<{ model: string; total?: number; input?: number; output?: number; costUsd?: number }>;
+} | null {
+  const agentResult = run?.agent_result;
+  if (!isRecord(agentResult)) {
+    return null;
+  }
+  const metadata = agentResult.metadata;
+  if (!isRecord(metadata)) {
+    return null;
+  }
+  const tokenUsage = metadata.token_usage;
+  if (!isRecord(tokenUsage)) {
+    return null;
+  }
+
+  const models = tokenUsage.models;
+  const byModel = !isRecord(models)
+    ? []
+    : Object.entries(models).map(([model, payload]) => {
+        const record = isRecord(payload) ? payload : {};
+        const input = typeof record.input === 'number'
+          ? record.input
+          : typeof record.prompt === 'number'
+            ? record.prompt
+            : typeof record.inputTokens === 'number'
+              ? record.inputTokens
+              : undefined;
+        const output = typeof record.candidates === 'number'
+          ? record.candidates
+          : typeof record.output === 'number'
+            ? record.output
+            : typeof record.outputTokens === 'number'
+              ? record.outputTokens
+              : undefined;
+        const total = typeof record.total === 'number'
+          ? record.total
+          : (input ?? 0) + (output ?? 0) || undefined;
+        return {
+          model,
+          total,
+          input,
+          output,
+          costUsd: typeof record.costUSD === 'number' ? record.costUSD : undefined,
+        };
+      });
+
+  const total = typeof tokenUsage.total === 'number'
+    ? tokenUsage.total
+    : byModel.reduce((sum, item) => sum + (item.total ?? 0), 0) || undefined;
+  const input = typeof tokenUsage.input === 'number'
+    ? tokenUsage.input
+    : byModel.reduce((sum, item) => sum + (item.input ?? 0), 0) || undefined;
+  const output = typeof tokenUsage.output === 'number'
+    ? tokenUsage.output
+    : byModel.reduce((sum, item) => sum + (item.output ?? 0), 0) || undefined;
+  const totalCostUsd = typeof tokenUsage.total_cost_usd === 'number' ? tokenUsage.total_cost_usd : undefined;
+
+  return { total, input, output, totalCostUsd, byModel };
+}
+
 export function RunsPage() {
   const { state, isLoading, error, reload } = useProject();
   const {
@@ -43,6 +112,7 @@ export function RunsPage() {
   const isWaitingDecision = run?.status === 'waiting_input' && run.awaiting_decision;
   const availableAgents = state?.available_agents ?? [];
   const selectedAgent = availableAgents.find((agent) => agent.agent_id === selectedAgentId) ?? null;
+  const tokenUsage = getTokenUsage(run);
 
   useEffect(() => {
     if (!selectedTaskId && runnableTasks.length > 0) {
@@ -360,6 +430,46 @@ export function RunsPage() {
                 <div className="run-warning-box">
                   <strong>Erro reportado</strong>
                   <p>{run.error_message}</p>
+                </div>
+              ) : null}
+              {tokenUsage ? (
+                <div className="run-json-card">
+                  <div className="run-json-title">Uso de tokens</div>
+                  <div className="run-result-grid">
+                    <div>
+                      <strong>Total</strong>
+                      <span>{tokenUsage.total ?? 'n/d'}</span>
+                    </div>
+                    <div>
+                      <strong>Entrada</strong>
+                      <span>{tokenUsage.input ?? 'n/d'}</span>
+                    </div>
+                    <div>
+                      <strong>Saída</strong>
+                      <span>{tokenUsage.output ?? 'n/d'}</span>
+                    </div>
+                    <div>
+                      <strong>Custo</strong>
+                      <span>{tokenUsage.totalCostUsd !== undefined ? `$${tokenUsage.totalCostUsd.toFixed(6)}` : 'n/d'}</span>
+                    </div>
+                  </div>
+                  {tokenUsage.byModel.length > 0 ? (
+                    <div className="decision-history-list">
+                      {tokenUsage.byModel.map((item) => (
+                        <div key={item.model} className="decision-history-item">
+                          <div className="decision-history-top">
+                            <strong>{item.model}</strong>
+                          </div>
+                          <div className="decision-history-meta">
+                            <span>total: {item.total ?? 'n/d'}</span>
+                            <span>entrada: {item.input ?? 'n/d'}</span>
+                            <span>saída: {item.output ?? 'n/d'}</span>
+                            {item.costUsd !== undefined ? <span>custo: ${item.costUsd.toFixed(6)}</span> : null}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
               ) : null}
               <div className="run-json-card">

@@ -7,6 +7,7 @@ import { TasksPage } from './pages/TasksPage';
 import { RunsPage } from './pages/RunsPage';
 import { ActivityPage } from './pages/ActivityPage';
 import { ArtifactsPage } from './pages/ArtifactsPage';
+import { ChatPage } from './pages/ChatPage';
 import { IntegrityPage } from './pages/IntegrityPage';
 import { IssuesPage } from './pages/IssuesPage';
 import { LessonsPage } from './pages/LessonsPage';
@@ -22,6 +23,7 @@ export function AppRouter() {
           <Route path="tasks" element={<TasksPage />} />
           <Route path="runs" element={<RunsPage />} />
           <Route path="activity" element={<ActivityPage />} />
+          <Route path="chat" element={<ChatPage />} />
           <Route path="artifacts" element={<ArtifactsPage />} />
           <Route path="integrity" element={<IntegrityPage />} />
           <Route path="issues" element={<IssuesPage />} />

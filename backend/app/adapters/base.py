@@ -62,6 +62,7 @@ class BaseAgentAdapter(ABC):
             stderr = completed.stderr or ""
             self._emit_logs(stdout, stderr, log_callback)
             duration_ms = int((time.perf_counter() - started) * 1000)
+            metadata_extras = self._extract_metadata_extras(raw_output=self._merge_output(stdout, stderr), stdout=stdout, stderr=stderr)
             return self._normalize_result(
                 context=context,
                 exit_code=completed.returncode,
@@ -69,6 +70,7 @@ class BaseAgentAdapter(ABC):
                 stderr=stderr,
                 duration_ms=duration_ms,
                 command=command,
+                metadata_extras=metadata_extras,
             )
         except subprocess.TimeoutExpired as exc:
             stdout = exc.stdout or ""
@@ -84,6 +86,7 @@ class BaseAgentAdapter(ABC):
                 duration_ms=duration_ms,
                 command=command,
                 timed_out=True,
+                metadata_extras=self._extract_metadata_extras(raw_output=self._merge_output(stdout, stderr), stdout=stdout, stderr=stderr),
             )
         except FileNotFoundError:
             duration_ms = int((time.perf_counter() - started) * 1000)
@@ -95,6 +98,7 @@ class BaseAgentAdapter(ABC):
                 stderr="",
                 duration_ms=duration_ms,
                 command=command,
+                metadata_extras={},
             )
 
     @staticmethod
@@ -115,9 +119,11 @@ class BaseAgentAdapter(ABC):
         stderr: str,
         duration_ms: int,
         command: list[str],
+        metadata_extras: dict | None = None,
     ) -> AgentResult:
         raw_output = self._merge_output(stdout, stderr)
-        parsed = self._extract_result_json(raw_output)
+        parsed = self._extract_result_payload(raw_output=raw_output, stdout=stdout, stderr=stderr)
+        metadata_extras = metadata_extras or {}
         if exit_code != 0 and parsed is None:
             return self._issue_result(
                 context=context,
@@ -127,6 +133,7 @@ class BaseAgentAdapter(ABC):
                 stderr=stderr,
                 duration_ms=duration_ms,
                 command=command,
+                metadata_extras=metadata_extras,
             )
 
         if parsed is None:
@@ -138,6 +145,7 @@ class BaseAgentAdapter(ABC):
                 stderr=stderr,
                 duration_ms=duration_ms,
                 command=command,
+                metadata_extras=metadata_extras,
             )
 
         payload = parsed.get("payload", {})
@@ -162,6 +170,7 @@ class BaseAgentAdapter(ABC):
                 stdout=stdout,
                 stderr=stderr,
                 command=command,
+                **metadata_extras,
             ),
         )
 
@@ -176,6 +185,7 @@ class BaseAgentAdapter(ABC):
         duration_ms: int,
         command: list[str],
         timed_out: bool = False,
+        metadata_extras: dict | None = None,
     ) -> AgentResult:
         return AgentResult(
             action="issue.report",
@@ -189,8 +199,15 @@ class BaseAgentAdapter(ABC):
                 stderr=stderr,
                 command=command,
                 timed_out=timed_out,
+                **(metadata_extras or {}),
             ),
         )
+
+    def _extract_result_payload(self, *, raw_output: str, stdout: str, stderr: str) -> dict | None:
+        return self._extract_result_json(raw_output)
+
+    def _extract_metadata_extras(self, *, raw_output: str, stdout: str, stderr: str) -> dict:
+        return {}
 
     @staticmethod
     def _merge_output(stdout: str, stderr: str) -> str:

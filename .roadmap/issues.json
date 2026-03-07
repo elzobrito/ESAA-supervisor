@@ -5,7 +5,7 @@
     "generated_by": "esaa.project",
     "source_event_store": ".roadmap/activity.jsonl",
     "last_event_seq": 149,
-    "updated_at": "2026-03-07T10:55:07Z"
+    "updated_at": "2026-03-07T08:21:36Z"
   },
   "issues": [
     {
@@ -426,6 +426,68 @@
       },
       "timeline": {
         "created_event_seq": 149,
+        "resolved_event_seq": null
+      }
+    },
+    {
+      "issue_id": "ISS-0012",
+      "status": "resolved",
+      "severity": "medium",
+      "title": "Supervisor nao oferecia superficie de chat persistente por projeto",
+      "baseline_id": null,
+      "affected": {
+        "paths": [
+          "backend/app/api/routes_chat.py",
+          "backend/app/core/chat_store.py",
+          "backend/app/core/chat_service.py",
+          "frontend/src/pages/ChatPage.tsx",
+          "frontend/src/services/chat.ts"
+        ]
+      },
+      "evidence": {
+        "symptom": "O operador precisava sair do supervisor para conversar com os modelos e nao havia historico persistido, chat livre nem chat vinculado à task dentro do projeto ativo."
+      },
+      "resolution": {
+        "summary": "Foi criada uma superficie completa de chat com sessoes livres e vinculadas à task, persistidas em .roadmap/chat_sessions e acessiveis pela UI.",
+        "evidence": [
+          "Nova rota /projects/:projectId/chat com criacao de sessoes e envio de mensagens.",
+          "Historico do chat fica versionado por projeto em .roadmap/chat_sessions/*.json."
+        ]
+      },
+      "timeline": {
+        "created_event_seq": null,
+        "resolved_event_seq": null
+      }
+    },
+    {
+      "issue_id": "ISS-0013",
+      "status": "resolved",
+      "severity": "medium",
+      "title": "Telemetria de tokens era visivel apenas parcialmente e nao estava integrada ao chat",
+      "baseline_id": null,
+      "affected": {
+        "paths": [
+          "backend/app/adapters/codex_adapter.py",
+          "backend/app/adapters/claude_adapter.py",
+          "backend/app/adapters/gemini_adapter.py",
+          "frontend/src/pages/RunsPage.tsx",
+          "frontend/src/components/activity/ActivityTimeline.tsx",
+          "frontend/src/pages/ChatPage.tsx"
+        ]
+      },
+      "evidence": {
+        "symptom": "O consumo de tokens nao aparecia de forma uniforme entre agentes e nao havia leitura consolidada em chat, activity e trilha auditavel dos eventos."
+      },
+      "resolution": {
+        "summary": "A telemetria de tokens passou a ser extraida para codex, claude-code e gemini-cli, exibida na UI e anexada ao payload dos eventos aplicados via agent_execution.token_usage.",
+        "evidence": [
+          "Runs exibem uso de tokens por execucao e por modelo.",
+          "Activity mostra consumo agregado por task e por evento.",
+          "Mensagens do chat exibem tokens/custo quando o agente retorna esse dado."
+        ]
+      },
+      "timeline": {
+        "created_event_seq": null,
         "resolved_event_seq": null
       }
     }

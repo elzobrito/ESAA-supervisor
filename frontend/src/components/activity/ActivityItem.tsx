@@ -8,6 +8,10 @@ interface ActivityItemProps {
   onSelect: (event: ActivityEvent) => void;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 function getEventTone(action: string) {
   if (action.includes('review')) {
     return {
@@ -57,9 +61,39 @@ function summarize(event: ActivityEvent) {
   return `Evento ${event.action} registrado por ${event.actor}.`;
 }
 
+function eventUsageLabel(event: ActivityEvent): string | null {
+  const payload = event.payload;
+  if (!isRecord(payload)) {
+    return null;
+  }
+  const execution = payload.agent_execution;
+  if (!isRecord(execution)) {
+    return null;
+  }
+  const tokenUsage = execution.token_usage;
+  if (!isRecord(tokenUsage)) {
+    return null;
+  }
+
+  const total = typeof tokenUsage.total === 'number' ? tokenUsage.total : null;
+  const totalCostUsd = typeof tokenUsage.total_cost_usd === 'number' ? tokenUsage.total_cost_usd : null;
+  if (total === null && totalCostUsd === null) {
+    return null;
+  }
+
+  if (total !== null && totalCostUsd !== null) {
+    return `${total} tokens · $${totalCostUsd.toFixed(6)}`;
+  }
+  if (total !== null) {
+    return `${total} tokens`;
+  }
+  return `$${totalCostUsd?.toFixed(6)}`;
+}
+
 export function ActivityItem({ event, selected, onSelect }: ActivityItemProps) {
   const tone = getEventTone(event.action);
   const Icon = tone.icon;
+  const usageLabel = eventUsageLabel(event);
 
   return (
     <button
@@ -84,6 +118,7 @@ export function ActivityItem({ event, selected, onSelect }: ActivityItemProps) {
           <span>{event.actor}</span>
           <span>{new Date(event.ts).toLocaleString()}</span>
           {event.prior_status ? <span>prior: {event.prior_status}</span> : null}
+          {usageLabel ? <span>{usageLabel}</span> : null}
         </div>
       </div>
     </button>

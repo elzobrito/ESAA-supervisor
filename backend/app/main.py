@@ -8,6 +8,7 @@ from app.api.routes_logs import router as logs_router
 from app.api.routes_tasks import router as tasks_router
 from app.api.routes_issues import router as issues_router
 from app.api.routes_integrity import router as integrity_router
+from app.api.routes_chat import router as chat_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -48,3 +49,4 @@ app.include_router(logs_router, prefix="/api/v1")
 app.include_router(tasks_router, prefix="/api/v1")
 app.include_router(issues_router, prefix="/api/v1")
 app.include_router(integrity_router, prefix="/api/v1")
+app.include_router(chat_router, prefix="/api/v1")

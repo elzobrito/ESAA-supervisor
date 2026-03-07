@@ -5,7 +5,7 @@
     "generated_by": "esaa.project",
     "source_event_store": ".roadmap/activity.jsonl",
     "last_event_seq": 114,
-    "updated_at": "2026-03-07T10:55:07Z"
+    "updated_at": "2026-03-07T08:21:36Z"
   },
   "lessons": [
     {
@@ -336,6 +336,60 @@
         "mode": "require_step",
         "applies_to": "acceptance_gate"
       }
+    },
+    {
+      "lesson_id": "LES-0021",
+      "status": "active",
+      "created_at": "2026-03-07T08:21:36Z",
+      "title": "Supervisores de agentes precisam oferecer chat persistente no escopo do projeto",
+      "mistake": "Sem uma superficie de chat interna, o operador precisava sair do sistema para iterar com o modelo e perdia contexto, historico e rastreabilidade por projeto.",
+      "rule": "Quando o produto supervisiona execucao de agentes, deve existir chat persistente por projeto, com sessoes livres e sessoes vinculadas à task, preservando contexto operacional sem depender de ferramentas externas.",
+      "scope": {
+        "task_kinds": [
+          "impl",
+          "qa"
+        ]
+      },
+      "enforcement": {
+        "mode": "require_step",
+        "applies_to": "acceptance_gate"
+      }
+    },
+    {
+      "lesson_id": "LES-0022",
+      "status": "active",
+      "created_at": "2026-03-07T08:21:36Z",
+      "title": "Chats operacionais devem distinguir conversa livre de conversa vinculada à task",
+      "mistake": "Misturar brainstorming livre com interacoes ligadas a uma task dificulta saber quando a resposta do agente está sob contexto de entrega auditavel e quando é apenas exploratoria.",
+      "rule": "A UX de chat deve separar explicitamente sessoes livres de sessoes vinculadas à task, carregando contexto adicional apenas quando houver relacao direta com um item do roadmap.",
+      "scope": {
+        "task_kinds": [
+          "impl",
+          "qa"
+        ]
+      },
+      "enforcement": {
+        "mode": "require_step",
+        "applies_to": "workflow_gate"
+      }
+    },
+    {
+      "lesson_id": "LES-0023",
+      "status": "active",
+      "created_at": "2026-03-07T08:21:36Z",
+      "title": "Telemetria de tokens deve ser tratada como dado auditavel de execucao",
+      "mistake": "O sistema mostrava logs e resultados, mas o gasto de tokens/custo nao era persistido no evento aplicado nem consolidado em superficies operacionais.",
+      "rule": "Sempre que o CLI expuser metrica de uso, o supervisor deve normalizar e persistir token_usage junto da execucao do agente, exibindo esse dado em runs, activity e demais superficies de acompanhamento.",
+      "scope": {
+        "task_kinds": [
+          "impl",
+          "qa"
+        ]
+      },
+      "enforcement": {
+        "mode": "require_step",
+        "applies_to": "verification_gate"
+      }
     }
   ],
   "indexes": {
@@ -367,7 +421,10 @@
         "LES-0017",
         "LES-0018",
         "LES-0019",
-        "LES-0020"
+        "LES-0020",
+        "LES-0021",
+        "LES-0022",
+        "LES-0023"
       ],
       "qa": [
         "LES-0001",
@@ -385,7 +442,10 @@
         "LES-0016",
         "LES-0017",
         "LES-0018",
-        "LES-0019"
+        "LES-0019",
+        "LES-0021",
+        "LES-0022",
+        "LES-0023"
       ]
     },
     "by_enforcement_applies_to": {
@@ -394,7 +454,8 @@
         "LES-0005",
         "LES-0010",
         "LES-0013",
-        "LES-0015"
+        "LES-0015",
+        "LES-0022"
       ],
       "output_contract": [
         "LES-0002",
@@ -405,7 +466,8 @@
         "LES-0011",
         "LES-0012",
         "LES-0018",
-        "LES-0019"
+        "LES-0019",
+        "LES-0023"
       ],
       "acceptance_gate": [
         "LES-0006",
@@ -413,7 +475,8 @@
         "LES-0014",
         "LES-0016",
         "LES-0017",
-        "LES-0020"
+        "LES-0020",
+        "LES-0021"
       ]
     }
   }
