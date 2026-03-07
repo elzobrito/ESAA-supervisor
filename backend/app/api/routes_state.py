@@ -7,7 +7,10 @@ from fastapi import APIRouter, HTTPException, Query
 from app.api.routes_projects import store
 from app.api.schemas import (
     ActivityEventResponse,
+    ActiveRunResponse,
     AgentOptionResponse,
+    AgentModelOptionResponse,
+    AgentReasoningOptionResponse,
     ArtifactResponse,
     IssueResponse,
     LessonResponse,
@@ -16,7 +19,10 @@ from app.api.schemas import (
     StateResponse,
     TaskResponse,
 )
+from app.core.agent_model_catalog import AgentModelCatalog
 from app.core.agent_router import AgentRouter
+from app.core.run_coordinator import RunCoordinator
+from app.core.run_engine import RunEngine
 from app.core.selector import TaskSelector
 
 router = APIRouter(prefix="/projects/{project_id}/state", tags=["state"])
@@ -55,6 +61,7 @@ def _agent_label(agent_id: str) -> str:
 
 
 def _build_task_rows(
+    project_id: str,
     roadmap_id: str,
     roadmap_label: str,
     roadmap: Dict[str, Any],
@@ -62,6 +69,7 @@ def _build_task_rows(
 ) -> tuple[List[TaskResponse], List[str]]:
     selector = TaskSelector(roadmap, open_issues)
     status_report = {row["task_id"]: row for row in selector.get_task_status_report()}
+    active_runs = {run.task_id: run for run in RunEngine.list_runs(project_id) if run.roadmap_id == roadmap_id}
     tasks: List[TaskResponse] = []
     eligible_ids: List[str] = []
 
@@ -70,6 +78,11 @@ def _build_task_rows(
         task_ref = f"{roadmap_id}:{task_id}"
         report = status_report.get(task_id, {})
         is_eligible = report.get("is_eligible", False)
+        active_run = active_runs.get(task_id)
+        planning = task.get("planning", {}) if isinstance(task.get("planning"), dict) else {}
+        preferred_runner = planning.get("preferred_runner")
+        if not preferred_runner:
+            preferred_runner = AgentRouter.default_runner_for_kind(task.get("task_kind", ""))
         if is_eligible:
             eligible_ids.append(task_ref)
         tasks.append(TaskResponse(
@@ -82,11 +95,17 @@ def _build_task_rows(
             description=task.get("description", ""),
             status=task.get("status", ""),
             assigned_to=task.get("assigned_to"),
+            active_run_id=active_run.run_id if active_run else None,
+            active_agent=active_run.agent_id if active_run else None,
+            active_model=active_run.model_id if active_run else None,
             started_at=task.get("started_at"),
             completed_at=task.get("completed_at"),
             depends_on=task.get("depends_on", []),
             is_eligible=is_eligible,
             ineligibility_reasons=report.get("reasons", []),
+            planning={
+                "preferred_runner": preferred_runner,
+            },
         ))
 
     return tasks, eligible_ids
@@ -123,6 +142,8 @@ async def get_project_state(project_id: str, roadmap: Optional[str] = Query(defa
         lessons_list = lessons_data or []
 
     open_issues = [issue for issue in issues_list if issue.get("status") == "open"]
+    active_runs = RunEngine.list_runs(project_id)
+    busy_agents = RunCoordinator.busy_agents(project_id)
 
     available_roadmaps = [
         RoadmapOptionResponse(
@@ -141,22 +162,42 @@ async def get_project_state(project_id: str, roadmap: Optional[str] = Query(defa
             label=_agent_label(agent_id),
             available=adapter.is_available(),
             command=adapter.resolve_command(),
+            busy=agent_id in busy_agents,
+            default_model=catalog_entry.default_model,
+            models=[
+                AgentModelOptionResponse(
+                    model_id=model.model_id,
+                    label=model.label,
+                    is_default=model.model_id == catalog_entry.default_model,
+                )
+                for model in catalog_entry.models
+            ],
+            default_reasoning_effort=catalog_entry.default_reasoning_effort,
+            reasoning_efforts=[
+                AgentReasoningOptionResponse(
+                    effort_id=effort.effort_id,
+                    label=effort.label,
+                    is_default=effort.effort_id == catalog_entry.default_reasoning_effort,
+                )
+                for effort in catalog_entry.reasoning_efforts
+            ],
         )
         for agent_id, adapter in router.adapters.items()
+        for catalog_entry in [AgentModelCatalog.get_entry(agent_id, roadmap_dir=store.active_project.base_path)]
     ]
 
     tasks: List[TaskResponse] = []
     eligible_ids: List[str] = []
     if aggregate_mode:
         for roadmap_id, candidate in roadmap_variants.items():
-            rows, eligible = _build_task_rows(roadmap_id, _roadmap_label(roadmap_id), candidate, open_issues)
+            rows, eligible = _build_task_rows(project_id, roadmap_id, _roadmap_label(roadmap_id), candidate, open_issues)
             tasks.extend(rows)
             eligible_ids.extend(eligible)
         last_event_seq = max(candidate.get("meta", {}).get("run", {}).get("last_event_seq", 0) for candidate in roadmap_variants.values())
         is_consistent = all(store._is_consistent(candidate) for candidate in roadmap_variants.values())
     else:
         selected = roadmap_variants[selected_roadmap_id]
-        tasks, eligible_ids = _build_task_rows(selected_roadmap_id, _roadmap_label(selected_roadmap_id), selected, open_issues)
+        tasks, eligible_ids = _build_task_rows(project_id, selected_roadmap_id, _roadmap_label(selected_roadmap_id), selected, open_issues)
         last_event_seq = selected.get("meta", {}).get("run", {}).get("last_event_seq", 0)
         is_consistent = store._is_consistent(selected)
 
@@ -219,6 +260,24 @@ async def get_project_state(project_id: str, roadmap: Optional[str] = Query(defa
         selected_roadmap_id=selected_roadmap_id,
         available_roadmaps=available_roadmaps,
         available_agents=available_agents,
+        active_runs=[
+            ActiveRunResponse(
+                run_id=run.run_id,
+                task_id=run.task_id,
+                agent_id=run.agent_id,
+                model_id=run.model_id,
+                reasoning_effort=run.reasoning_effort,
+                roadmap_id=run.roadmap_id,
+                execution_mode=run.execution_mode,
+                status=run.status,
+                started_at=run.started_at,
+                awaiting_decision=run.awaiting_decision,
+            )
+            for run in active_runs
+        ],
+        active_run_count=len(active_runs),
+        remaining_run_slots=RunCoordinator.remaining_slots(project_id),
+        busy_agents=busy_agents,
         tasks=tasks,
         open_issues=open_issue_responses,
         lessons=lesson_responses,

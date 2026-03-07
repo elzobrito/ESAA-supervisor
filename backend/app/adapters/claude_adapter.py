@@ -12,7 +12,7 @@ class ClaudeAdapter(BaseAgentAdapter):
     command_name = "claude"
 
     def build_command(self, context: TaskContext, prompt: str) -> list[str]:
-        return [
+        command = [
             self.resolve_command(),
             "-p",
             "--output-format",
@@ -20,6 +20,13 @@ class ClaudeAdapter(BaseAgentAdapter):
             "--permission-mode",
             "bypassPermissions",
         ]
+        model_id = self.selected_model(context)
+        if model_id:
+            command.extend(["--model", model_id])
+        reasoning_effort = self.selected_reasoning_effort(context)
+        if reasoning_effort:
+            command.extend(["--effort", reasoning_effort])
+        return command
 
     def build_stdin(self, context: TaskContext, prompt: str) -> str:
         return json.dumps({"prompt": prompt, "context": context.model_dump(mode="json")}, ensure_ascii=False)

@@ -1,0 +1,62 @@
+{
+  "task_id": "SEC-016",
+  "audit_date": "2026-03-07T14:45:00Z",
+  "domain": "file_upload",
+  "summary": {
+    "total_checks": 6,
+    "pass": 2,
+    "fail": 4,
+    "partial": 0,
+    "na": 0
+  },
+  "results": [
+    {
+      "check_id": "FU-001",
+      "name": "Uploads sem validação de tipo",
+      "status": "FAIL",
+      "evidence": "src/esaa/validator.py ignores file content, validating only path against contract allowlist.",
+      "severity": "HIGH"
+    },
+    {
+      "check_id": "FU-002",
+      "name": "Uploads sem limite de tamanho",
+      "status": "FAIL",
+      "evidence": "No file size enforcement in backend or ESAA core; subprocess output captured in memory without limits.",
+      "severity": "MEDIUM"
+    },
+    {
+      "check_id": "FU-003",
+      "name": "Uploads armazenados no servidor da aplicação",
+      "status": "PASS",
+      "evidence": "By design for local orchestration PoC; storage restricted by ESAA boundaries.",
+      "severity": "LOW"
+    },
+    {
+      "check_id": "FU-004",
+      "name": "Ausência de antivírus",
+      "status": "FAIL",
+      "evidence": "No malware scanning integrated into the agent result processing pipeline.",
+      "severity": "MEDIUM"
+    },
+    {
+      "check_id": "FU-005",
+      "name": "Possibilidade de upload executável",
+      "status": "FAIL",
+      "evidence": "Agents with 'impl' task_kind can write executable files (.py, .sh, .js) to src/ directory.",
+      "severity": "HIGH"
+    },
+    {
+      "check_id": "FU-006",
+      "name": "Filenames não sanitizados",
+      "status": "PASS",
+      "evidence": "_validate_safe_path in src/esaa/validator.py effectively prevents path traversal.",
+      "severity": "CRITICAL"
+    }
+  ],
+  "recommendations": [
+    "Implement magic bytes validation in validator.py using python-magic or file-type.",
+    "Add max_file_size constraints to AGENT_CONTRACT.yaml and enforce them during submission.",
+    "Restrict backend process filesystem permissions to the active workspace only.",
+    "Implement API authentication to protect endpoints that trigger file-mutating agent runs."
+  ]
+}

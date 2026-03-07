@@ -12,6 +12,7 @@ from app.api.schemas import IntegrityRepairRequest, IntegrityRepairResponse
 from app.core.artifact_discovery import ArtifactDiscovery
 from app.core.projector import Projector
 from app.core.validators import ArtifactValidator
+from app.utils.jsonl import read_jsonl
 
 router = APIRouter(prefix="/projects/{project_id}/integrity", tags=["integrity"])
 
@@ -22,12 +23,24 @@ def _get_project_roadmap_dir(project_id: str) -> str:
     return store.active_project.base_path
 
 
-def _repair_roadmap_hash(roadmap_dir: str, roadmap_id: str) -> bool:
+def _repair_roadmap_projection(roadmap_dir: str, roadmap_id: str) -> bool:
     roadmap_path = Path(roadmap_dir) / roadmap_id
     if not roadmap_path.exists():
         return False
 
+    projector = Projector(roadmap_dir, roadmap_id=roadmap_id)
     roadmap = json.loads(roadmap_path.read_text(encoding="utf-8"))
+    projected_seq = int(roadmap.get("meta", {}).get("run", {}).get("last_event_seq", 0) or 0)
+    pending_events = [
+        event
+        for event in read_jsonl(str(projector.activity_path))
+        if int(event.get("event_seq", 0) or 0) > projected_seq
+    ]
+
+    if pending_events:
+        projector.sync_to_disk(pending_events)
+        return True
+
     roadmap.setdefault("meta", {}).setdefault("run", {})
     roadmap["meta"]["run"]["projection_hash_sha256"] = Projector.compute_projection_hash(roadmap)
     roadmap["meta"]["run"]["verify_status"] = "ok"
@@ -48,7 +61,7 @@ async def repair_integrity(project_id: str, request: IntegrityRepairRequest):
     for roadmap_id in target_ids:
         if roadmap_id not in variants:
             raise HTTPException(status_code=404, detail=f"Requested roadmap not found: {roadmap_id}")
-        if _repair_roadmap_hash(roadmap_dir, roadmap_id):
+        if _repair_roadmap_projection(roadmap_dir, roadmap_id):
             repaired.append(roadmap_id)
 
     validator = ArtifactValidator(roadmap_dir)

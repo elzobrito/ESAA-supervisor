@@ -1,10 +1,12 @@
+from datetime import datetime
+from unittest.mock import MagicMock, patch
+import tempfile
 import json
+
 from fastapi.testclient import TestClient
-from unittest.mock import patch, MagicMock
 
 from app.main import app
 from app.models.run_state import RunExecutionMode, RunState, RunStatus
-from datetime import datetime
 
 client = TestClient(app)
 
@@ -167,6 +169,25 @@ def test_get_run_status_404_when_not_found() -> None:
     assert response.status_code == 404
 
 
+def test_list_runs_returns_active_runs() -> None:
+    mock_run = RunState(
+        run_id="run-list",
+        task_id="T-001",
+        agent_id="gemini-cli",
+        model_id="gemini-2.5-pro",
+        status=RunStatus.RUNNING,
+        started_at=datetime(2026, 3, 7, 4, 0, 0),
+    )
+    with patch("app.api.routes_runs.store") as mock_store, \
+         patch("app.api.routes_runs.RunEngine.list_runs", return_value=[mock_run]):
+        _mock_store(mock_store)
+        response = client.get(f"/api/v1/projects/{MOCK_PROJECT_ID}/runs")
+
+    assert response.status_code == 200
+    assert response.json()[0]["run_id"] == "run-list"
+    assert response.json()[0]["model_id"] == "gemini-2.5-pro"
+
+
 def test_stop_after_current_activates_graceful_stop() -> None:
     mock_run = RunState(
         run_id="run-stop",
@@ -187,3 +208,142 @@ def test_stop_after_current_activates_graceful_stop() -> None:
 
     assert response.status_code == 200
     assert response.json()["stop_after_current"] is True
+
+
+def test_start_task_run_blocks_when_dependency_is_pending() -> None:
+    blocked_roadmap = {
+        "tasks": [
+            {
+                "task_id": "T-001",
+                "task_kind": "impl",
+                "title": "Parent",
+                "description": "desc",
+                "status": "todo",
+                "depends_on": [],
+                "targets": [],
+                "outputs": {"files": []},
+                "immutability": {"done_is_immutable": True},
+                "required_verification": [],
+            },
+            {
+                "task_id": "T-002",
+                "task_kind": "impl",
+                "title": "Child",
+                "description": "desc",
+                "status": "todo",
+                "depends_on": ["T-001"],
+                "targets": [],
+                "outputs": {"files": []},
+                "immutability": {"done_is_immutable": True},
+                "required_verification": [],
+            },
+        ],
+        "indexes": {"by_status": {"todo": 2, "in_progress": 0, "review": 0, "done": 0}},
+    }
+    with patch("app.api.routes_runs.store") as mock_store, \
+         patch("app.api.routes_runs._load_roadmap_variants", return_value={"roadmap.json": blocked_roadmap}):
+        _mock_store(mock_store)
+        response = client.post(
+            f"/api/v1/projects/{MOCK_PROJECT_ID}/runs/task",
+            json={"task_id": "T-002", "agent_id": "gemini-cli"},
+        )
+
+    assert response.status_code == 422
+    assert "Dependency T-001 is todo" in str(response.json()["detail"])
+
+
+def test_start_task_run_returns_409_when_projection_is_stale() -> None:
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        roadmap = {
+            "meta": {
+                "schema_version": "0.4.0",
+                "run": {
+                    "last_event_seq": 1,
+                    "verify_status": "ok",
+                    "projection_hash_sha256": "placeholder",
+                }
+            },
+            "project": {"name": "Test"},
+            "tasks": [
+                {
+                    "task_id": "T-001",
+                    "task_kind": "impl",
+                    "title": "Task",
+                    "description": "desc",
+                    "status": "todo",
+                    "depends_on": [],
+                    "targets": [],
+                    "outputs": {"files": []},
+                    "immutability": {"done_is_immutable": True},
+                    "required_verification": [],
+                }
+            ],
+            "indexes": {"by_status": {"todo": 1, "in_progress": 0, "review": 0, "done": 0}, "by_kind": {"spec": 0, "impl": 1, "qa": 0}, "by_preferred_runner": {}},
+        }
+        from app.core.projector import Projector
+        roadmap["meta"]["run"]["projection_hash_sha256"] = Projector.compute_projection_hash(roadmap)
+        with open(f"{tmp_dir}\\roadmap.json", "w", encoding="utf-8") as handle:
+            json.dump(roadmap, handle)
+        with open(f"{tmp_dir}\\issues.json", "w", encoding="utf-8") as handle:
+            json.dump({"issues": []}, handle)
+        with open(f"{tmp_dir}\\lessons.json", "w", encoding="utf-8") as handle:
+            json.dump({"lessons": []}, handle)
+        with open(f"{tmp_dir}\\activity.jsonl", "w", encoding="utf-8") as handle:
+            handle.write(json.dumps({
+                "schema_version": "0.4.1",
+                "event_id": "EV-00000002",
+                "event_seq": 2,
+                "ts": "2026-03-07T15:00:00Z",
+                "actor": "claude-code",
+                "action": "complete",
+                "payload": {"task_id": "T-001", "prior_status": "in_progress"},
+            }) + "\n")
+
+        stale_project = MagicMock()
+        stale_project.id = MOCK_PROJECT_ID
+        stale_project.base_path = tmp_dir
+
+        with patch("app.api.routes_runs.store") as mock_store:
+            mock_store.active_project = stale_project
+            mock_store.get_state.return_value = MOCK_STATE
+            response = client.post(
+                f"/api/v1/projects/{MOCK_PROJECT_ID}/runs/task",
+                json={"task_id": "T-001", "agent_id": "gemini-cli"},
+            )
+
+    assert response.status_code == 409
+    assert "integrity repair" in response.json()["detail"].lower()
+
+
+def test_patch_task_planning_persists_only_preferred_runner() -> None:
+    roadmap = {
+        "tasks": [
+            {
+                "task_id": "T-001",
+                "task_kind": "impl",
+                "title": "Task",
+                "description": "desc",
+                "status": "todo",
+                "depends_on": [],
+                "targets": [],
+                "outputs": {"files": []},
+                "immutability": {"done_is_immutable": True},
+                "required_verification": [],
+                "planning": {"preferred_runner": "codex"},
+            }
+        ]
+    }
+    with patch("app.api.routes_tasks.store") as mock_store, \
+         patch("app.api.routes_tasks._load_roadmap_variants", return_value={"roadmap.json": roadmap}), \
+         patch("app.api.routes_tasks.EventWriter") as MockWriter, \
+         patch("app.api.routes_tasks.Projector"):
+        _mock_store(mock_store)
+        writer = MockWriter.return_value
+        writer.append_event.return_value = {"event_seq": 1, "payload": {"planning": {"preferred_runner": "gemini-cli"}}}
+        response = client.patch(
+            f"/api/v1/projects/{MOCK_PROJECT_ID}/tasks/T-001/planning",
+            json={"preferred_runner": "gemini-cli"},
+        )
+
+    assert response.status_code == 200
+    assert response.json()["planning"] == {"preferred_runner": "gemini-cli"}

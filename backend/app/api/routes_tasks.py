@@ -4,9 +4,11 @@ from fastapi import APIRouter, HTTPException
 
 from app.api.routes_projects import store
 from app.api.routes_state import _load_roadmap_variants
-from app.api.schemas import TaskMutationResponse, TaskResetRequest, TaskReviewRequest
+from app.api.schemas import TaskMutationResponse, TaskPlanningMutationResponse, TaskPlanningUpdateRequest, TaskResetRequest, TaskReviewRequest
+from app.core.agent_router import AgentRouter
 from app.core.event_writer import EventWriter, utc_now_iso
 from app.core.projector import Projector
+from app.core.run_coordinator import RunCoordinator
 
 router = APIRouter(prefix="/projects/{project_id}/tasks", tags=["tasks"])
 
@@ -46,13 +48,14 @@ async def reset_task_to_todo(project_id: str, request: TaskResetRequest):
         "verification": {},
         "clear_fields": ["issue_id", "fixes"],
     }
-    writer = EventWriter(roadmap_dir=roadmap_dir)
-    event = writer.append_event(
-        actor="orchestrator",
-        action="orchestrator.view.mutate",
-        payload=payload,
-    )
-    Projector(roadmap_dir, roadmap_id=roadmap_id).sync_to_disk([event])
+    async with RunCoordinator.event_write(project_id):
+        writer = EventWriter(roadmap_dir=roadmap_dir)
+        event = writer.append_event(
+            actor="orchestrator",
+            action="orchestrator.view.mutate",
+            payload=payload,
+        )
+        Projector(roadmap_dir, roadmap_id=roadmap_id).sync_to_disk([event])
 
     return TaskMutationResponse(
         task_id=request.task_id,
@@ -99,17 +102,66 @@ async def review_task(project_id: str, task_id: str, request: TaskReviewRequest)
     else:
         raise HTTPException(status_code=422, detail="Decision must be 'approve' or 'reject'")
 
-    writer = EventWriter(roadmap_dir=roadmap_dir)
-    event = writer.append_event(
-        actor="orchestrator",
-        action="orchestrator.view.mutate",
-        payload=payload,
-    )
-    Projector(roadmap_dir, roadmap_id=roadmap_id).sync_to_disk([event])
+    async with RunCoordinator.event_write(project_id):
+        writer = EventWriter(roadmap_dir=roadmap_dir)
+        event = writer.append_event(
+            actor="orchestrator",
+            action="orchestrator.view.mutate",
+            payload=payload,
+        )
+        Projector(roadmap_dir, roadmap_id=roadmap_id).sync_to_disk([event])
 
     return TaskMutationResponse(
         task_id=task_id,
         roadmap_id=roadmap_id,
         status=target_status,
         message=f"Task reviewed with decision: {request.decision}",
+    )
+
+
+@router.patch("/{task_id}/planning", response_model=TaskPlanningMutationResponse)
+async def update_task_planning(project_id: str, task_id: str, request: TaskPlanningUpdateRequest):
+    roadmap_dir = _get_project_roadmap_dir(project_id)
+    roadmap_id = request.roadmap_id or "roadmap.json"
+    variants = _load_roadmap_variants(roadmap_dir)
+    roadmap = variants.get(roadmap_id)
+    if not roadmap:
+        raise HTTPException(status_code=404, detail="Requested roadmap not found.")
+
+    task = next((item for item in roadmap.get("tasks", []) if item.get("task_id") == task_id), None)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found.")
+
+    preferred_runner = request.preferred_runner
+    if preferred_runner is None:
+        current_planning = task.get("planning", {}) if isinstance(task.get("planning"), dict) else {}
+        preferred_runner = current_planning.get("preferred_runner")
+    if not preferred_runner:
+        raise HTTPException(status_code=422, detail="preferred_runner is required to persist task planning.")
+    try:
+        AgentRouter().get_adapter(preferred_runner)
+    except KeyError as exc:
+        raise HTTPException(status_code=422, detail="Unknown preferred_runner.") from exc
+
+    planning = {
+        "preferred_runner": preferred_runner,
+    }
+
+    async with RunCoordinator.event_write(project_id):
+        writer = EventWriter(roadmap_dir=roadmap_dir)
+        event = writer.append_event(
+            actor="orchestrator",
+            action="orchestrator.view.mutate",
+            payload={
+                "task_id": task_id,
+                "planning": planning,
+            },
+        )
+        Projector(roadmap_dir, roadmap_id=roadmap_id).sync_to_disk([event])
+
+    return TaskPlanningMutationResponse(
+        task_id=task_id,
+        roadmap_id=roadmap_id,
+        planning=planning,
+        message="Task planning updated.",
     )

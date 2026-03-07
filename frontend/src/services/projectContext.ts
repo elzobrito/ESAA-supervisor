@@ -5,7 +5,7 @@ export interface ProjectContextValue {
   state: StateResponse | null;
   isLoading: boolean;
   error: string | null;
-  reload: () => void;
+  reload: () => Promise<void>;
 }
 
 export const ProjectContext = createContext<ProjectContextValue | null>(null);

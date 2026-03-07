@@ -1,0 +1,52 @@
+{
+  "agents": {
+    "codex": {
+      "default_model": "GPT-5.4",
+      "models": [
+        {
+          "model_id": "GPT-5.3-Codex",
+          "label": "GPT-5.3-Codex"
+        },
+        {
+          "model_id": "GPT-5.4",
+          "label": "GPT-5.4"
+        },
+        {
+          "model_id": "GPT-5.2-Codex",
+          "label": "GPT-5.2-Codex"
+        },
+        {
+          "model_id": "GPT-5.1-Codex-Max",
+          "label": "GPT-5.1-Codex-Max"
+        },
+        {
+          "model_id": "GPT-5.2",
+          "label": "GPT-5.2"
+        },
+        {
+          "model_id": "GPT-5.1-Codex-Mini",
+          "label": "GPT-5.1-Codex-Mini"
+        }
+      ],
+      "default_reasoning_effort": "medium",
+      "reasoning_efforts": [
+        {
+          "effort_id": "low",
+          "label": "Baixa"
+        },
+        {
+          "effort_id": "medium",
+          "label": "Media"
+        },
+        {
+          "effort_id": "high",
+          "label": "Alta"
+        },
+        {
+          "effort_id": "very_high",
+          "label": "Altissima"
+        }
+      ]
+    }
+  }
+}

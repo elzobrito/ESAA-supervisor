@@ -1,0 +1,89 @@
+{
+  "task_id": "SEC-014",
+  "domain": "api_security",
+  "checks_total": 7,
+  "checks_pass": 2,
+  "checks_fail": 5,
+  "checks_partial": 0,
+  "checks_na": 0,
+  "worst_severity": "HIGH",
+  "results": [
+    {
+      "check_id": "AP-001",
+      "check_name": "Endpoints sem rate limit",
+      "status": "fail",
+      "severity_if_fail": "HIGH",
+      "evidence": {
+        "files": ["backend/app/main.py"],
+        "description": "Nenhum middleware de rate limiting (como slowapi) ou decorador de limite de requisicao foi encontrado no backend. O sistema esta vulneravel a ataques de forca bruta e exaustao de recursos."
+      },
+      "remediation": "Implementar middleware de rate limiting no FastAPI (ex: slowapi) e aplicar limites especificos por endpoint e IP."
+    },
+    {
+      "check_id": "AP-002",
+      "check_name": "Endpoints retornando dados excessivos",
+      "status": "fail",
+      "severity_if_fail": "MEDIUM",
+      "evidence": {
+        "files": ["backend/app/api/routes_state.py", "backend/app/api/routes_chat.py"],
+        "description": "O endpoint /state retorna o estado completo do projeto (tarefas, issues, lessons, artifacts, activity) em um unico payload. O historico de chat tambem e retornado integralmente em cada interacao, gerando over-fetching significativo."
+      },
+      "remediation": "Utilizar DTOs mais enxutos, filtrar campos sensiveis e implementar carregamento sob demanda para listas grandes."
+    },
+    {
+      "check_id": "AP-003",
+      "check_name": "Enumeração de usuários",
+      "status": "fail",
+      "severity_if_fail": "MEDIUM",
+      "evidence": {
+        "files": ["backend/app/api/routes_projects.py"],
+        "description": "Embora nao haja usuarios autenticaveis, o endpoint /projects/browse permite a enumeracao de diretorios e arquivos em todo o sistema de arquivos do host (root C:\\ no Windows), expondo a estrutura interna do servidor."
+      },
+      "remediation": "Restringir o BROWSE_ROOT a um diretorio de dados isolado e validar rigorosamente os caminhos acessados."
+    },
+    {
+      "check_id": "AP-004",
+      "check_name": "Falta de validação de schema",
+      "status": "pass",
+      "severity_if_fail": "HIGH",
+      "evidence": {
+        "files": ["backend/app/api/schemas.py", "backend/app/api/routes_*.py"],
+        "description": "O sistema utiliza Pydantic para definir todos os modelos de entrada e saida, e o FastAPI realiza a validacao automatica dos corpos das requisicoes POST/PUT."
+      },
+      "remediation": "Manter a consistencia no uso de modelos Pydantic e considerar validacao estrita para evitar campos desconhecidos."
+    },
+    {
+      "check_id": "AP-005",
+      "check_name": "Falta de versionamento de API",
+      "status": "pass",
+      "severity_if_fail": "LOW",
+      "evidence": {
+        "files": ["backend/app/main.py"],
+        "description": "Todas as rotas da API estao prefixadas com /api/v1, seguindo uma estrategia clara de versionamento via URL."
+      },
+      "remediation": "Nenhuma acao necessaria no momento."
+    },
+    {
+      "check_id": "AP-006",
+      "check_name": "Ausência de paginação",
+      "status": "fail",
+      "severity_if_fail": "MEDIUM",
+      "evidence": {
+        "files": ["backend/app/api/routes_state.py", "backend/app/api/routes_projects.py"],
+        "description": "Endpoints de listagem como /state (activity, tasks), /projects (list) e /browse (files) nao possuem parametros de paginacao (limit, offset), retornando todos os registros de uma vez."
+      },
+      "remediation": "Implementar paginacao obrigatoria em todos os endpoints que retornam listas, com limites default e maximos."
+    },
+    {
+      "check_id": "AP-007",
+      "check_name": "Replay attacks possíveis",
+      "status": "fail",
+      "severity_if_fail": "MEDIUM",
+      "evidence": {
+        "files": ["backend/app/api/routes_runs.py", "backend/app/api/routes_tasks.py", "backend/app/api/routes_chat.py"],
+        "description": "Operacoes criticas como iniciar uma execucao (run), resetar uma tarefa ou enviar mensagens de chat nao possuem tokens de idempotencia (idempotency keys) ou nonces, permitindo a repeticao de acoes por reenvio de pacotes."
+      },
+      "remediation": "Implementar suporte a headers de idempotencia (ex: X-Idempotency-Key) para todas as operacoes de escrita (POST/PUT/DELETE)."
+    }
+  ]
+}

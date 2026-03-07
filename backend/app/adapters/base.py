@@ -36,7 +36,23 @@ class BaseAgentAdapter(ABC):
     def build_command(self, context: TaskContext, prompt: str) -> list[str]:
         raise NotImplementedError
 
+    @staticmethod
+    def selected_model(context: TaskContext) -> str | None:
+        model_id = context.metadata.get("model_id")
+        return model_id if isinstance(model_id, str) and model_id.strip() else None
+
+    @staticmethod
+    def selected_reasoning_effort(context: TaskContext) -> str | None:
+        effort_id = context.metadata.get("reasoning_effort")
+        return effort_id if isinstance(effort_id, str) and effort_id.strip() else None
+
     def build_stdin(self, context: TaskContext, prompt: str) -> str | None:
+        return None
+
+    def build_env(self, context: TaskContext, prompt: str) -> dict[str, str]:
+        return {}
+
+    def cleanup_runtime(self, context: TaskContext, prompt: str) -> None:
         return None
 
     def sanitize_outputs(self, stdout: str, stderr: str) -> tuple[str, str]:
@@ -48,6 +64,7 @@ class BaseAgentAdapter(ABC):
         stdin_payload = self.build_stdin(context, prompt)
         merged_env = os.environ.copy()
         merged_env.update(self.env)
+        merged_env.update(self.build_env(context, prompt))
 
         try:
             completed = subprocess.run(
@@ -101,6 +118,8 @@ class BaseAgentAdapter(ABC):
                 command=command,
                 metadata_extras={},
             )
+        finally:
+            self.cleanup_runtime(context, prompt)
 
     @staticmethod
     def _prepare_command(command: list[str]) -> list[str]:
@@ -151,9 +170,13 @@ class BaseAgentAdapter(ABC):
 
         payload = parsed.get("payload", {})
         verification_checks = [
-            VerificationCheck.model_validate(item) for item in payload.get("verification_checks", [])
+            VerificationCheck.model_validate(self._normalize_verification_check(item))
+            for item in payload.get("verification_checks", [])
         ]
-        file_updates = [FileUpdate.model_validate(item) for item in payload.get("file_updates", [])]
+        file_updates = [
+            FileUpdate.model_validate(self._normalize_file_update(item))
+            for item in payload.get("file_updates", [])
+        ]
 
         return AgentResult(
             action=parsed["action"],
@@ -240,3 +263,40 @@ class BaseAgentAdapter(ABC):
         except json.JSONDecodeError:
             return None
         return parsed if isinstance(parsed, dict) and "action" in parsed else None
+
+    @staticmethod
+    def _normalize_verification_check(item: object) -> dict:
+        if not isinstance(item, dict):
+            return {}
+        status_map = {
+            "pass": "pass",
+            "passed": "pass",
+            "ok": "pass",
+            "fail": "fail",
+            "failed": "fail",
+            "partial": "partial",
+            "na": "not_applicable",
+            "n/a": "not_applicable",
+            "not_applicable": "not_applicable",
+        }
+        raw_status = item.get("status")
+        normalized_status = None
+        if isinstance(raw_status, str):
+            normalized_status = status_map.get(raw_status.strip().lower(), raw_status.strip().lower())
+
+        return {
+            "id": item.get("id") or item.get("check_id"),
+            "status": normalized_status,
+            "title": item.get("title"),
+            "evidence": item.get("evidence") or item.get("notes"),
+        }
+
+    @staticmethod
+    def _normalize_file_update(item: object) -> dict:
+        if not isinstance(item, dict):
+            return {}
+        return {
+            "path": item.get("path"),
+            "content": item.get("content"),
+            "status": item.get("status"),
+        }

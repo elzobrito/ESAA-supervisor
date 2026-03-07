@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import json
+import os
 import re
+import tempfile
 from typing import Any
 
 from app.adapters.base import BaseAgentAdapter
@@ -13,7 +15,7 @@ class GeminiAdapter(BaseAgentAdapter):
     command_name = "gemini"
 
     def build_command(self, context: TaskContext, prompt: str) -> list[str]:
-        return [
+        command = [
             self.resolve_command(),
             "-p",
             "",
@@ -22,6 +24,28 @@ class GeminiAdapter(BaseAgentAdapter):
             "--output-format",
             "json",
         ]
+        model_id = self.selected_model(context)
+        if model_id:
+            command.extend(["-m", model_id])
+        return command
+
+    def build_env(self, context: TaskContext, prompt: str) -> dict[str, str]:
+        reasoning_effort = self.selected_reasoning_effort(context)
+        model_id = self.selected_model(context)
+        if not reasoning_effort or not model_id:
+            return {}
+
+        settings_path = self._write_settings_file(model_id=model_id, reasoning_effort=reasoning_effort)
+        context.metadata["_gemini_settings_path"] = settings_path
+        return {"GEMINI_CLI_SYSTEM_SETTINGS_PATH": settings_path}
+
+    def cleanup_runtime(self, context: TaskContext, prompt: str) -> None:
+        settings_path = context.metadata.pop("_gemini_settings_path", None)
+        if isinstance(settings_path, str) and settings_path:
+            try:
+                os.remove(settings_path)
+            except OSError:
+                pass
 
     def build_stdin(self, context: TaskContext, prompt: str) -> str:
         return json.dumps({"prompt": prompt, "context": context.model_dump(mode="json")}, ensure_ascii=False)
@@ -109,3 +133,37 @@ class GeminiAdapter(BaseAgentAdapter):
             filtered_lines.append(raw_line)
 
         return "\n".join(line for line in filtered_lines if line.strip())
+
+    @classmethod
+    def _write_settings_file(cls, *, model_id: str, reasoning_effort: str) -> str:
+        fd, path = tempfile.mkstemp(prefix="esaa-gemini-settings-", suffix=".json")
+        os.close(fd)
+        payload = {
+            "modelConfigs": {
+                "customAliases": {
+                    "esaa-run": {
+                        "modelConfig": {
+                            "model": model_id,
+                            "generateContentConfig": {
+                                "thinkingConfig": cls._thinking_config_for(model_id=model_id, reasoning_effort=reasoning_effort),
+                            },
+                        },
+                    },
+                },
+            },
+        }
+        with open(path, "w", encoding="utf-8") as handle:
+            json.dump(payload, handle, ensure_ascii=False, indent=2)
+        return path
+
+    @staticmethod
+    def _thinking_config_for(*, model_id: str, reasoning_effort: str) -> dict[str, Any]:
+        if model_id.startswith("gemini-3") or model_id == "auto-gemini-3":
+            return {"thinkingLevel": reasoning_effort.upper()}
+
+        budgets = {
+            "low": 1024,
+            "medium": 4096,
+            "high": 8192,
+        }
+        return {"thinkingBudget": budgets.get(reasoning_effort, 4096)}

@@ -7,11 +7,11 @@
     "run": {
       "run_id": null,
       "status": "initialized",
-      "last_event_seq": 160,
-      "projection_hash_sha256": "374ca41c0168c89c6a298c9722e0c91225d5f7be0f26b618abf8ea0abb2deadd",
+      "last_event_seq": 198,
+      "projection_hash_sha256": "7c7fca68b66aef90b3199b9a57036626fefcdd0b0518519c5c4e5f7e0ad74283",
       "verify_status": "ok"
     },
-    "updated_at": "2026-03-07T12:09:47Z"
+    "updated_at": "2026-03-07T18:40:28Z"
   },
   "project": {
     "name": "PARCER Security Audit",
@@ -243,7 +243,7 @@
       "task_kind": "impl",
       "title": "Auditar Segurança de API",
       "description": "Avaliar rate limiting, over-fetching, enumeração de usuários, validação de schema, versionamento, paginação e replay attacks. Playbook: api_security (AP-001 a AP-007).",
-      "status": "todo",
+      "status": "done",
       "depends_on": [
         "SEC-003"
       ],
@@ -262,6 +262,16 @@
       },
       "immutability": {
         "done_is_immutable": true
+      },
+      "assigned_to": "gemini-cli",
+      "started_at": "2026-03-07T12:46:27Z",
+      "completed_at": "2026-03-07T13:42:20Z",
+      "verification": {
+        "checks": [
+          "Auditoria de seguranca de API concluida.",
+          "Identificadas 5 falhas de seguranca (AP-001 a AP-003, AP-006 a AP-007).",
+          "Gerados relatorios .md e .json."
+        ]
       }
     },
     {
@@ -269,7 +279,7 @@
       "task_kind": "impl",
       "title": "Auditar Validação de Entrada",
       "description": "Testar SQL injection, command injection, template injection, SSRF, XSS, inputs não validados e sanitização ausente. Playbook: input_validation (IV-001 a IV-007).",
-      "status": "todo",
+      "status": "in_progress",
       "depends_on": [
         "SEC-003"
       ],
@@ -289,16 +299,18 @@
       },
       "immutability": {
         "done_is_immutable": true
-      }
+      },
+      "assigned_to": "gemini-cli",
+      "started_at": "2026-03-07T13:43:08Z"
     },
     {
       "task_id": "SEC-016",
       "task_kind": "impl",
       "title": "Auditar Upload de Arquivos",
       "description": "Verificar validação de tipo, limite de tamanho, storage seguro, antivírus, uploads executáveis e filenames não sanitizados. Playbook: file_upload (FU-001 a FU-006).",
-      "status": "todo",
+      "status": "done",
       "depends_on": [
-        "SEC-003"
+        "SEC-030"
       ],
       "targets": [
         "src/controllers/upload*",
@@ -314,14 +326,17 @@
       },
       "immutability": {
         "done_is_immutable": true
-      }
+      },
+      "assigned_to": "gemini-cli",
+      "started_at": "2026-03-07T13:45:42Z",
+      "completed_at": "2026-03-07T14:48:05Z"
     },
     {
       "task_id": "SEC-017",
       "task_kind": "impl",
       "title": "Auditar Segurança de Sessão",
       "description": "Avaliar cookies httpOnly/Secure/SameSite, CSRF tokens, expiração de sessão e tokens reutilizáveis. Playbook: session_security (SS-001 a SS-006).",
-      "status": "todo",
+      "status": "done",
       "depends_on": [
         "SEC-012"
       ],
@@ -339,14 +354,24 @@
       },
       "immutability": {
         "done_is_immutable": true
-      }
+      },
+      "assigned_to": "gemini-cli",
+      "started_at": "2026-03-07T14:11:52Z",
+      "verification": {
+        "checks": [
+          "Auditoria de seguranca de sessao concluida.",
+          "Identificadas 5 falhas de seguranca (SS-001 a SS-003, SS-005 a SS-006).",
+          "Gerados relatorios .md e .json."
+        ]
+      },
+      "completed_at": "2026-03-07T17:36:31Z"
     },
     {
       "task_id": "SEC-018",
       "task_kind": "impl",
       "title": "Auditar Criptografia",
       "description": "Verificar HTTPS obrigatório, algoritmos criptográficos, encryption at-rest, chaves expostas e rotação de chaves. Playbook: cryptography (CR-001 a CR-005).",
-      "status": "todo",
+      "status": "in_progress",
       "depends_on": [
         "SEC-003"
       ],
@@ -365,7 +390,9 @@
       },
       "immutability": {
         "done_is_immutable": true
-      }
+      },
+      "assigned_to": "codex",
+      "started_at": "2026-03-07T17:36:51Z"
     },
     {
       "task_id": "SEC-019",
@@ -728,15 +755,16 @@
   ],
   "indexes": {
     "by_status": {
-      "todo": 19,
-      "in_progress": 0,
+      "todo": 14,
+      "in_progress": 2,
       "review": 0,
-      "done": 7
+      "done": 10
     },
     "by_kind": {
       "spec": 5,
       "impl": 16,
       "qa": 5
-    }
+    },
+    "by_preferred_runner": {}
   }
 }

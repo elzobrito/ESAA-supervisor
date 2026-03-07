@@ -20,6 +20,8 @@ export type RunState = {
   run_id: string;
   task_id: string;
   agent_id: string;
+  model_id?: string | null;
+  reasoning_effort?: string | null;
   roadmap_id?: string | null;
   execution_mode?: 'manual' | 'continuous';
   status: string;
@@ -69,6 +71,11 @@ export async function startTaskRun(
 
 export async function fetchRunStatus(projectId: string, runId: string): Promise<RunState> {
   const response = await api.get<RunState>(`/projects/${projectId}/runs/${runId}`);
+  return response.data;
+}
+
+export async function fetchRuns(projectId: string): Promise<RunState[]> {
+  const response = await api.get<RunState[]>(`/projects/${projectId}/runs`);
   return response.data;
 }
 

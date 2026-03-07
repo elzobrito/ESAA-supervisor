@@ -2,14 +2,18 @@ import type { RunState } from '../../services/runs';
 
 interface RunHeaderProps {
   run: RunState | null;
+  activeRunCount: number;
 }
 
-export function RunHeader({ run }: RunHeaderProps) {
+export function RunHeader({ run, activeRunCount }: RunHeaderProps) {
   return (
     <section className="run-header-card">
       <div>
         <h2 className="run-info-title">Execução supervisionada</h2>
         <div className="run-meta">
+          <span>
+            <span className="run-meta-label">Ativas:</span> {activeRunCount}
+          </span>
           <span>
             <span className="run-meta-label">Status:</span> {run?.status ?? 'idle'}
           </span>

@@ -11,7 +11,7 @@ import { startTaskRun } from '../services/runs';
 
 export function TasksPage() {
   const { state, isLoading, error, reload } = useProject();
-  const { setActiveRun, setActiveRunLogs, setActiveRunError } = useShell();
+  const { setSelectedRunId, setRunLogsById } = useShell();
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -40,14 +40,21 @@ export function TasksPage() {
     ?? state?.tasks.find((task) => task.task_ref === selectedTaskId)
     ?? null;
 
-  const handleRunTask = async (task: TaskSummary) => {
+  const handleRunTask = async (
+    task: TaskSummary,
+    overrides?: { agentId?: string },
+  ) => {
     if (!state) return;
     setRunningTaskRef(task.task_ref);
-    setActiveRunError(null);
-    setActiveRunLogs([]);
     try {
-      const run = await startTaskRun(state.project.id, { taskId: task.task_id, roadmapId: task.roadmap_id });
-      setActiveRun(run);
+      const run = await startTaskRun(state.project.id, {
+        taskId: task.task_id,
+        roadmapId: task.roadmap_id,
+        agentId: overrides?.agentId ?? task.planning?.preferred_runner ?? undefined,
+      });
+      await reload();
+      setSelectedRunId(run.run_id);
+      setRunLogsById((current) => ({ ...current, [run.run_id]: run.logs ?? [] }));
       navigate(`/projects/${state.project.id}/runs`);
     } catch {
       setRunningTaskRef(null);
@@ -70,6 +77,9 @@ export function TasksPage() {
         onKindChange={setKindFilter}
       />
       <TasksDataGrid
+        availableAgents={state.available_agents}
+        activeRunCount={state.active_run_count}
+        remainingRunSlots={state.remaining_run_slots}
         tasks={filteredTasks}
         selectedTaskId={selectedTaskId}
         onSelectTask={setSelectedTaskId}
@@ -78,10 +88,13 @@ export function TasksPage() {
       />
       <TaskDetailDrawer
         projectId={state.project.id}
+        availableAgents={state.available_agents}
+        remainingRunSlots={state.remaining_run_slots}
         task={selectedTask}
         open={selectedTask !== null}
         onClose={() => setSelectedTaskId(null)}
         onTaskUpdated={reload}
+        onExecuteTask={(task, overrides) => handleRunTask(task, overrides)}
       />
     </section>
   );

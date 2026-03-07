@@ -1,15 +1,12 @@
 import { Link } from 'react-router-dom';
 import { ShieldAlert, ShieldCheck } from 'lucide-react';
-import type { RunState } from '../../services/runs';
 import type { StateResponse } from '../../services/projects';
 import { SidebarToggle } from './SidebarToggle';
-
-const TERMINAL_RUN_STATUSES = new Set(['done', 'error', 'cancelled']);
 
 interface TopBarProps {
   projectName: string;
   integrityMismatch: boolean;
-  activeRun: RunState | null;
+  activeRunCount: number;
   onToggleSidebar: () => void;
   availableRoadmaps: StateResponse['available_roadmaps'];
   selectedRoadmapId: string;
@@ -20,15 +17,13 @@ interface TopBarProps {
 export function TopBar({
   projectName,
   integrityMismatch,
-  activeRun,
+  activeRunCount,
   onToggleSidebar,
   availableRoadmaps,
   selectedRoadmapId,
   roadmapMode,
   onChangeRoadmap,
 }: TopBarProps) {
-  const hasExecutingRun = activeRun !== null && !TERMINAL_RUN_STATUSES.has(activeRun.status);
-
   return (
     <header className="topbar">
       <div className="topbar-left">
@@ -70,9 +65,9 @@ export function TopBar({
           </span>
         )}
 
-        {hasExecutingRun && (
+        {activeRunCount > 0 && (
           <span className="topbar-badge-running">
-            Executando
+            {activeRunCount === 1 ? '1 run ativa' : `${activeRunCount} runs ativas`}
           </span>
         )}
       </div>

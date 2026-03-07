@@ -2,7 +2,6 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
 import { TopBar } from './TopBar';
 import { SidebarNav } from './SidebarNav';
-import type { RunState } from '../../services/runs';
 import type { LogEntry } from '../../services/logStream';
 import type { StateResponse } from '../../services/projects';
 
@@ -11,12 +10,12 @@ import type { StateResponse } from '../../services/projects';
 interface ShellContextValue {
   sidebarExpanded: boolean;
   toggleSidebar: () => void;
-  activeRun: RunState | null;
-  setActiveRun: Dispatch<SetStateAction<RunState | null>>;
-  activeRunLogs: LogEntry[];
-  setActiveRunLogs: Dispatch<SetStateAction<LogEntry[]>>;
-  activeRunError: string | null;
-  setActiveRunError: Dispatch<SetStateAction<string | null>>;
+  selectedRunId: string | null;
+  setSelectedRunId: Dispatch<SetStateAction<string | null>>;
+  runLogsById: Record<string, LogEntry[]>;
+  setRunLogsById: Dispatch<SetStateAction<Record<string, LogEntry[]>>>;
+  runErrorsById: Record<string, string | null>;
+  setRunErrorsById: Dispatch<SetStateAction<Record<string, string | null>>>;
 }
 
 const ShellContext = createContext<ShellContextValue | null>(null);
@@ -35,6 +34,7 @@ interface AppShellProps {
   projectName?: string;
   eligibleCount?: number;
   openIssuesCount?: number;
+  activeRunCount?: number;
   integrityMismatch?: boolean;
   currentSearch?: string;
   availableRoadmaps?: StateResponse['available_roadmaps'];
@@ -44,7 +44,6 @@ interface AppShellProps {
 }
 
 const STORAGE_KEY = 'esaa-sidebar-expanded';
-const TERMINAL_RUN_STATUSES = new Set(['done', 'error', 'cancelled']);
 
 function readSidebarPref(): boolean {
   try {
@@ -61,6 +60,7 @@ export function AppShell({
   projectName,
   eligibleCount = 0,
   openIssuesCount = 0,
+  activeRunCount = 0,
   integrityMismatch = false,
   currentSearch = '',
   availableRoadmaps = [],
@@ -70,9 +70,9 @@ export function AppShell({
 }: AppShellProps) {
   const [sidebarExpanded, setSidebarExpanded] = useState<boolean>(readSidebarPref);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [activeRun, setActiveRun] = useState<RunState | null>(null);
-  const [activeRunLogs, setActiveRunLogs] = useState<LogEntry[]>([]);
-  const [activeRunError, setActiveRunError] = useState<string | null>(null);
+  const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
+  const [runLogsById, setRunLogsById] = useState<Record<string, LogEntry[]>>({});
+  const [runErrorsById, setRunErrorsById] = useState<Record<string, string | null>>({});
   const sidebarRef = useRef<HTMLElement>(null);
 
   const toggleSidebar = useCallback(() => {
@@ -93,12 +93,10 @@ export function AppShell({
   }, [projectId]);
 
   useEffect(() => {
-    setActiveRun(null);
-    setActiveRunLogs([]);
-    setActiveRunError(null);
+    setSelectedRunId(null);
+    setRunLogsById({});
+    setRunErrorsById({});
   }, [projectId]);
-
-  const hasExecutingRun = activeRun !== null && !TERMINAL_RUN_STATUSES.has(activeRun.status);
 
   const shellClass = [
     'app-shell',
@@ -116,19 +114,19 @@ export function AppShell({
       value={{
         sidebarExpanded,
         toggleSidebar,
-        activeRun,
-        setActiveRun,
-        activeRunLogs,
-        setActiveRunLogs,
-        activeRunError,
-        setActiveRunError,
+        selectedRunId,
+        setSelectedRunId,
+        runLogsById,
+        setRunLogsById,
+        runErrorsById,
+        setRunErrorsById,
       }}
     >
       <div className={shellClass}>
         <TopBar
           projectName={projectName ?? projectId}
           integrityMismatch={integrityMismatch}
-          activeRun={activeRun}
+          activeRunCount={activeRunCount}
           onToggleSidebar={toggleSidebar}
           availableRoadmaps={availableRoadmaps}
           selectedRoadmapId={selectedRoadmapId}
@@ -142,7 +140,7 @@ export function AppShell({
             projectId={projectId}
             eligibleCount={eligibleCount}
             openIssuesCount={openIssuesCount}
-            hasActiveRun={hasExecutingRun}
+            activeRunCount={activeRunCount}
             integrityMismatch={integrityMismatch}
             currentSearch={currentSearch}
           />

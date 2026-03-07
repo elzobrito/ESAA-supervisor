@@ -1,0 +1,68 @@
+{
+  "task_id": "SEC-015",
+  "audit_date": "2026-03-07T14:15:00Z",
+  "domain": "input_validation",
+  "summary": {
+    "total_checks": 7,
+    "pass": 2,
+    "fail": 1,
+    "partial": 1,
+    "na": 3
+  },
+  "results": [
+    {
+      "check_id": "IV-001",
+      "name": "SQL injection",
+      "status": "NA",
+      "evidence": "No SQL database or ORM used. Persistence is JSON-based.",
+      "severity": "CRITICAL"
+    },
+    {
+      "check_id": "IV-002",
+      "name": "Command injection",
+      "status": "PASS",
+      "evidence": "subprocess.run used with list arguments. User input via stdin.",
+      "severity": "CRITICAL"
+    },
+    {
+      "check_id": "IV-003",
+      "name": "Template injection",
+      "status": "NA",
+      "evidence": "No template engines processing user input found.",
+      "severity": "HIGH"
+    },
+    {
+      "check_id": "IV-004",
+      "name": "SSRF",
+      "status": "NA",
+      "evidence": "No HTTP client used in backend. No outbound requests.",
+      "severity": "HIGH"
+    },
+    {
+      "check_id": "IV-005",
+      "name": "Cross-site scripting (XSS)",
+      "status": "PASS",
+      "evidence": "React auto-escaping in place. No dangerous DOM patterns found.",
+      "severity": "HIGH"
+    },
+    {
+      "check_id": "IV-006",
+      "name": "Inputs não validados",
+      "status": "PARTIAL",
+      "evidence": "Pydantic schemas present but lack field constraints (length, range).",
+      "severity": "MEDIUM"
+    },
+    {
+      "check_id": "IV-007",
+      "name": "Sanitização ausente",
+      "status": "FAIL",
+      "evidence": "User data stored raw in JSON files without contextual sanitization.",
+      "severity": "MEDIUM"
+    }
+  ],
+  "recommendations": [
+    "Add length constraints to Pydantic models in app/api/schemas.py.",
+    "Implement basic sanitization for free text before persistence.",
+    "Verify security posture if a SQL database is introduced in the future."
+  ]
+}

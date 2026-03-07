@@ -5,16 +5,19 @@ import json
 import os
 import uuid
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Dict, Optional
 
 from app.core.agent_router import AgentRouter
+from app.core.eligibility import EligibilityEngine
 from app.core.event_writer import EventWriter
-from app.core.locks import ProjectLock
 from app.core.log_stream import LogStreamer
 from app.core.projector import Projector
+from app.core.run_coordinator import RunCoordinator
 from app.core.selector import TaskSelector
 from app.models.run_state import RunDecisionEntry, RunExecutionMode, RunLogEntry, RunState, RunStatus
 from app.models.task_context import ActiveLesson, TaskContext, TaskOutputs
+from app.utils.jsonl import read_jsonl
 
 
 class RunEngine:
@@ -30,22 +33,62 @@ class RunEngine:
     async def start_run(
         self,
         task_id: str,
-        agent_id: str,
+        agent_id: str | None,
         roadmap_id: str | None = None,
         execution_mode: RunExecutionMode = RunExecutionMode.MANUAL,
         roadmap_dir: str | None = None,
         roadmap: dict[str, Any] | None = None,
         lessons: list[dict[str, Any]] | None = None,
+        allow_in_progress: bool = False,
     ) -> RunState:
         run_id = str(uuid.uuid4())
+        roadmap_payload = roadmap or {}
+        lessons_payload = lessons or []
 
-        if not ProjectLock.acquire(self.project_id, run_id):
-            raise asyncio.CancelledError(f"Project {self.project_id} is already locked")
+        async with RunCoordinator.admission(self.project_id):
+            async with RunCoordinator.event_write(self.project_id):
+                current_roadmap = self._load_runtime_roadmap(
+                    roadmap_dir=roadmap_dir,
+                    roadmap_id=roadmap_id,
+                    fallback=roadmap_payload,
+                )
+                self._ensure_projection_ready(roadmap_dir=roadmap_dir, roadmap=current_roadmap)
+                task = self._find_task(current_roadmap, task_id) if current_roadmap else {
+                    "task_id": task_id,
+                    "task_kind": "impl",
+                    "title": task_id,
+                    "description": task_id,
+                    "status": "todo",
+                }
+                open_issues = self._load_open_issues(roadmap_dir)
+                is_runnable, reasons = EligibilityEngine(current_roadmap, open_issues).check_runnable(
+                    task_id,
+                    allow_in_progress=allow_in_progress,
+                )
+                if not is_runnable:
+                    raise ValueError("; ".join(reasons) or "Task is not runnable")
+
+                selected_agent = self._resolve_agent_id(task=task, override_agent_id=agent_id)
+                RunCoordinator.ensure_capacity(self.project_id, selected_agent, task_id)
+
+                if task.get("status") == "todo" and roadmap_dir:
+                    writer = EventWriter(roadmap_dir=roadmap_dir)
+                    claim_event = writer.append_event(
+                        actor=selected_agent,
+                        action="claim",
+                        payload={
+                            "task_id": task_id,
+                            "prior_status": task.get("status", "todo"),
+                        },
+                    )
+                    Projector(roadmap_dir, roadmap_id=roadmap_id or "roadmap.json").sync_to_disk([claim_event])
+
+                RunCoordinator.register_run(self.project_id, run_id, selected_agent, task_id)
 
         run_state = RunState(
             run_id=run_id,
             task_id=task_id,
-            agent_id=agent_id,
+            agent_id=selected_agent,
             roadmap_id=roadmap_id,
             execution_mode=execution_mode,
             status=RunStatus.PREFLIGHT,
@@ -58,8 +101,8 @@ class RunEngine:
             self._execute(
                 run_id,
                 roadmap_dir=roadmap_dir,
-                roadmap=roadmap or {},
-                lessons=lessons or [],
+                roadmap=roadmap_payload,
+                lessons=lessons_payload,
             )
         )
 
@@ -86,20 +129,16 @@ class RunEngine:
                     "description": run_state.task_id,
                     "status": "todo",
                 }
-                if roadmap_dir:
-                    self._claim_task(run_state, task=task, roadmap_dir=roadmap_dir)
-                    current_roadmap = self._load_runtime_roadmap(
-                        roadmap_dir=roadmap_dir,
-                        roadmap_id=run_state.roadmap_id,
-                        fallback=current_roadmap,
-                    )
-                    task = self._find_task(current_roadmap, run_state.task_id)
-                self._ensure_not_cancelled(run_state)
 
                 run_state.status = RunStatus.RUNNING
                 self._log(run_id, "system", f"Invoking agent {run_state.agent_id}...")
 
-                context = self._build_context(task=task, roadmap_id=run_state.roadmap_id, lessons=lessons, roadmap_dir=roadmap_dir)
+                context = self._build_context(
+                    task=task,
+                    roadmap_id=run_state.roadmap_id,
+                    lessons=lessons,
+                    roadmap_dir=roadmap_dir,
+                )
                 adapter = self.agent_router.get_adapter(run_state.agent_id)
                 result = await asyncio.to_thread(adapter.run, context, self._build_prompt(context), self._log_callback(run_id))
 
@@ -124,7 +163,7 @@ class RunEngine:
                 self._log(run_id, "system", f"Applying selected action '{selected_action}'...")
 
                 if roadmap_dir:
-                    self._apply_selected_action(
+                    await self._apply_selected_action(
                         run_state=run_state,
                         selected_action=selected_action,
                         roadmap_dir=roadmap_dir,
@@ -141,11 +180,9 @@ class RunEngine:
                     self._log(run_id, "system", "Graceful stop requested. Continuous execution will stop after the current task.")
                     break
 
-                next_task = self._select_next_task(
-                    roadmap_dir=roadmap_dir,
-                    roadmap_id=run_state.roadmap_id,
-                    current_task_id=run_state.task_id,
-                )
+                current_task_id = run_state.task_id
+                RunCoordinator.release_task(self.project_id, run_id, current_task_id)
+                next_task = await self._claim_next_task(run_state=run_state, roadmap_dir=roadmap_dir, roadmap=roadmap)
                 if not next_task:
                     self._log(run_id, "system", "No further eligible tasks found. Continuous execution is complete.")
                     break
@@ -175,26 +212,54 @@ class RunEngine:
             run_state.ended_at = datetime.now()
             self._log(run_id, "system", f"Run failed: {str(exc)}")
         finally:
-            ProjectLock.release(self.project_id, run_id)
+            RunCoordinator.finish_run(self.project_id, run_id, run_state.agent_id, run_state.task_id)
             self._run_tasks.pop(run_id, None)
             self._decision_events.pop(run_id, None)
 
-    def _claim_task(self, run_state: RunState, *, task: dict[str, Any], roadmap_dir: str) -> None:
-        if task.get("status") != "todo":
-            return
-        writer = EventWriter(roadmap_dir=roadmap_dir)
-        claim_event = writer.append_event(
-            actor=run_state.agent_id,
-            action="claim",
-            payload={
-                "task_id": run_state.task_id,
-                "prior_status": task.get("status", "todo"),
-            },
-        )
-        Projector(roadmap_dir, roadmap_id=run_state.roadmap_id or "roadmap.json").sync_to_disk([claim_event])
-        self._log(run_state.run_id, "system", f"Claim recorded for task {run_state.task_id}.")
+    async def _claim_next_task(
+        self,
+        *,
+        run_state: RunState,
+        roadmap_dir: str | None,
+        roadmap: dict[str, Any],
+    ) -> Optional[dict[str, Any]]:
+        if not roadmap_dir:
+            return None
 
-    def _apply_selected_action(
+        async with RunCoordinator.admission(self.project_id):
+            async with RunCoordinator.event_write(self.project_id):
+                current_roadmap = self._load_runtime_roadmap(
+                    roadmap_dir=roadmap_dir,
+                    roadmap_id=run_state.roadmap_id,
+                    fallback=roadmap,
+                )
+                open_issues = self._load_open_issues(roadmap_dir)
+                selector = TaskSelector(current_roadmap, open_issues)
+
+                for candidate in selector.get_eligible_tasks():
+                    candidate_id = candidate["task_id"]
+                    if candidate_id == run_state.task_id:
+                        continue
+                    if self._resolve_agent_id(task=candidate, override_agent_id=None) != run_state.agent_id:
+                        continue
+                    if RunCoordinator.active_task_run_id(self.project_id, candidate_id):
+                        continue
+
+                    writer = EventWriter(roadmap_dir=roadmap_dir)
+                    claim_event = writer.append_event(
+                        actor=run_state.agent_id,
+                        action="claim",
+                        payload={
+                            "task_id": candidate_id,
+                            "prior_status": candidate.get("status", "todo"),
+                        },
+                    )
+                    Projector(roadmap_dir, roadmap_id=run_state.roadmap_id or "roadmap.json").sync_to_disk([claim_event])
+                    RunCoordinator.claim_task(self.project_id, run_state.run_id, candidate_id)
+                    return candidate
+        return None
+
+    async def _apply_selected_action(
         self,
         *,
         run_state: RunState,
@@ -255,10 +320,11 @@ class RunEngine:
                 )
             )
 
-        written = writer.append_events(events)
-        if written:
-            Projector(roadmap_dir, roadmap_id=run_state.roadmap_id or "roadmap.json").sync_to_disk(written)
-            self._log(run_state.run_id, "system", f"Persisted {len(written)} event(s) for action '{selected_action}'.")
+        async with RunCoordinator.event_write(self.project_id):
+            written = writer.append_events(events)
+            if written:
+                Projector(roadmap_dir, roadmap_id=run_state.roadmap_id or "roadmap.json").sync_to_disk(written)
+                self._log(run_state.run_id, "system", f"Persisted {len(written)} event(s) for action '{selected_action}'.")
 
     async def _resolve_selected_action(
         self,
@@ -364,21 +430,32 @@ class RunEngine:
             issues = payload
         return [issue for issue in issues if issue.get("status") == "open"]
 
-    def _select_next_task(
-        self,
-        *,
-        roadmap_dir: str | None,
-        roadmap_id: str | None,
-        current_task_id: str,
-    ) -> Optional[dict[str, Any]]:
+    @staticmethod
+    def _ensure_projection_ready(*, roadmap_dir: str | None, roadmap: dict[str, Any]) -> None:
         if not roadmap_dir:
-            return None
-        roadmap = self._load_runtime_roadmap(roadmap_dir=roadmap_dir, roadmap_id=roadmap_id, fallback={})
-        selector = TaskSelector(roadmap, self._load_open_issues(roadmap_dir))
-        next_task = selector.select_next_task()
-        if next_task and next_task.get("task_id") == current_task_id:
-            return None
-        return next_task
+            return
+
+        run_meta = roadmap.get("meta", {}).get("run", {})
+        verify_status = run_meta.get("verify_status")
+        stored_hash = run_meta.get("projection_hash_sha256")
+        if verify_status != "ok" or not stored_hash:
+            raise RuntimeError("Roadmap projection is not verified. Run integrity repair before executing tasks.")
+
+        computed_hash = Projector.compute_projection_hash(roadmap)
+        if computed_hash != stored_hash:
+            raise RuntimeError("Roadmap projection hash is stale. Run integrity repair before executing tasks.")
+
+        activity_path = Path(roadmap_dir) / "activity.jsonl"
+        if not activity_path.exists():
+            return
+
+        projected_seq = int(run_meta.get("last_event_seq", 0) or 0)
+        activity = read_jsonl(str(activity_path))
+        latest_activity_seq = max((int(event.get("event_seq", 0) or 0) for event in activity), default=0)
+        if latest_activity_seq > projected_seq:
+            raise RuntimeError(
+                "Roadmap projection is behind activity.jsonl. Run integrity repair before executing tasks."
+            )
 
     def _build_context(
         self,
@@ -410,6 +487,17 @@ class RunEngine:
             },
         )
 
+    def _resolve_agent_id(self, *, task: dict[str, Any], override_agent_id: str | None) -> str:
+        if override_agent_id:
+            self.agent_router.get_adapter(override_agent_id)
+            return override_agent_id
+        planning = task.get("planning", {}) if isinstance(task.get("planning"), dict) else {}
+        preferred_runner = planning.get("preferred_runner")
+        if isinstance(preferred_runner, str) and preferred_runner:
+            self.agent_router.get_adapter(preferred_runner)
+            return preferred_runner
+        return self.agent_router.default_runner_for_kind(task.get("task_kind", "impl"))
+
     @staticmethod
     def _build_execution_metadata(*, run_state: RunState, result: dict[str, Any]) -> dict[str, Any]:
         metadata = result.get("metadata", {})
@@ -419,6 +507,8 @@ class RunEngine:
         execution: dict[str, Any] = {
             "run_id": run_state.run_id,
             "agent_id": run_state.agent_id,
+            "model_id": run_state.model_id,
+            "reasoning_effort": run_state.reasoning_effort,
             "duration_ms": metadata.get("duration_ms"),
             "exit_code": metadata.get("exit_code"),
             "timed_out": metadata.get("timed_out", False),
@@ -447,7 +537,7 @@ class RunEngine:
             "Return a single JSON object on the last line with action in "
             "['claim','complete','issue.report'] and payload.task_id set correctly. "
             "Do not return prose after the final JSON line. "
-            f"Task: {context.task_id}. Description: {context.description}"
+            f"Task: {context.task_id}. Description: {context.description}."
         )
         if not init_prompt:
             return base_prompt
@@ -500,6 +590,15 @@ class RunEngine:
         return run_state
 
     @classmethod
+    def list_runs(cls, project_id: str) -> list[RunState]:
+        runs = [
+            cls._active_runs[run_id]
+            for run_id in RunCoordinator.active_run_ids(project_id)
+            if run_id in cls._active_runs
+        ]
+        return sorted(runs, key=lambda item: item.started_at)
+
+    @classmethod
     def get_run_state(cls, run_id: str) -> Optional[RunState]:
         return cls._active_runs.get(run_id)
 
@@ -533,7 +632,6 @@ class RunEngine:
         decision_event = cls._decision_events.get(run_id)
         if decision_event:
             decision_event.set()
-        ProjectLock.release(project_id, run_id)
         task.cancel()
         return True
 

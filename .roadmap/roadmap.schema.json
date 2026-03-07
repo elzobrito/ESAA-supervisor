@@ -238,6 +238,14 @@
               "type": "string",
               "enum": ["claude-code", "codex", "gemini-cli"]
             },
+            "default_model": {
+              "type": "string",
+              "minLength": 1
+            },
+            "default_reasoning_effort": {
+              "type": "string",
+              "minLength": 1
+            },
             "routing_reason": {
               "type": "string",
               "minLength": 1

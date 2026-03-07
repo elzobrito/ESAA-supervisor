@@ -51,9 +51,15 @@ export type TaskSummary = {
   description?: string;
   status: string;
   assigned_to?: string | null;
+  active_run_id?: string | null;
+  active_agent?: string | null;
+  active_model?: string | null;
   depends_on?: string[];
   is_eligible: boolean;
   ineligibility_reasons: string[];
+  planning?: {
+    preferred_runner?: string | null;
+  };
 };
 
 export type IssueSummary = {
@@ -105,7 +111,34 @@ export type StateResponse = {
     label: string;
     available: boolean;
     command: string;
+    busy: boolean;
+    default_model?: string | null;
+    default_reasoning_effort?: string | null;
+    models: Array<{
+      model_id: string;
+      label: string;
+      is_default: boolean;
+    }>;
+    reasoning_efforts: Array<{
+      effort_id: string;
+      label: string;
+      is_default: boolean;
+    }>;
   }>;
+  active_runs: Array<{
+    run_id: string;
+    task_id: string;
+    agent_id: string;
+    model_id?: string | null;
+    roadmap_id?: string | null;
+    execution_mode: 'manual' | 'continuous';
+    status: string;
+    started_at: string;
+    awaiting_decision: boolean;
+  }>;
+  active_run_count: number;
+  remaining_run_slots: number;
+  busy_agents: string[];
   tasks: TaskSummary[];
   open_issues: IssueSummary[];
   lessons: LessonSummary[];
@@ -120,6 +153,15 @@ export type TaskMutationResponse = {
   task_id: string;
   roadmap_id: string;
   status: string;
+  message: string;
+};
+
+export type TaskPlanningMutationResponse = {
+  task_id: string;
+  roadmap_id: string;
+  planning: {
+    preferred_runner?: string | null;
+  };
   message: string;
 };
 
@@ -183,6 +225,18 @@ export async function submitTaskReview(
   const response = await api.post<TaskMutationResponse>(`/projects/${projectId}/tasks/${taskId}/review`, {
     decision: options.decision,
     roadmap_id: options.roadmapId,
+  });
+  return response.data;
+}
+
+export async function updateTaskPlanning(
+  projectId: string,
+  taskId: string,
+  options: { roadmapId?: string; preferredRunner: string },
+): Promise<TaskPlanningMutationResponse> {
+  const response = await api.patch<TaskPlanningMutationResponse>(`/projects/${projectId}/tasks/${taskId}/planning`, {
+    roadmap_id: options.roadmapId,
+    preferred_runner: options.preferredRunner,
   });
   return response.data;
 }

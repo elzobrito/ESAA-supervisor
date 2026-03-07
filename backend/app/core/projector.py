@@ -119,29 +119,34 @@ class Projector:
         if action == "orchestrator.view.mutate":
             transition = payload.get("transition")
             task_id = payload.get("task_id")
-            if not task_id or not transition:
+            if not task_id:
                 return
             task = self._find_task(roadmap, task_id)
-            _, new_status = transition.split("->", 1)
-            task["status"] = new_status
-            if "assigned_to" in payload:
-                task["assigned_to"] = payload["assigned_to"]
-            if "started_at" in payload:
-                task["started_at"] = payload["started_at"]
-            if "completed_at" in payload:
-                task["completed_at"] = payload["completed_at"]
-            if "verification" in payload:
-                task["verification"] = payload["verification"]
-            for field in payload.get("clear_fields", []):
-                task.pop(field, None)
+            if transition:
+                _, new_status = transition.split("->", 1)
+                task["status"] = new_status
+                if "assigned_to" in payload:
+                    task["assigned_to"] = payload["assigned_to"]
+                if "started_at" in payload:
+                    task["started_at"] = payload["started_at"]
+                if "completed_at" in payload:
+                    task["completed_at"] = payload["completed_at"]
+                if "verification" in payload:
+                    task["verification"] = payload["verification"]
+                for field in payload.get("clear_fields", []):
+                    task.pop(field, None)
+            if "planning" in payload and isinstance(payload["planning"], dict):
+                current_planning = task.get("planning", {}) if isinstance(task.get("planning"), dict) else {}
+                task["planning"] = {**current_planning, **payload["planning"]}
             return
 
     def _sync_roadmap(self, roadmap: dict[str, Any], *, last_event_seq: int, updated_at: str) -> None:
         roadmap["meta"]["run"]["last_event_seq"] = last_event_seq
         roadmap["meta"]["updated_at"] = updated_at
-        roadmap["meta"]["run"]["projection_hash_sha256"] = self.compute_projection_hash(roadmap)
         roadmap["indexes"]["by_status"] = self._count_by_status(roadmap["tasks"])
         roadmap["indexes"]["by_kind"] = self._count_by_kind(roadmap["tasks"])
+        roadmap["indexes"]["by_preferred_runner"] = self._group_by_preferred_runner(roadmap["tasks"])
+        roadmap["meta"]["run"]["projection_hash_sha256"] = self.compute_projection_hash(roadmap)
 
     @staticmethod
     def compute_projection_hash(roadmap: dict[str, Any]) -> str:
@@ -167,6 +172,19 @@ class Projector:
         for task in tasks:
             counts[task["task_kind"]] = counts.get(task["task_kind"], 0) + 1
         return counts
+
+    @staticmethod
+    def _group_by_preferred_runner(tasks: list[dict[str, Any]]) -> dict[str, list[str]]:
+        grouped: dict[str, list[str]] = {}
+        for task in tasks:
+            planning = task.get("planning", {})
+            if not isinstance(planning, dict):
+                continue
+            preferred_runner = planning.get("preferred_runner")
+            if not isinstance(preferred_runner, str) or not preferred_runner:
+                continue
+            grouped.setdefault(preferred_runner, []).append(task["task_id"])
+        return grouped
 
     @staticmethod
     def _find_task(roadmap: dict[str, Any], task_id: str) -> dict[str, Any]:

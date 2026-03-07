@@ -7,11 +7,11 @@
     "run": {
       "run_id": null,
       "status": "initialized",
-      "last_event_seq": 155,
-      "projection_hash_sha256": "71d84536ad15c320d2bd2367984750c255fb5e98f4d76c0b647c6a9cbfd06126",
+      "last_event_seq": 190,
+      "projection_hash_sha256": "c5beb4f8cccb171c74b7d2b14659cc7c20d337491ce6572c0a68d4f20e4882e1",
       "verify_status": "ok"
     },
-    "updated_at": "2026-03-07T11:30:58Z"
+    "updated_at": "2026-03-07T17:45:02Z"
   },
   "project": {
     "name": "esaa-supervisor-poc",
@@ -557,46 +557,46 @@
       "immutability": {
         "done_is_immutable": true
       },
-      "assigned_to": "claude-code",
-      "started_at": "2026-03-07T04:10:00Z",
-      "completed_at": "2026-03-07T04:30:00Z",
+      "assigned_to": "gemini-cli",
+      "started_at": "2026-03-07T17:19:00Z",
+      "completed_at": "2026-03-07T17:45:01Z",
       "verification": {
         "checks": [
           {
-            "id": "CHK-001",
-            "title": "RunControls.tsx corrigido",
-            "status": "pass",
-            "evidence": "bool -> boolean corrigido."
+            "name": "frontend/src/components/RunConsole.tsx exists",
+            "status": "pass"
           },
           {
-            "id": "CHK-002",
-            "title": "runs.ts endpoint e polling",
-            "status": "pass",
-            "evidence": "startTaskRun usa /runs/task; fetchRunStatus adicionado."
+            "name": "frontend/src/components/RunControls.tsx exists",
+            "status": "pass"
           },
           {
-            "id": "CHK-003",
-            "title": "StateResponse alinhado ao schema da API",
-            "status": "pass",
-            "evidence": "projects.ts alinhado com schemas.py do backend."
+            "name": "frontend/src/components/RunStatusBadge.tsx exists",
+            "status": "pass"
           },
           {
-            "id": "CHK-004",
-            "title": "ProjectDashboardPage integra RunConsole + RunControls",
-            "status": "pass",
-            "evidence": "Dashboard com polling, SSE e reload após run."
+            "name": "frontend/src/services/logStream.ts exists",
+            "status": "pass"
           },
           {
-            "id": "CHK-005",
-            "title": "RunStatusBadge.tsx criado",
-            "status": "pass",
-            "evidence": "components/RunStatusBadge.tsx criado."
+            "name": "frontend/src/services/runs.ts exists",
+            "status": "pass"
           },
           {
-            "id": "CHK-006",
-            "title": "npm run build passou",
-            "status": "pass",
-            "evidence": "tsc + vite build EXIT:0, 1533 modules, sem erros de tipo."
+            "name": "frontend/src/services/projects.ts exists",
+            "status": "pass"
+          },
+          {
+            "name": "frontend/src/pages/ProjectDashboardPage.tsx exists",
+            "status": "pass"
+          },
+          {
+            "name": "tsc --noEmit (zero TypeScript errors)",
+            "status": "pass"
+          },
+          {
+            "name": "vite build (production bundle)",
+            "status": "pass"
           }
         ]
       },
@@ -753,15 +753,16 @@
     "done": 18,
     "by_status": {
       "todo": 0,
-      "in_progress": 0,
+      "in_progress": 1,
       "review": 0,
-      "done": 18
+      "done": 17
     },
     "by_kind": {
       "spec": 4,
       "impl": 11,
       "qa": 3
-    }
+    },
+    "by_preferred_runner": {}
   },
   "last_event_seq": 59
 }

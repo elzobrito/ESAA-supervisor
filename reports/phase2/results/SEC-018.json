@@ -1,0 +1,56 @@
+{
+  "task_id": "SEC-018",
+  "audit_date": "2026-03-07T00:00:00Z",
+  "domain": "cryptography",
+  "summary": {
+    "total_checks": 5,
+    "pass": 1,
+    "fail": 3,
+    "partial": 1,
+    "na": 0
+  },
+  "results": [
+    {
+      "check_id": "CR-001",
+      "name": "HTTPS obrigatório",
+      "status": "FAIL",
+      "severity": "HIGH",
+      "evidence": "Backend FastAPI configurado em HTTP puro (ESAA_HOST=127.0.0.1, port=8000). Frontend .env: VITE_API_BASE_URL=http://localhost:8000. Nenhum middleware TLS, ssl_keyfile ou ssl_certfile configurado em main.py. Sem redirecionamento HTTP->HTTPS."
+    },
+    {
+      "check_id": "CR-002",
+      "name": "Algoritmos criptográficos",
+      "status": "PASS",
+      "severity": null,
+      "evidence": "SHA-256 via hashlib.sha256() em backend/app/core/projector.py:160 sobre JSON canônico com sort_keys=True. Nenhum algoritmo fraco (MD5, SHA-1, DES, RC4) encontrado na codebase. Uso coerente com escopo do PoC."
+    },
+    {
+      "check_id": "CR-003",
+      "name": "Encryption at-rest",
+      "status": "FAIL",
+      "severity": "MEDIUM",
+      "evidence": "Artefatos ESAA armazenados em texto plano: roadmap.json, activity.jsonl, issues.json, lessons.json e .roadmap/chat_sessions/*.json. ChatStore.save_session() usa path.write_text() sem criptografia (chat_store.py:57). Nenhuma camada de criptografia de arquivo ou banco de dados encontrada."
+    },
+    {
+      "check_id": "CR-004",
+      "name": "Chaves expostas",
+      "status": "PARTIAL",
+      "severity": "MEDIUM",
+      "evidence": "POSITIVO: nenhuma chave API hardcoded no código-fonte; backend .env contém apenas variáveis operacionais. NEGATIVO: (1) array 'command' com caminhos absolutos do executável exposto na resposta da API de chat (chat_service.py:158); (2) ausência de .gitignore na raiz do repositório expõe arquivos .env a commit acidental."
+    },
+    {
+      "check_id": "CR-005",
+      "name": "Rotação de chaves",
+      "status": "FAIL",
+      "severity": "LOW",
+      "evidence": "Nenhum mecanismo de rotação de chaves. API keys injetadas via os.environ.copy() sem ciclo de vida gerenciado. Sem integração com sistema de gerenciamento de segredos (Vault, AWS Secrets Manager, etc.)."
+    }
+  ],
+  "recommendations": [
+    "Documentar requisito de HTTPS (proxy reverso TLS) para deploy em produção e bloquear inicialização sem flag explícita em ESAA_ENV=production.",
+    "Remover ou filtrar o campo 'command' do metadata retornado na resposta da API de chat para evitar exposição de caminhos internos.",
+    "Criar .gitignore na raiz do repositório com regras para *.env, .env.*, *.key, *.pem e chat_sessions/.",
+    "Para ambientes além de PoC local, considerar criptografia de arquivos de sessão de chat com cryptography.fernet ou armazenamento em banco de dados com criptografia nativa.",
+    "Documentar política de gestão de chaves API e considerar integração com gerenciador de segredos para ambientes compartilhados."
+  ]
+}

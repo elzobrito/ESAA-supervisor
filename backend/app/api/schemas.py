@@ -86,11 +86,15 @@ class TaskResponse(BaseModel):
     description: str
     status: str
     assigned_to: Optional[str] = None
+    active_run_id: Optional[str] = None
+    active_agent: Optional[str] = None
+    active_model: Optional[str] = None
     started_at: Optional[str] = None
     completed_at: Optional[str] = None
     depends_on: List[str] = []
     is_eligible: bool = False
     ineligibility_reasons: List[str] = []
+    planning: Dict[str, Optional[str]] = Field(default_factory=dict)
 
 
 class IssueResponse(BaseModel):
@@ -107,11 +111,41 @@ class LessonResponse(BaseModel):
     rule: str
 
 
+class AgentModelOptionResponse(BaseModel):
+    model_id: str
+    label: str
+    is_default: bool = False
+
+
+class AgentReasoningOptionResponse(BaseModel):
+    effort_id: str
+    label: str
+    is_default: bool = False
+
+
 class AgentOptionResponse(BaseModel):
     agent_id: str
     label: str
     available: bool
     command: str
+    busy: bool = False
+    default_model: Optional[str] = None
+    models: List[AgentModelOptionResponse] = []
+    default_reasoning_effort: Optional[str] = None
+    reasoning_efforts: List[AgentReasoningOptionResponse] = []
+
+
+class ActiveRunResponse(BaseModel):
+    run_id: str
+    task_id: str
+    agent_id: str
+    model_id: Optional[str] = None
+    reasoning_effort: Optional[str] = None
+    roadmap_id: Optional[str] = None
+    execution_mode: RunExecutionMode = RunExecutionMode.MANUAL
+    status: RunStatus
+    started_at: datetime
+    awaiting_decision: bool = False
 
 
 class StateResponse(BaseModel):
@@ -122,6 +156,10 @@ class StateResponse(BaseModel):
     selected_roadmap_id: str = "roadmap.json"
     available_roadmaps: List[RoadmapOptionResponse] = []
     available_agents: List[AgentOptionResponse] = []
+    active_runs: List[ActiveRunResponse] = []
+    active_run_count: int = 0
+    remaining_run_slots: int = 0
+    busy_agents: List[str] = []
     tasks: List[TaskResponse] = []
     open_issues: List[IssueResponse] = []
     lessons: List[LessonResponse] = []
@@ -131,14 +169,14 @@ class StateResponse(BaseModel):
 
 
 class RunStartRequest(BaseModel):
-    agent_id: Optional[str] = "gemini-cli"
+    agent_id: Optional[str] = None
     roadmap_id: Optional[str] = "roadmap.json"
     execution_mode: RunExecutionMode = RunExecutionMode.MANUAL
 
 
 class RunTaskRequest(BaseModel):
     task_id: str
-    agent_id: Optional[str] = "gemini-cli"
+    agent_id: Optional[str] = None
     roadmap_id: Optional[str] = "roadmap.json"
     execution_mode: RunExecutionMode = RunExecutionMode.MANUAL
 
@@ -158,10 +196,22 @@ class TaskReviewRequest(BaseModel):
     roadmap_id: Optional[str] = "roadmap.json"
 
 
+class TaskPlanningUpdateRequest(BaseModel):
+    roadmap_id: Optional[str] = "roadmap.json"
+    preferred_runner: Optional[str] = None
+
+
 class TaskMutationResponse(BaseModel):
     task_id: str
     roadmap_id: str
     status: str
+    message: str
+
+
+class TaskPlanningMutationResponse(BaseModel):
+    task_id: str
+    roadmap_id: str
+    planning: Dict[str, Optional[str]] = Field(default_factory=dict)
     message: str
 
 
@@ -250,6 +300,8 @@ class RunResponse(BaseModel):
     run_id: str
     task_id: str
     agent_id: str
+    model_id: Optional[str] = None
+    reasoning_effort: Optional[str] = None
     roadmap_id: Optional[str] = None
     execution_mode: RunExecutionMode = RunExecutionMode.MANUAL
     status: RunStatus

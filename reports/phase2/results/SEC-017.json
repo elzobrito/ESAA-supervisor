@@ -1,0 +1,74 @@
+{
+  "task_id": "SEC-017",
+  "domain": "session_security",
+  "checks_total": 6,
+  "checks_pass": 1,
+  "checks_fail": 5,
+  "checks_partial": 0,
+  "checks_na": 0,
+  "worst_severity": "HIGH",
+  "results": [
+    {
+      "check_id": "SS-001",
+      "check_name": "Cookies sem httpOnly",
+      "status": "fail",
+      "severity_if_fail": "HIGH",
+      "evidence": {
+        "files": ["backend/app/main.py", "backend/app/core/chat_store.py"],
+        "description": "O sistema nao utiliza cookies para gerenciar sessoes, dependendo de UUIDs no client-side expostos ao JS."
+      },
+      "remediation": "Implementar cookies HttpOnly para sessoes de autenticacao e chat."
+    },
+    {
+      "check_id": "SS-002",
+      "check_name": "Cookies sem Secure flag",
+      "status": "fail",
+      "severity_if_fail": "HIGH",
+      "evidence": {
+        "description": "Ausencia de cookies de sessao e falta de configuracao 'Secure' global."
+      },
+      "remediation": "Configurar Secure=True em todos os cookies sensiveis."
+    },
+    {
+      "check_id": "SS-003",
+      "check_name": "SameSite ausente",
+      "status": "fail",
+      "severity_if_fail": "MEDIUM",
+      "evidence": {
+        "description": "Atributo SameSite nao utilizado por falta de uso de cookies."
+      },
+      "remediation": "Configurar SameSite=Strict em cookies de sessao."
+    },
+    {
+      "check_id": "SS-004",
+      "check_name": "Ausência de CSRF token",
+      "status": "pass",
+      "severity_if_fail": "HIGH",
+      "evidence": {
+        "description": "Mitigado: o sistema nao usa cookies para auth/sessao, o que impede ataques de CSRF tradicionais."
+      },
+      "remediation": "Implementar tokens CSRF caso a arquitetura mude para sessoes baseadas em cookies."
+    },
+    {
+      "check_id": "SS-005",
+      "check_name": "Sessões sem expiração",
+      "status": "fail",
+      "severity_if_fail": "HIGH",
+      "evidence": {
+        "files": ["backend/app/core/chat_store.py"],
+        "description": "Sessoes de chat sao persistentes indefinidamente no disco sem TTL."
+      },
+      "remediation": "Implementar expiraÃ§Ã£o (TTL) e rotina de limpeza de sessoes."
+    },
+    {
+      "check_id": "SS-006",
+      "check_name": "Tokens reutilizáveis",
+      "status": "fail",
+      "severity_if_fail": "MEDIUM",
+      "evidence": {
+        "description": "Session IDs (UUIDs) sao permanentes e podem ser reutilizados sem limites após vazamento."
+      },
+      "remediation": "Implementar rotaca§Ã£o de IDs de sessao e invalidacao manual."
+    }
+  ]
+}

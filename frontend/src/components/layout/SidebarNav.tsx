@@ -9,21 +9,22 @@ import {
   Play,
   ShieldCheck,
 } from 'lucide-react';
-import { NavLink, useParams } from 'react-router-dom';
+import type { ElementType } from 'react';
+import { NavLink } from 'react-router-dom';
 
 interface SidebarNavProps {
   expanded: boolean;
   projectId: string;
   eligibleCount: number;
   openIssuesCount: number;
-  hasActiveRun: boolean;
+  activeRunCount: number;
   integrityMismatch: boolean;
   currentSearch: string;
 }
 
 interface NavItem {
   to: string;
-  icon: React.ElementType;
+  icon: ElementType;
   label: string;
   badge?: number | string | null;
   badgeVariant?: 'default' | 'warn' | 'error' | 'live';
@@ -34,7 +35,7 @@ export function SidebarNav({
   projectId,
   eligibleCount,
   openIssuesCount,
-  hasActiveRun,
+  activeRunCount,
   integrityMismatch,
   currentSearch,
 }: SidebarNavProps) {
@@ -56,7 +57,7 @@ export function SidebarNav({
       to: `${base}/runs`,
       icon: Play,
       label: 'Execução',
-      badge: hasActiveRun ? 'AO VIVO' : null,
+      badge: activeRunCount > 0 ? activeRunCount : null,
       badgeVariant: 'live',
     },
     {

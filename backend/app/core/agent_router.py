@@ -47,3 +47,7 @@ class AgentRouter:
             "qa": ["gemini-cli", "claude-code", "codex"],
         }
         return mapping.get(task_kind, ["codex", "claude-code", "gemini-cli"])
+
+    @classmethod
+    def default_runner_for_kind(cls, task_kind: str) -> str:
+        return cls._defaults_for_kind(task_kind)[0]

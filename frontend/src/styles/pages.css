@@ -1498,6 +1498,36 @@ a:hover { text-decoration: underline; }
   gap: var(--space-4);
 }
 
+.run-active-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-3);
+}
+
+.run-active-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-surface);
+  text-align: left;
+  color: inherit;
+}
+
+.run-active-card.selected {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 1px rgba(94, 166, 255, 0.25);
+}
+
+.run-active-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
 .run-result-stack {
   display: flex;
   flex-direction: column;

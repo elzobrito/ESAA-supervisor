@@ -40,6 +40,8 @@ class RunState(BaseModel):
     run_id: str
     task_id: str
     agent_id: str
+    model_id: Optional[str] = None
+    reasoning_effort: Optional[str] = None
     roadmap_id: Optional[str] = None
     execution_mode: RunExecutionMode = RunExecutionMode.MANUAL
     status: RunStatus = RunStatus.PREFLIGHT

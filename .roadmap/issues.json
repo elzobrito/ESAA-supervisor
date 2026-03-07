@@ -4,8 +4,8 @@
     "esaa_version": "0.4.x",
     "generated_by": "esaa.project",
     "source_event_store": ".roadmap/activity.jsonl",
-    "last_event_seq": 160,
-    "updated_at": "2026-03-07T13:40:00Z"
+    "last_event_seq": 198,
+    "updated_at": "2026-03-07T19:05:00Z"
   },
   "issues": [
     {
@@ -637,6 +637,36 @@
       }
     },
     {
+      "issue_id": "ISS-0018",
+      "status": "resolved",
+      "severity": "high",
+      "title": "Runs podiam iniciar com projection defasada em relacao ao activity.jsonl",
+      "baseline_id": null,
+      "affected": {
+        "paths": [
+          "backend/app/core/run_engine.py",
+          "backend/app/core/projector.py",
+          "backend/app/api/routes_integrity.py",
+          "backend/app/adapters/codex_adapter.py"
+        ]
+      },
+      "evidence": {
+        "symptom": "Uma run de task podia ser admitida mesmo com last_event_seq do roadmap atrasado em relacao ao activity.jsonl, permitindo reexecucao de task ja concluida no log bruto e expondo divergencia entre projection e source of truth."
+      },
+      "resolution": {
+        "summary": "A admissao de run passou a bloquear projeção nao verificada, hash stale e roadmap atrasado em relacao ao activity.jsonl; o repair integrity agora reaplica eventos pendentes e o projector passou a calcular o hash depois de atualizar os indexes.",
+        "evidence": [
+          "Execucoes agora retornam erro orientando integrity repair antes de iniciar quando a projection esta atrasada.",
+          "repair integrity reaplica eventos pendentes do activity.jsonl na projection materializada.",
+          "O adapter do codex tambem passou a filtrar transcript operacional redundante no stderr para reduzir ruido no console."
+        ]
+      },
+      "timeline": {
+        "created_event_seq": null,
+        "resolved_event_seq": null
+      }
+    },
+    {
       "issue_id": "ISS-RUN-7352CB40",
       "status": "open",
       "severity": "medium",
@@ -654,6 +684,90 @@
       },
       "timeline": {
         "created_event_seq": 158,
+        "resolved_event_seq": null
+      }
+    },
+    {
+      "issue_id": "ISS-RUN-40714C13",
+      "status": "open",
+      "severity": "medium",
+      "title": "Agent reported issue while executing SEC-015",
+      "baseline_id": null,
+      "affected": {
+        "task_id": "SEC-015"
+      },
+      "evidence": "Agent did not return valid JSON",
+      "resolution": null,
+      "links": {
+        "reported_by_task_id": "SEC-015",
+        "fixes_task_id": null,
+        "hotfix_task_id": null
+      },
+      "timeline": {
+        "created_event_seq": 170,
+        "resolved_event_seq": null
+      }
+    },
+    {
+      "issue_id": "ISS-RUN-49369052",
+      "status": "open",
+      "severity": "medium",
+      "title": "Agent reported issue while executing ESUP-IMPL-015",
+      "baseline_id": null,
+      "affected": {
+        "task_id": "ESUP-IMPL-015"
+      },
+      "evidence": "Agent did not return valid JSON",
+      "resolution": null,
+      "links": {
+        "reported_by_task_id": "ESUP-IMPL-015",
+        "fixes_task_id": null,
+        "hotfix_task_id": null
+      },
+      "timeline": {
+        "created_event_seq": 184,
+        "resolved_event_seq": null
+      }
+    },
+    {
+      "issue_id": "ISS-RUN-384DFC52",
+      "status": "open",
+      "severity": "medium",
+      "title": "Agent reported issue while executing SEC-015",
+      "baseline_id": null,
+      "affected": {
+        "task_id": "SEC-015"
+      },
+      "evidence": "codex exited with code 1",
+      "resolution": null,
+      "links": {
+        "reported_by_task_id": "SEC-015",
+        "fixes_task_id": null,
+        "hotfix_task_id": null
+      },
+      "timeline": {
+        "created_event_seq": 193,
+        "resolved_event_seq": null
+      }
+    },
+    {
+      "issue_id": "ISS-RUN-F7B10D82",
+      "status": "open",
+      "severity": "medium",
+      "title": "Agent reported issue while executing SEC-018",
+      "baseline_id": null,
+      "affected": {
+        "task_id": "SEC-018"
+      },
+      "evidence": "Agent requested issue reporting from manual review flow.",
+      "resolution": null,
+      "links": {
+        "reported_by_task_id": "SEC-018",
+        "fixes_task_id": null,
+        "hotfix_task_id": null
+      },
+      "timeline": {
+        "created_event_seq": 198,
         "resolved_event_seq": null
       }
     }

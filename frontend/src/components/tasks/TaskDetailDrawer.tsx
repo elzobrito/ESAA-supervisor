@@ -1,21 +1,60 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { X } from 'lucide-react';
 import { extractErrorMessage } from '../../services/api';
-import { resetTaskToTodo, submitTaskReview } from '../../services/projects';
+import { resetTaskToTodo, submitTaskReview, updateTaskPlanning } from '../../services/projects';
 import type { TaskSummary } from '../../services/projects';
 import { TaskStatusBadge } from './TaskStatusBadge';
 
 interface TaskDetailDrawerProps {
   projectId: string;
+  availableAgents: Array<{
+    agent_id: string;
+    label: string;
+    available: boolean;
+    busy: boolean;
+  }>;
+  remainingRunSlots: number;
   task: TaskSummary | null;
   open: boolean;
   onClose: () => void;
   onTaskUpdated: () => void;
+  onExecuteTask: (task: TaskSummary, overrides: { agentId?: string }) => Promise<void>;
 }
 
-export function TaskDetailDrawer({ projectId, task, open, onClose, onTaskUpdated }: TaskDetailDrawerProps) {
+export function TaskDetailDrawer({
+  projectId,
+  availableAgents,
+  remainingRunSlots,
+  task,
+  open,
+  onClose,
+  onTaskUpdated,
+  onExecuteTask,
+}: TaskDetailDrawerProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mutationError, setMutationError] = useState<string | null>(null);
+  const [preferredRunner, setPreferredRunner] = useState('');
+
+  const selectedAgent = useMemo(
+    () => availableAgents.find((agent) => agent.agent_id === preferredRunner) ?? null,
+    [availableAgents, preferredRunner],
+  );
+  const canResumeTask = task?.status === 'in_progress' && !task.active_run_id;
+  const canExecuteNow = !!task
+    && !task.active_run_id
+    && remainingRunSlots > 0
+    && !!selectedAgent
+    && selectedAgent.available
+    && !selectedAgent.busy
+    && (task.is_eligible || canResumeTask);
+
+  useEffect(() => {
+    if (!task) {
+      return;
+    }
+    const nextPreferredRunner = task.planning?.preferred_runner ?? availableAgents.find((agent) => !agent.busy)?.agent_id ?? availableAgents[0]?.agent_id ?? '';
+    setPreferredRunner(nextPreferredRunner);
+  }, [availableAgents, task]);
 
   if (!open || !task) {
     return null;
@@ -44,6 +83,37 @@ export function TaskDetailDrawer({ projectId, task, open, onClose, onTaskUpdated
         roadmapId: task.roadmap_id,
       });
       await onTaskUpdated();
+      onClose();
+    } catch (error) {
+      setMutationError(extractErrorMessage(error));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSavePlanning = async () => {
+    setIsSubmitting(true);
+    setMutationError(null);
+    try {
+      await updateTaskPlanning(projectId, task.task_id, {
+        roadmapId: task.roadmap_id,
+        preferredRunner,
+      });
+      await onTaskUpdated();
+    } catch (error) {
+      setMutationError(extractErrorMessage(error));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleExecuteNow = async () => {
+    setIsSubmitting(true);
+    setMutationError(null);
+    try {
+      await onExecuteTask(task, {
+        agentId: preferredRunner || undefined,
+      });
       onClose();
     } catch (error) {
       setMutationError(extractErrorMessage(error));
@@ -99,12 +169,51 @@ export function TaskDetailDrawer({ projectId, task, open, onClose, onTaskUpdated
           <section className="drawer-section">
             <span className="drawer-section-label">Execução</span>
             <div className="drawer-section-content">
-              Agente atual: {task.assigned_to || 'não atribuído'}
+              <p>Agente atual: {task.assigned_to || 'não atribuído'}</p>
+              <p>Run ativa: {task.active_run_id ?? 'nenhuma'}</p>
+              <p>Slots disponíveis: {remainingRunSlots}</p>
+              {selectedAgent ? (
+                <p className={selectedAgent.available && !selectedAgent.busy ? 'task-eligible-hint' : 'task-blocked-hint'}>
+                  Override atual: {selectedAgent.label}
+                  {!selectedAgent.available ? ' indisponível no ambiente.' : selectedAgent.busy ? ' ocupado em outra run.' : ' disponível.'}
+                </p>
+              ) : null}
+            </div>
+          </section>
+          <section className="drawer-section">
+            <span className="drawer-section-label">Padrão da task</span>
+            <div className="drawer-section-content">
+              <label className="run-control-field">
+                <span className="run-control-label">Agente padrão</span>
+                <select className="filter-select-ds" value={preferredRunner} onChange={(event) => setPreferredRunner(event.target.value)}>
+                  {availableAgents.map((agent) => (
+                    <option key={agent.agent_id} value={agent.agent_id}>
+                      {agent.label}{agent.busy ? ' (ocupado)' : ''}
+                    </option>
+                  ))}
+                </select>
+              </label>
             </div>
           </section>
           {mutationError ? <p className="error-text">{mutationError}</p> : null}
         </div>
         <div className="drawer-footer">
+          <button
+            className="btn-primary-ds"
+            type="button"
+            onClick={() => void handleExecuteNow()}
+            disabled={isSubmitting || !canExecuteNow}
+          >
+            Executar agora
+          </button>
+          <button
+            className="btn-secondary-ds"
+            type="button"
+            onClick={() => void handleSavePlanning()}
+            disabled={isSubmitting || !preferredRunner || !selectedAgent || !selectedAgent.available}
+          >
+            Salvar padrão
+          </button>
           {task.status === 'review' ? (
             <>
               <button

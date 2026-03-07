@@ -5,7 +5,7 @@
     "generated_by": "esaa.project",
     "source_event_store": ".roadmap/activity.jsonl",
     "last_event_seq": 114,
-    "updated_at": "2026-03-07T13:40:00Z"
+    "updated_at": "2026-03-07T19:05:00Z"
   },
   "lessons": [
     {
@@ -480,6 +480,24 @@
         "mode": "require_step",
         "applies_to": "acceptance_gate"
       }
+    },
+    {
+      "lesson_id": "LES-0029",
+      "status": "active",
+      "created_at": "2026-03-07T19:05:00Z",
+      "title": "Admissao de run deve validar projection contra a fonte canonica antes de executar",
+      "mistake": "O supervisor admitiu execucao com roadmap materializado atrasado em relacao ao activity.jsonl, o que permitiu selecionar task ja concluida no log bruto e só descobrir o conflito dentro da invocacao do agente.",
+      "rule": "Antes de iniciar uma run, o runtime deve bloquear projection nao verificada, hash stale e qualquer lag entre roadmap.last_event_seq e activity.jsonl; quando houver atraso, o operador deve executar integrity repair para reaplicar os eventos pendentes.",
+      "scope": {
+        "task_kinds": [
+          "impl",
+          "qa"
+        ]
+      },
+      "enforcement": {
+        "mode": "reject",
+        "applies_to": "workflow_gate"
+      }
     }
   ],
   "indexes": {
@@ -519,7 +537,8 @@
         "LES-0025",
         "LES-0026",
         "LES-0027",
-        "LES-0028"
+        "LES-0028",
+        "LES-0029"
       ],
       "qa": [
         "LES-0001",
@@ -545,7 +564,8 @@
         "LES-0025",
         "LES-0026",
         "LES-0027",
-        "LES-0028"
+        "LES-0028",
+        "LES-0029"
       ]
     },
     "by_enforcement_applies_to": {
@@ -555,7 +575,8 @@
         "LES-0010",
         "LES-0013",
         "LES-0015",
-        "LES-0022"
+        "LES-0022",
+        "LES-0029"
       ],
       "output_contract": [
         "LES-0002",

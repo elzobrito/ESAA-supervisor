@@ -144,7 +144,7 @@ export function ProjectDashboardPage() {
 
       {runError ? <p className="error-text">{runError}</p> : null}
 
-      {(run || logs.length > 0) && <RunConsole logs={logs} status={run?.status ?? 'idle'} />}
+      {(run || logs.length > 0) && <RunConsole run={run} logs={logs} status={run?.status ?? 'idle'} />}
 
       {state ? (
         <div className="dashboard-layout">

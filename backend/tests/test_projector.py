@@ -142,3 +142,85 @@ def test_projector_applies_claim_complete_review_and_issue_resolution(tmp_path: 
     assert roadmap["indexes"]["by_status"]["done"] == 1
     assert len(roadmap["meta"]["run"]["projection_hash_sha256"]) == 64
     assert lessons["indexes"]["by_task_kind"] == {}
+
+
+def test_projector_persists_task_planning_and_indexes_preferred_runner(tmp_path: Path) -> None:
+    roadmap_dir = tmp_path
+    _write_json(
+        roadmap_dir / "roadmap.json",
+        {
+            "meta": {
+                "schema_version": "0.4.0",
+                "esaa_version": "0.4.x",
+                "immutable_done": True,
+                "master_correlation_id": None,
+                "run": {
+                    "run_id": None,
+                    "status": "initialized",
+                    "last_event_seq": 0,
+                    "projection_hash_sha256": "0" * 64,
+                    "verify_status": "ok",
+                },
+                "updated_at": "2026-03-07T00:00:00Z",
+            },
+            "project": {"name": "demo", "audit_scope": "test"},
+            "tasks": [
+                {
+                    "task_id": "SEC-014",
+                    "task_kind": "impl",
+                    "title": "API",
+                    "description": "desc",
+                    "status": "todo",
+                    "depends_on": [],
+                    "targets": [],
+                    "outputs": {"files": []},
+                    "immutability": {"done_is_immutable": True},
+                    "required_verification": [],
+                    "planning": {"preferred_runner": "codex"},
+                }
+            ],
+            "indexes": {
+                "by_status": {"todo": 1, "in_progress": 0, "review": 0, "done": 0},
+                "by_kind": {"spec": 0, "impl": 1, "qa": 0},
+                "by_preferred_runner": {"codex": ["SEC-014"]},
+            },
+        },
+    )
+    _write_json(
+        roadmap_dir / "issues.json",
+        {"meta": {"schema_version": "0.4.0", "last_event_seq": 0, "updated_at": "2026-03-07T00:00:00Z"}, "issues": [], "indexes": {"open_by_baseline": {}}},
+    )
+    _write_json(
+        roadmap_dir / "lessons.json",
+        {"meta": {"schema_version": "0.4.0", "updated_at": "2026-03-07T00:00:00Z"}, "lessons": [], "indexes": {"by_task_kind": {}, "by_enforcement_applies_to": {}}},
+    )
+
+    projector = Projector(str(roadmap_dir))
+    roadmap, _, _ = projector.apply_events(
+        json.loads((roadmap_dir / "roadmap.json").read_text(encoding="utf-8")),
+        json.loads((roadmap_dir / "issues.json").read_text(encoding="utf-8")),
+        json.loads((roadmap_dir / "lessons.json").read_text(encoding="utf-8")),
+        [
+            {
+                "schema_version": "0.4.1",
+                "event_id": "EV-00000021",
+                "event_seq": 21,
+                "ts": "2026-03-07T00:01:00Z",
+                "actor": "orchestrator",
+                "action": "orchestrator.view.mutate",
+                "payload": {
+                    "task_id": "SEC-014",
+                    "planning": {
+                        "preferred_runner": "gemini-cli",
+                        "default_model": "gemini-2.5-pro",
+                        "default_reasoning_effort": "high",
+                    },
+                },
+            }
+        ],
+    )
+
+    assert roadmap["tasks"][0]["planning"]["preferred_runner"] == "gemini-cli"
+    assert roadmap["tasks"][0]["planning"]["default_model"] == "gemini-2.5-pro"
+    assert roadmap["tasks"][0]["planning"]["default_reasoning_effort"] == "high"
+    assert roadmap["indexes"]["by_preferred_runner"] == {"gemini-cli": ["SEC-014"]}

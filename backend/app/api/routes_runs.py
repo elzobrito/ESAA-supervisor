@@ -34,6 +34,8 @@ def _to_run_response(run_state) -> RunResponse:
         run_id=run_state.run_id,
         task_id=run_state.task_id,
         agent_id=run_state.agent_id,
+        model_id=run_state.model_id,
+        reasoning_effort=run_state.reasoning_effort,
         roadmap_id=run_state.roadmap_id,
         execution_mode=run_state.execution_mode,
         status=run_state.status,
@@ -111,7 +113,10 @@ async def start_next_run(project_id: str, request: RunStartRequest):
             roadmap_dir=s.active_project.base_path,
             roadmap=roadmap,
             lessons=lessons,
+            allow_in_progress=False,
         )
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=409, detail=str(e))
 
@@ -145,7 +150,10 @@ async def start_task_run(project_id: str, request: RunTaskRequest):
             roadmap_dir=s.active_project.base_path,
             roadmap=roadmap,
             lessons=lessons,
+            allow_in_progress=True,
         )
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=409, detail=str(e))
 
@@ -222,3 +230,9 @@ async def get_run_status(project_id: str, run_id: str):
     if not run_state:
         raise HTTPException(status_code=404, detail="Run not found")
     return _to_run_response(run_state)
+
+
+@router.get("", response_model=list[RunResponse])
+async def list_runs(project_id: str):
+    _get_active_store(project_id)
+    return [_to_run_response(run_state) for run_state in RunEngine.list_runs(project_id)]

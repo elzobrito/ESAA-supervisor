@@ -10,14 +10,15 @@ AgentAction = Literal["claim", "complete", "issue.report"]
 
 class VerificationCheck(BaseModel):
     id: str | None = None
-    status: Literal["pass", "fail"] | None = None
+    status: Literal["pass", "fail", "partial", "not_applicable"] | None = None
     title: str | None = None
     evidence: str | None = None
 
 
 class FileUpdate(BaseModel):
     path: str
-    content: str
+    content: str | None = None
+    status: str | None = None
 
 
 class AgentPayload(BaseModel):
