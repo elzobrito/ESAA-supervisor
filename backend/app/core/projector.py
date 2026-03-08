@@ -157,7 +157,9 @@ class Projector:
         payload = event["payload"]
 
         if action == "claim":
-            task = self._find_task(roadmap, payload["task_id"])
+            task = self._find_task_optional(roadmap, payload["task_id"])
+            if task is None:
+                return
             self._expect_status(task, "todo")
             task["status"] = "in_progress"
             task["assigned_to"] = event["actor"]
@@ -165,7 +167,9 @@ class Projector:
             return
 
         if action == "complete":
-            task = self._find_task(roadmap, payload["task_id"])
+            task = self._find_task_optional(roadmap, payload["task_id"])
+            if task is None:
+                return
             if task.get("status") in {"review", "done"}:
                 if task.get("assigned_to") and task["assigned_to"] != event["actor"]:
                     raise ValueError(f"Task {task['task_id']} assigned to {task['assigned_to']}, not {event['actor']}")
@@ -183,7 +187,9 @@ class Projector:
             return
 
         if action == "review":
-            task = self._find_task(roadmap, payload["task_id"])
+            task = self._find_task_optional(roadmap, payload["task_id"])
+            if task is None:
+                return
             decision = payload["decision"]
             if decision == "approve" and task.get("status") == "done":
                 return
@@ -202,7 +208,9 @@ class Projector:
             task_id = payload.get("task_id")
             if not task_id:
                 return
-            task = self._find_task(roadmap, task_id)
+            task = self._find_task_optional(roadmap, task_id)
+            if task is None:
+                return
             if transition:
                 _, new_status = transition.split("->", 1)
                 task["status"] = new_status
@@ -285,6 +293,13 @@ class Projector:
             if task["task_id"] == task_id:
                 return task
         raise KeyError(f"Task not found: {task_id}")
+
+    @staticmethod
+    def _find_task_optional(roadmap: dict[str, Any], task_id: str) -> dict[str, Any] | None:
+        for task in roadmap.get("tasks", []):
+            if task["task_id"] == task_id:
+                return task
+        return None
 
     @staticmethod
     def _expect_status(task: dict[str, Any], expected: str) -> None:

@@ -102,7 +102,7 @@
             "required": ["created_event_seq", "resolved_event_seq"],
             "properties": {
               "created_event_seq": {
-                "type": "integer",
+                "type": ["integer", "null"],
                 "minimum": 1
               },
               "resolved_event_seq": {
@@ -132,4 +132,3 @@
     }
   }
 }
-

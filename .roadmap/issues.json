@@ -1,127 +1,87 @@
 {
-  "meta": {
-    "schema_version": "0.4.0",
-    "esaa_version": "0.4.x",
-    "generated_by": "esaa.project",
-    "source_event_store": ".roadmap/activity.jsonl",
-    "last_event_seq": 254,
-    "updated_at": "2026-03-08T18:13:23Z"
-  },
   "issues": [
     {
+      "evidence": {
+        "symptom": "O review encontrou um scaffold incompleto para a PoC: o frontend nao era um projeto Vite/TypeScript executavel, faltavam adapters/tests no backend e nao havia arquivos .env.example declarados pela task.",
+        "repro_steps": [
+          "Ler docs/qa/ESUP-IMPL-005.md. Comparar o escopo de ESUP-IMPL-005 em .roadmap/roadmap.json com os arquivos presentes no workspace antes da correcao. Verificar ausencia de frontend/index.html, frontend/tsconfig.json, frontend/tsconfig.node.json, backend/app/adapters/, backend/tests/ e arquivos .env.example."
+        ]
+      },
       "issue_id": "ISS-0001",
-      "status": "resolved",
+      "reported_at": "2026-03-07T06:00:02Z",
+      "resolved_at": "2026-03-07T06:00:03Z",
+      "resolved_by_task_id": null,
       "severity": "medium",
-      "title": "Scaffold inicial de ESUP-IMPL-005 incompleto",
-      "baseline_id": null,
+      "status": "resolved",
+      "task_id": "ESUP-IMPL-005",
+      "title": "Scaffold inicial de ESUP-IMPL-005 foi declarado completo sem arquivos-base operacionais do frontend, backend e ambiente",
       "affected": {
         "task_id": "ESUP-IMPL-005"
       },
-      "resolution": {
-        "summary": "Scaffold complementado com arquivos-base do frontend, estrutura minima de adapters/tests, exemplos de ambiente e README alinhado.",
-        "evidence": [
-          "Estrutura funcional entregue e validada via build."
-        ]
-      },
-      "timeline": {
-        "created_event_seq": 25,
-        "resolved_event_seq": 26
-      }
-    },
-    {
-      "issue_id": "ISS-0002",
-      "status": "resolved",
-      "severity": "high",
-      "title": "Gravacoes concorrentes no activity.jsonl quebram monotonicidade",
-      "baseline_id": null,
-      "affected": {
-        "paths": [
-          ".roadmap/activity.jsonl"
-        ]
-      },
-      "evidence": {
-        "symptom": "O event store compartilhado recebeu append concorrente com event_seq e event_id duplicados."
-      },
-      "resolution": {
-        "summary": "Saneamento completo do log realizado via reordenaÃ§Ã£o cronolÃ³gica e reatribuiÃ§Ã£o de sequÃªncias Ãºnicas (Gap-free).",
-        "evidence": [
-          "activity.jsonl agora possui 114 eventos contÃ­nuos e Ãºnicos."
-        ]
-      },
-      "timeline": {
-        "created_event_seq": 44,
-        "resolved_event_seq": 114
-      }
-    },
-    {
-      "issue_id": "ISS-0003",
-      "status": "resolved",
-      "severity": "low",
-      "title": "Ausencia de entrypoint simples na raiz",
-      "baseline_id": null,
-      "resolution": {
-        "summary": "Adicionado launcher start-esaa-supervisor.bat para subir stack completa.",
-        "evidence": [
-          "Script funcional entregue na raiz do projeto."
-        ]
+      "links": {
+        "reported_by_task_id": "ESUP-IMPL-005",
+        "fixes_task_id": null,
+        "hotfix_task_id": null
       },
       "timeline": {
         "created_event_seq": null,
         "resolved_event_seq": null
-      }
+      },
+      "baseline_id": null,
+      "resolution": null
     },
     {
-      "issue_id": "ISS-0004",
-      "status": "resolved",
-      "severity": "low",
-      "title": "Endpoint GET /state redirect slashes",
-      "baseline_id": null,
-      "resolution": {
-        "summary": "URLs de consulta corrigidas para incluir trailing slash (/state/) evitando redirect 307.",
-        "evidence": [
-          "Smoke tests agora passam com 100% de sucesso."
+      "evidence": {
+        "symptom": "Agent command not found: codex",
+        "repro_steps": [
+          "Consultar activity.jsonl para o evento original do issue."
         ]
       },
-      "timeline": {
-        "created_event_seq": 54,
-        "resolved_event_seq": 55
-      }
-    },
-    {
       "issue_id": "ISS-RUN-124B1466",
-      "status": "resolved",
+      "reported_at": "2026-03-07T07:32:04Z",
+      "resolved_at": "2026-03-08T18:39:07Z",
+      "resolved_by_task_id": "SEC-001",
       "severity": "medium",
-      "title": "Comando 'codex' nao encontrado durante execucao",
-      "baseline_id": null,
+      "status": "resolved",
+      "task_id": "SEC-001",
+      "title": "Agent reported issue while executing SEC-001",
       "affected": {
         "task_id": "SEC-001"
       },
-      "resolution": {
-        "summary": "Ambiente operacional estabilizado; o erro de comando nÃ£o encontrado foi tratado como falha de ambiente local e superado pela conclusÃ£o das tarefas via gemini-cli.",
-        "evidence": [
-          "Projeto 100% concluÃ­do; runner preferencial operando normalmente."
-        ]
+      "links": {
+        "reported_by_task_id": "SEC-001",
+        "fixes_task_id": "SEC-001",
+        "hotfix_task_id": null
       },
       "timeline": {
-        "created_event_seq": 114,
-        "resolved_event_seq": 114
+        "created_event_seq": null,
+        "resolved_event_seq": 268
+      },
+      "baseline_id": null,
+      "resolution": {
+        "summary": "Issue resolved manually via supervisor UI after operational verification.",
+        "evidence": [
+          "Resolved manually from the Issues page after operator review."
+        ]
       }
     },
     {
+      "evidence": {
+        "symptom": "Agent command not found: codex",
+        "repro_steps": [
+          "Consultar activity.jsonl para o evento original do issue."
+        ]
+      },
       "issue_id": "ISS-RUN-492EEC5C",
-      "status": "resolved",
+      "reported_at": "2026-03-07T07:39:16Z",
+      "resolved_at": "2026-03-07T11:30:48Z",
+      "resolved_by_task_id": "SEC-001",
       "severity": "medium",
+      "status": "resolved",
+      "task_id": "SEC-001",
       "title": "Agent reported issue while executing SEC-001",
-      "baseline_id": null,
       "affected": {
         "task_id": "SEC-001"
-      },
-      "evidence": "Agent command not found: codex",
-      "resolution": {
-        "summary": "Issue resolved manually via supervisor UI after operational verification.",
-        "evidence": [
-          "Resolved manually from the Issues page after operator review."
-        ]
       },
       "links": {
         "reported_by_task_id": "SEC-001",
@@ -129,25 +89,34 @@
         "hotfix_task_id": null
       },
       "timeline": {
-        "created_event_seq": 115,
+        "created_event_seq": null,
         "resolved_event_seq": 150
+      },
+      "baseline_id": null,
+      "resolution": {
+        "summary": "Issue resolved manually via supervisor UI after operational verification.",
+        "evidence": [
+          "Resolved manually from the Issues page after operator review."
+        ]
       }
     },
     {
+      "evidence": {
+        "symptom": "codex exited with code 1",
+        "repro_steps": [
+          "Consultar activity.jsonl para o evento original do issue."
+        ]
+      },
       "issue_id": "ISS-RUN-CE035C2F",
-      "status": "resolved",
+      "reported_at": "2026-03-07T07:42:40Z",
+      "resolved_at": "2026-03-07T11:30:51Z",
+      "resolved_by_task_id": "SEC-001",
       "severity": "medium",
+      "status": "resolved",
+      "task_id": "SEC-001",
       "title": "Agent reported issue while executing SEC-001",
-      "baseline_id": null,
       "affected": {
         "task_id": "SEC-001"
-      },
-      "evidence": "codex exited with code 1",
-      "resolution": {
-        "summary": "Issue resolved manually via supervisor UI after operational verification.",
-        "evidence": [
-          "Resolved manually from the Issues page after operator review."
-        ]
       },
       "links": {
         "reported_by_task_id": "SEC-001",
@@ -155,25 +124,34 @@
         "hotfix_task_id": null
       },
       "timeline": {
-        "created_event_seq": 116,
+        "created_event_seq": null,
         "resolved_event_seq": 151
+      },
+      "baseline_id": null,
+      "resolution": {
+        "summary": "Issue resolved manually via supervisor UI after operational verification.",
+        "evidence": [
+          "Resolved manually from the Issues page after operator review."
+        ]
       }
     },
     {
+      "evidence": {
+        "symptom": "Agent requested issue reporting from manual review flow.",
+        "repro_steps": [
+          "Consultar activity.jsonl para o evento original do issue."
+        ]
+      },
       "issue_id": "ISS-RUN-B3C387E0",
-      "status": "resolved",
+      "reported_at": "2026-03-07T07:47:22Z",
+      "resolved_at": "2026-03-07T11:30:53Z",
+      "resolved_by_task_id": "SEC-001",
       "severity": "medium",
+      "status": "resolved",
+      "task_id": "SEC-001",
       "title": "Agent reported issue while executing SEC-001",
-      "baseline_id": null,
       "affected": {
         "task_id": "SEC-001"
-      },
-      "evidence": "Agent requested issue reporting from manual review flow.",
-      "resolution": {
-        "summary": "Issue resolved manually via supervisor UI after operational verification.",
-        "evidence": [
-          "Resolved manually from the Issues page after operator review."
-        ]
       },
       "links": {
         "reported_by_task_id": "SEC-001",
@@ -181,25 +159,34 @@
         "hotfix_task_id": null
       },
       "timeline": {
-        "created_event_seq": 117,
+        "created_event_seq": null,
         "resolved_event_seq": 152
+      },
+      "baseline_id": null,
+      "resolution": {
+        "summary": "Issue resolved manually via supervisor UI after operational verification.",
+        "evidence": [
+          "Resolved manually from the Issues page after operator review."
+        ]
       }
     },
     {
+      "evidence": {
+        "symptom": "Agent requested issue reporting from manual review flow.",
+        "repro_steps": [
+          "Consultar activity.jsonl para o evento original do issue."
+        ]
+      },
       "issue_id": "ISS-RUN-71BF6720",
-      "status": "resolved",
+      "reported_at": "2026-03-07T07:52:37Z",
+      "resolved_at": "2026-03-07T11:30:54Z",
+      "resolved_by_task_id": "SEC-001",
       "severity": "medium",
+      "status": "resolved",
+      "task_id": "SEC-001",
       "title": "Agent reported issue while executing SEC-001",
-      "baseline_id": null,
       "affected": {
         "task_id": "SEC-001"
-      },
-      "evidence": "Agent requested issue reporting from manual review flow.",
-      "resolution": {
-        "summary": "Issue resolved manually via supervisor UI after operational verification.",
-        "evidence": [
-          "Resolved manually from the Issues page after operator review."
-        ]
       },
       "links": {
         "reported_by_task_id": "SEC-001",
@@ -207,25 +194,34 @@
         "hotfix_task_id": null
       },
       "timeline": {
-        "created_event_seq": 118,
+        "created_event_seq": null,
         "resolved_event_seq": 153
-      }
-    },
-    {
-      "issue_id": "ISS-RUN-051833A0",
-      "status": "resolved",
-      "severity": "medium",
-      "title": "Agent reported issue while executing SEC-001",
-      "baseline_id": null,
-      "affected": {
-        "task_id": "SEC-001"
       },
-      "evidence": "Agent requested issue reporting from manual review flow.",
+      "baseline_id": null,
       "resolution": {
         "summary": "Issue resolved manually via supervisor UI after operational verification.",
         "evidence": [
           "Resolved manually from the Issues page after operator review."
         ]
+      }
+    },
+    {
+      "evidence": {
+        "symptom": "Agent requested issue reporting from manual review flow.",
+        "repro_steps": [
+          "Consultar activity.jsonl para o evento original do issue."
+        ]
+      },
+      "issue_id": "ISS-RUN-051833A0",
+      "reported_at": "2026-03-07T08:18:31Z",
+      "resolved_at": "2026-03-07T11:30:56Z",
+      "resolved_by_task_id": "SEC-001",
+      "severity": "medium",
+      "status": "resolved",
+      "task_id": "SEC-001",
+      "title": "Agent reported issue while executing SEC-001",
+      "affected": {
+        "task_id": "SEC-001"
       },
       "links": {
         "reported_by_task_id": "SEC-001",
@@ -233,221 +229,34 @@
         "hotfix_task_id": null
       },
       "timeline": {
-        "created_event_seq": 125,
+        "created_event_seq": null,
         "resolved_event_seq": 154
-      }
-    },
-    {
-      "issue_id": "ISS-0005",
-      "status": "resolved",
-      "severity": "high",
-      "title": "Execucao do codex no Windows falhava por sandbox/CLI/linha de comando",
+      },
       "baseline_id": null,
-      "affected": {
-        "paths": [
-          "backend/app/adapters/base.py",
-          "backend/app/adapters/codex_adapter.py",
-          "backend/app/core/run_engine.py"
-        ]
-      },
-      "evidence": {
-        "symptom": "Runs do agente codex alternavam entre command not found, read-only implícito, argumento inválido em codex exec e estouro de comprimento da linha de comando no Windows."
-      },
       "resolution": {
-        "summary": "A invocacao do codex passou a usar caminho resolvido, codex exec com --sandbox workspace-write, prompt via stdin e prompt-base derivado de .roadmap/init.yaml.",
+        "summary": "Issue resolved manually via supervisor UI after operational verification.",
         "evidence": [
-          "Execuções reais passaram a produzir proposal/complete válidos via codex.",
-          "O adapter deixou de depender do prompt inteiro como argumento da shell."
+          "Resolved manually from the Issues page after operator review."
         ]
-      },
-      "timeline": {
-        "created_event_seq": null,
-        "resolved_event_seq": null
       }
     },
     {
-      "issue_id": "ISS-0006",
-      "status": "resolved",
-      "severity": "medium",
-      "title": "Artefatos catalogados não podiam ser lidos nem abertos fora do escopo imediato do .roadmap",
-      "baseline_id": null,
-      "affected": {
-        "paths": [
-          "backend/app/api/routes_projects.py",
-          "frontend/src/pages/ArtifactsPage.tsx",
-          "frontend/src/components/artifacts/ArtifactDetailDrawer.tsx"
-        ]
-      },
       "evidence": {
-        "symptom": "A UI retornava 404 para artefatos relativos ao .roadmap e não permitia navegar por diretórios como reports/ para abrir arquivos produzidos."
-      },
-      "resolution": {
-        "summary": "Foi adicionado endpoint seguro de leitura de artefato, resolução dual project-root/.roadmap-root, browser de arquivos do projeto e viewer expandido com leitura completa formatada para Markdown e bloco de código para texto/código.",
-        "evidence": [
-          "Artefatos em reports/ e snapshots do .roadmap podem ser abertos pela interface.",
-          "Arquivos .md podem ser lidos em visualização formatada."
+        "symptom": "Agent requested issue reporting from manual review flow.",
+        "repro_steps": [
+          "Consultar activity.jsonl para o evento original do issue."
         ]
       },
-      "timeline": {
-        "created_event_seq": null,
-        "resolved_event_seq": null
-      }
-    },
-    {
-      "issue_id": "ISS-0007",
-      "status": "resolved",
-      "severity": "medium",
-      "title": "Operador não conseguia retomar tasks in_progress nem regredir tasks para todo pela UI",
-      "baseline_id": null,
-      "affected": {
-        "paths": [
-          "backend/app/core/eligibility.py",
-          "backend/app/api/routes_runs.py",
-          "backend/app/api/routes_tasks.py",
-          "frontend/src/pages/RunsPage.tsx",
-          "frontend/src/components/tasks/TaskDetailDrawer.tsx"
-        ]
-      },
-      "evidence": {
-        "symptom": "A execução manual rejeitava tasks em in_progress como inelegíveis e a lista de tarefas não permitia regressão auditável para todo."
-      },
-      "resolution": {
-        "summary": "A execução manual passou a aceitar retomada de in_progress e foi criado endpoint/UI para regressão auditável de task para todo via orchestrator.view.mutate.",
-        "evidence": [
-          "Runs podem ser retomadas para tasks in_progress.",
-          "Drawer de task agora oferece ação Regredir para todo."
-        ]
-      },
-      "timeline": {
-        "created_event_seq": null,
-        "resolved_event_seq": null
-      }
-    },
-    {
-      "issue_id": "ISS-0008",
-      "status": "resolved",
-      "severity": "medium",
-      "title": "Sessao de run era perdida ao sair da tela de execucao dentro do mesmo projeto",
-      "baseline_id": null,
-      "affected": {
-        "paths": [
-          "frontend/src/components/layout/AppShell.tsx",
-          "frontend/src/pages/RunsPage.tsx",
-          "frontend/src/components/layout/TopBar.tsx"
-        ]
-      },
-      "evidence": {
-        "symptom": "Ao navegar para outra pagina do projeto, a RunsPage desmontava, limpava activeRun/logs e o operador perdia a possibilidade de retomar a execucao em andamento."
-      },
-      "resolution": {
-        "summary": "A sessao ativa de run passou a ficar no contexto do AppShell, persistindo durante a navegacao interna do projeto e sendo limpa apenas ao trocar de projeto.",
-        "evidence": [
-          "Ao voltar para /runs, a UI restabelece polling e stream da run em andamento.",
-          "Topbar e sidebar refletem apenas runs realmente ativas."
-        ]
-      },
-      "timeline": {
-        "created_event_seq": null,
-        "resolved_event_seq": null
-      }
-    },
-    {
-      "issue_id": "ISS-0009",
-      "status": "resolved",
-      "severity": "medium",
-      "title": "Painel de issues e integridade era apenas informativo e sem remediacao operacional",
-      "baseline_id": null,
-      "affected": {
-        "paths": [
-          "backend/app/api/routes_issues.py",
-          "backend/app/api/routes_integrity.py",
-          "frontend/src/pages/IssuesPage.tsx",
-          "frontend/src/pages/IntegrityPage.tsx"
-        ]
-      },
-      "evidence": {
-        "symptom": "O operador via problemas abertos e mismatch de integridade, mas nao podia resolver issues nem disparar reparo de integridade pela interface."
-      },
-      "resolution": {
-        "summary": "Foram adicionados endpoints e botoes para issue.resolve e reparo de integridade diretamente pela UI.",
-        "evidence": [
-          "Modal de issue agora expõe a acao Resolver issue.",
-          "Tela de integridade agora expõe a acao Resolver integridade."
-        ]
-      },
-      "timeline": {
-        "created_event_seq": null,
-        "resolved_event_seq": null
-      }
-    },
-    {
-      "issue_id": "ISS-0010",
-      "status": "resolved",
-      "severity": "high",
-      "title": "Adapters claude-code e gemini-cli executavam em modos que bloqueavam escrita ou falhavam no ambiente local",
-      "baseline_id": null,
-      "affected": {
-        "paths": [
-          "backend/app/adapters/claude_adapter.py",
-          "backend/app/adapters/gemini_adapter.py"
-        ]
-      },
-      "evidence": {
-        "symptom": "Claude reportava escrita bloqueada por permissao e Gemini dependia de sandbox interno indisponivel no ambiente, impedindo persistencia dos artefatos de saida."
-      },
-      "resolution": {
-        "summary": "Os adapters passaram a usar modo nao interativo, prompt via stdin e configuracoes de permissao/autoaprovacao compatíveis com o ambiente real.",
-        "evidence": [
-          "Claude agora usa -p com --permission-mode bypassPermissions.",
-          "Gemini agora usa -p com --approval-mode yolo sem depender do sandbox interno quebrado."
-        ]
-      },
-      "timeline": {
-        "created_event_seq": null,
-        "resolved_event_seq": null
-      }
-    },
-    {
-      "issue_id": "ISS-0011",
-      "status": "resolved",
-      "severity": "low",
-      "title": "Seletor de roadmap no topbar permanecia branco apesar da classe de tema aplicada",
-      "baseline_id": null,
-      "affected": {
-        "paths": [
-          "frontend/src/styles/app-shell.css",
-          "frontend/src/components/layout/TopBar.tsx"
-        ]
-      },
-      "evidence": {
-        "symptom": "O select do topbar mantinha fundo branco por causa da aparencia nativa do navegador e de regras mais especificas do shell."
-      },
-      "resolution": {
-        "summary": "O seletor passou a resetar appearance e a forcar fundo escuro tanto no campo quanto nas options.",
-        "evidence": [
-          "Topbar roadmap switch agora respeita o tema dark do sistema."
-        ]
-      },
-      "timeline": {
-        "created_event_seq": null,
-        "resolved_event_seq": null
-      }
-    },
-    {
       "issue_id": "ISS-RUN-9BA8B158",
-      "status": "resolved",
+      "reported_at": "2026-03-07T10:55:07Z",
+      "resolved_at": "2026-03-07T11:30:58Z",
+      "resolved_by_task_id": "SEC-011",
       "severity": "medium",
+      "status": "resolved",
+      "task_id": "SEC-011",
       "title": "Agent reported issue while executing SEC-011",
-      "baseline_id": null,
       "affected": {
         "task_id": "SEC-011"
-      },
-      "evidence": "Agent requested issue reporting from manual review flow.",
-      "resolution": {
-        "summary": "Issue resolved manually via supervisor UI after operational verification.",
-        "evidence": [
-          "Resolved manually from the Issues page after operator review."
-        ]
       },
       "links": {
         "reported_by_task_id": "SEC-011",
@@ -455,232 +264,34 @@
         "hotfix_task_id": null
       },
       "timeline": {
-        "created_event_seq": 149,
+        "created_event_seq": null,
         "resolved_event_seq": 155
-      }
-    },
-    {
-      "issue_id": "ISS-0012",
-      "status": "resolved",
-      "severity": "medium",
-      "title": "Supervisor nao oferecia superficie de chat persistente por projeto",
+      },
       "baseline_id": null,
-      "affected": {
-        "paths": [
-          "backend/app/api/routes_chat.py",
-          "backend/app/core/chat_store.py",
-          "backend/app/core/chat_service.py",
-          "frontend/src/pages/ChatPage.tsx",
-          "frontend/src/services/chat.ts"
-        ]
-      },
-      "evidence": {
-        "symptom": "O operador precisava sair do supervisor para conversar com os modelos e nao havia historico persistido, chat livre nem chat vinculado à task dentro do projeto ativo."
-      },
-      "resolution": {
-        "summary": "Foi criada uma superficie completa de chat com sessoes livres e vinculadas à task, persistidas em .roadmap/chat_sessions e acessiveis pela UI.",
-        "evidence": [
-          "Nova rota /projects/:projectId/chat com criacao de sessoes e envio de mensagens.",
-          "Historico do chat fica versionado por projeto em .roadmap/chat_sessions/*.json."
-        ]
-      },
-      "timeline": {
-        "created_event_seq": null,
-        "resolved_event_seq": null
-      }
-    },
-    {
-      "issue_id": "ISS-0013",
-      "status": "resolved",
-      "severity": "medium",
-      "title": "Telemetria de tokens era visivel apenas parcialmente e nao estava integrada ao chat",
-      "baseline_id": null,
-      "affected": {
-        "paths": [
-          "backend/app/adapters/codex_adapter.py",
-          "backend/app/adapters/claude_adapter.py",
-          "backend/app/adapters/gemini_adapter.py",
-          "frontend/src/pages/RunsPage.tsx",
-          "frontend/src/components/activity/ActivityTimeline.tsx",
-          "frontend/src/pages/ChatPage.tsx"
-        ]
-      },
-      "evidence": {
-        "symptom": "O consumo de tokens nao aparecia de forma uniforme entre agentes e nao havia leitura consolidada em chat, activity e trilha auditavel dos eventos."
-      },
-      "resolution": {
-        "summary": "A telemetria de tokens passou a ser extraida para codex, claude-code e gemini-cli, exibida na UI e anexada ao payload dos eventos aplicados via agent_execution.token_usage.",
-        "evidence": [
-          "Runs exibem uso de tokens por execucao e por modelo.",
-          "Activity mostra consumo agregado por task e por evento.",
-          "Mensagens do chat exibem tokens/custo quando o agente retorna esse dado."
-        ]
-      },
-      "timeline": {
-        "created_event_seq": null,
-        "resolved_event_seq": null
-      }
-    },
-    {
-      "issue_id": "ISS-0014",
-      "status": "resolved",
-      "severity": "medium",
-      "title": "Chat do projeto expirava em 10s e nao permitia excluir sessoes anteriores",
-      "baseline_id": null,
-      "affected": {
-        "paths": [
-          "frontend/src/services/chat.ts",
-          "frontend/src/pages/ChatPage.tsx",
-          "backend/app/api/routes_chat.py",
-          "backend/app/core/chat_store.py"
-        ]
-      },
-      "evidence": {
-        "symptom": "Conversas com agentes longos falhavam com timeout of 10000ms exceeded e o operador nao tinha como remover sessoes antigas do historico do projeto."
-      },
-      "resolution": {
-        "summary": "As chamadas de chat passaram a usar timeout dedicado mais alto e a superficie ganhou exclusao de sessoes no backend e na UI.",
-        "evidence": [
-          "Mensagens de chat agora usam timeout de 180s.",
-          "A tela de chat permite excluir sessoes pela lista e pela conversa ativa."
-        ]
-      },
-      "timeline": {
-        "created_event_seq": null,
-        "resolved_event_seq": null
-      }
-    },
-    {
-      "issue_id": "ISS-0015",
-      "status": "resolved",
-      "severity": "medium",
-      "title": "Gemini CLI no Windows emitia stacktrace AttachConsole failed mesmo com resposta valida",
-      "baseline_id": null,
-      "affected": {
-        "paths": [
-          "backend/app/adapters/base.py",
-          "backend/app/adapters/gemini_adapter.py"
-        ]
-      },
-      "evidence": {
-        "symptom": "O gemini-cli retornava proposta valida em stdout, mas o node-pty interno adicionava ruído recorrente em stderr com AttachConsole failed, poluindo o console e induzindo leitura errada de falha."
-      },
-      "resolution": {
-        "summary": "O pipeline dos adapters passou a permitir sanitizacao de stdout/stderr e o adapter do Gemini filtra ruído conhecido do node-pty no Windows sem ocultar erros reais.",
-        "evidence": [
-          "Runs do Gemini preservam a resposta valida do agente sem repetir o stacktrace benigno do conpty_console_list_agent.js."
-        ]
-      },
-      "timeline": {
-        "created_event_seq": null,
-        "resolved_event_seq": null
-      }
-    },
-    {
-      "issue_id": "ISS-0016",
-      "status": "resolved",
-      "severity": "medium",
-      "title": "Review de task foi entregue com contrato incompleto e helper inexistente",
-      "baseline_id": null,
-      "affected": {
-        "paths": [
-          "backend/app/api/routes_tasks.py",
-          "backend/app/api/schemas.py",
-          "frontend/src/services/projects.ts",
-          "frontend/src/components/tasks/TaskDetailDrawer.tsx",
-          "frontend/src/pages/RunsPage.tsx"
-        ]
-      },
-      "evidence": {
-        "symptom": "A feature de aprovar/rejeitar task em review introduziu import de schema inexistente, uso de EventWriter.now_iso() sem suporte real e corrupção do client projects.ts."
-      },
-      "resolution": {
-        "summary": "O schema TaskReviewRequest foi adicionado, o endpoint passou a usar utc_now_iso(), o service projects.ts foi restaurado e a UI de review foi integrada com contrato consistente.",
-        "evidence": [
-          "backend/app compila sem erro.",
-          "frontend volta a buildar com submitTaskReview funcional."
-        ]
-      },
-      "timeline": {
-        "created_event_seq": null,
-        "resolved_event_seq": null
-      }
-    },
-    {
-      "issue_id": "ISS-0017",
-      "status": "resolved",
-      "severity": "medium",
-      "title": "Supervisor nao oferecia execucao sequencial continua nem parada graciosa ao fim da task atual",
-      "baseline_id": null,
-      "affected": {
-        "paths": [
-          "backend/app/core/run_engine.py",
-          "backend/app/api/routes_runs.py",
-          "backend/app/api/schemas.py",
-          "frontend/src/services/runs.ts",
-          "frontend/src/pages/RunsPage.tsx"
-        ]
-      },
-      "evidence": {
-        "symptom": "Toda run pausava para decisao manual em waiting_input e o operador so podia cancelar abruptamente a execucao, sem opcao de continuar automaticamente nem de encerrar a fila apenas apos concluir a task corrente."
-      },
-      "resolution": {
-        "summary": "Foi adicionado modo de execucao continua com autoaprovacao da proposta do agente e selecao automatica da proxima task elegivel, alem de um comando de parada graciosa para encerrar a sequencia depois da task atual.",
-        "evidence": [
-          "A API agora aceita execution_mode=continuous e expõe stop_after_current.",
-          "A UI de Runs passou a oferecer os modos Manual/Sequencial sem interrupcao e o botao Parar apos tarefa atual."
-        ]
-      },
-      "timeline": {
-        "created_event_seq": null,
-        "resolved_event_seq": null
-      }
-    },
-    {
-      "issue_id": "ISS-0018",
-      "status": "resolved",
-      "severity": "high",
-      "title": "Runs podiam iniciar com projection defasada em relacao ao activity.jsonl",
-      "baseline_id": null,
-      "affected": {
-        "paths": [
-          "backend/app/core/run_engine.py",
-          "backend/app/core/projector.py",
-          "backend/app/api/routes_integrity.py",
-          "backend/app/adapters/codex_adapter.py"
-        ]
-      },
-      "evidence": {
-        "symptom": "Uma run de task podia ser admitida mesmo com last_event_seq do roadmap atrasado em relacao ao activity.jsonl, permitindo reexecucao de task ja concluida no log bruto e expondo divergencia entre projection e source of truth."
-      },
-      "resolution": {
-        "summary": "A admissao de run passou a bloquear projeção nao verificada, hash stale e roadmap atrasado em relacao ao activity.jsonl; o repair integrity agora reaplica eventos pendentes e o projector passou a calcular o hash depois de atualizar os indexes.",
-        "evidence": [
-          "Execucoes agora retornam erro orientando integrity repair antes de iniciar quando a projection esta atrasada.",
-          "repair integrity reaplica eventos pendentes do activity.jsonl na projection materializada.",
-          "O adapter do codex tambem passou a filtrar transcript operacional redundante no stderr para reduzir ruido no console."
-        ]
-      },
-      "timeline": {
-        "created_event_seq": null,
-        "resolved_event_seq": null
-      }
-    },
-    {
-      "issue_id": "ISS-RUN-7352CB40",
-      "status": "resolved",
-      "severity": "medium",
-      "title": "Agent reported issue while executing SEC-012",
-      "baseline_id": null,
-      "affected": {
-        "task_id": "SEC-012"
-      },
-      "evidence": "Agent requested issue reporting from manual review flow.",
       "resolution": {
         "summary": "Issue resolved manually via supervisor UI after operational verification.",
         "evidence": [
           "Resolved manually from the Issues page after operator review."
         ]
+      }
+    },
+    {
+      "evidence": {
+        "symptom": "Agent requested issue reporting from manual review flow.",
+        "repro_steps": [
+          "Consultar activity.jsonl para o evento original do issue."
+        ]
+      },
+      "issue_id": "ISS-RUN-7352CB40",
+      "reported_at": "2026-03-07T11:37:51Z",
+      "resolved_at": "2026-03-07T18:51:22Z",
+      "resolved_by_task_id": "SEC-012",
+      "severity": "medium",
+      "status": "resolved",
+      "task_id": "SEC-012",
+      "title": "Agent reported issue while executing SEC-012",
+      "affected": {
+        "task_id": "SEC-012"
       },
       "links": {
         "reported_by_task_id": "SEC-012",
@@ -688,25 +299,34 @@
         "hotfix_task_id": null
       },
       "timeline": {
-        "created_event_seq": 158,
+        "created_event_seq": null,
         "resolved_event_seq": 199
-      }
-    },
-    {
-      "issue_id": "ISS-RUN-40714C13",
-      "status": "resolved",
-      "severity": "medium",
-      "title": "Agent reported issue while executing SEC-015",
-      "baseline_id": null,
-      "affected": {
-        "task_id": "SEC-015"
       },
-      "evidence": "Agent did not return valid JSON",
+      "baseline_id": null,
       "resolution": {
         "summary": "Issue resolved manually via supervisor UI after operational verification.",
         "evidence": [
           "Resolved manually from the Issues page after operator review."
         ]
+      }
+    },
+    {
+      "evidence": {
+        "symptom": "Agent did not return valid JSON",
+        "repro_steps": [
+          "Consultar activity.jsonl para o evento original do issue."
+        ]
+      },
+      "issue_id": "ISS-RUN-40714C13",
+      "reported_at": "2026-03-07T13:45:42Z",
+      "resolved_at": "2026-03-07T18:51:24Z",
+      "resolved_by_task_id": "SEC-015",
+      "severity": "medium",
+      "status": "resolved",
+      "task_id": "SEC-015",
+      "title": "Agent reported issue while executing SEC-015",
+      "affected": {
+        "task_id": "SEC-015"
       },
       "links": {
         "reported_by_task_id": "SEC-015",
@@ -714,25 +334,34 @@
         "hotfix_task_id": null
       },
       "timeline": {
-        "created_event_seq": 170,
+        "created_event_seq": null,
         "resolved_event_seq": 200
-      }
-    },
-    {
-      "issue_id": "ISS-RUN-49369052",
-      "status": "resolved",
-      "severity": "medium",
-      "title": "Agent reported issue while executing ESUP-IMPL-015",
-      "baseline_id": null,
-      "affected": {
-        "task_id": "ESUP-IMPL-015"
       },
-      "evidence": "Agent did not return valid JSON",
+      "baseline_id": null,
       "resolution": {
         "summary": "Issue resolved manually via supervisor UI after operational verification.",
         "evidence": [
           "Resolved manually from the Issues page after operator review."
         ]
+      }
+    },
+    {
+      "evidence": {
+        "symptom": "Agent did not return valid JSON",
+        "repro_steps": [
+          "Consultar activity.jsonl para o evento original do issue."
+        ]
+      },
+      "issue_id": "ISS-RUN-49369052",
+      "reported_at": "2026-03-07T17:29:26Z",
+      "resolved_at": "2026-03-07T18:51:27Z",
+      "resolved_by_task_id": "ESUP-IMPL-015",
+      "severity": "medium",
+      "status": "resolved",
+      "task_id": "ESUP-IMPL-015",
+      "title": "Agent reported issue while executing ESUP-IMPL-015",
+      "affected": {
+        "task_id": "ESUP-IMPL-015"
       },
       "links": {
         "reported_by_task_id": "ESUP-IMPL-015",
@@ -740,25 +369,34 @@
         "hotfix_task_id": null
       },
       "timeline": {
-        "created_event_seq": 184,
+        "created_event_seq": null,
         "resolved_event_seq": 201
-      }
-    },
-    {
-      "issue_id": "ISS-RUN-384DFC52",
-      "status": "resolved",
-      "severity": "medium",
-      "title": "Agent reported issue while executing SEC-015",
-      "baseline_id": null,
-      "affected": {
-        "task_id": "SEC-015"
       },
-      "evidence": "codex exited with code 1",
+      "baseline_id": null,
       "resolution": {
         "summary": "Issue resolved manually via supervisor UI after operational verification.",
         "evidence": [
           "Resolved manually from the Issues page after operator review."
         ]
+      }
+    },
+    {
+      "evidence": {
+        "symptom": "codex exited with code 1",
+        "repro_steps": [
+          "Consultar activity.jsonl para o evento original do issue."
+        ]
+      },
+      "issue_id": "ISS-RUN-384DFC52",
+      "reported_at": "2026-03-07T18:04:48Z",
+      "resolved_at": "2026-03-07T18:51:29Z",
+      "resolved_by_task_id": "SEC-015",
+      "severity": "medium",
+      "status": "resolved",
+      "task_id": "SEC-015",
+      "title": "Agent reported issue while executing SEC-015",
+      "affected": {
+        "task_id": "SEC-015"
       },
       "links": {
         "reported_by_task_id": "SEC-015",
@@ -766,25 +404,34 @@
         "hotfix_task_id": null
       },
       "timeline": {
-        "created_event_seq": 193,
+        "created_event_seq": null,
         "resolved_event_seq": 202
-      }
-    },
-    {
-      "issue_id": "ISS-RUN-F7B10D82",
-      "status": "resolved",
-      "severity": "medium",
-      "title": "Agent reported issue while executing SEC-018",
-      "baseline_id": null,
-      "affected": {
-        "task_id": "SEC-018"
       },
-      "evidence": "Agent requested issue reporting from manual review flow.",
+      "baseline_id": null,
       "resolution": {
         "summary": "Issue resolved manually via supervisor UI after operational verification.",
         "evidence": [
           "Resolved manually from the Issues page after operator review."
         ]
+      }
+    },
+    {
+      "evidence": {
+        "symptom": "Agent requested issue reporting from manual review flow.",
+        "repro_steps": [
+          "Consultar activity.jsonl para o evento original do issue."
+        ]
+      },
+      "issue_id": "ISS-RUN-F7B10D82",
+      "reported_at": "2026-03-07T18:40:28Z",
+      "resolved_at": "2026-03-07T18:51:30Z",
+      "resolved_by_task_id": "SEC-018",
+      "severity": "medium",
+      "status": "resolved",
+      "task_id": "SEC-018",
+      "title": "Agent reported issue while executing SEC-018",
+      "affected": {
+        "task_id": "SEC-018"
       },
       "links": {
         "reported_by_task_id": "SEC-018",
@@ -792,11 +439,77 @@
         "hotfix_task_id": null
       },
       "timeline": {
-        "created_event_seq": 198,
+        "created_event_seq": null,
         "resolved_event_seq": 203
+      },
+      "baseline_id": null,
+      "resolution": {
+        "summary": "Issue resolved manually via supervisor UI after operational verification.",
+        "evidence": [
+          "Resolved manually from the Issues page after operator review."
+        ]
       }
+    },
+    {
+      "issue_id": "ISS-0002",
+      "status": "resolved",
+      "severity": "medium",
+      "title": "Projecoes compartilhadas de issues e lessons ficaram fora do schema canonico e dessincronizadas entre roadmap variants",
+      "baseline_id": null,
+      "affected": {
+        "artifacts": [
+          "issues.json",
+          "lessons.json",
+          "roadmap.security.json"
+        ],
+        "paths": [
+          "backend/app/api/routes_issues.py",
+          "backend/app/api/routes_integrity.py",
+          "backend/app/core/issues_sync.py",
+          "backend/app/core/lessons_sync.py"
+        ]
+      },
+      "evidence": {
+        "symptom": "A resolucao manual de issue sincronizava apenas roadmap.json, enquanto issues.json e lessons.json permaneciam sem metadados canonicos completos. Isso deixava os artefatos marcados com erro de validacao e podia manter roadmap variants como roadmap.security.json presos em verify_status=error.",
+        "repro_steps": [
+          "Resolver um issue pela UI de supervisor com uma variante como roadmap.security.json selecionada.",
+          "Abrir a pagina de Integridade e observar issues.json e lessons.json com status error.",
+          "Verificar em roadmap.security.json que o hash do arquivo pode estar correto, mas meta.run.verify_status continua error por cursor stale."
+        ]
+      },
+      "resolution": {
+        "summary": "A sincronizacao de issue.resolve passou a atualizar todas as variantes de roadmap, o repair de integridade passou a reserializar issues.json e lessons.json, e as projecoes auxiliares agora preenchem meta/indexes/evidence no formato canonico.",
+        "evidence": [
+          "backend/app/api/routes_issues.py sincroniza o evento para todas as variantes de roadmap.",
+          "backend/app/api/routes_integrity.py chama sync_to_disk([]) para normalizar issues.json e lessons.json.",
+          "backend/app/core/issues_sync.py normaliza evidence/resolution/meta da projecao de issues.",
+          "backend/app/core/lessons_sync.py preenche meta canonica e indexes da projecao de lessons."
+        ]
+      },
+      "links": {
+        "reported_by_task_id": null,
+        "fixes_task_id": null,
+        "hotfix_task_id": null
+      },
+      "timeline": {
+        "created_event_seq": null,
+        "resolved_event_seq": null
+      },
+      "reported_at": "2026-03-08T19:15:00Z",
+      "resolved_at": "2026-03-08T19:20:00Z",
+      "resolved_by_task_id": null,
+      "task_id": null
     }
   ],
+  "schema_version": "0.4.0",
+  "meta": {
+    "last_event_seq": 278,
+    "updated_at": "2026-03-08T19:14:12Z",
+    "schema_version": "0.4.0",
+    "esaa_version": "0.4.x",
+    "generated_by": "esaa.project",
+    "source_event_store": ".roadmap/activity.jsonl"
+  },
   "indexes": {
     "open_by_baseline": {}
   }

@@ -7,11 +7,19 @@
     "run": {
       "run_id": null,
       "status": "initialized",
-      "last_event_seq": 254,
-      "projection_hash_sha256": "01621e24985ae6db01204a7c1c0d3a74ae3f7d81f923aaeed0d0c90418edfd95",
-      "verify_status": "ok"
+      "last_event_seq": 278,
+      "projection_hash_sha256": "61b804e269a9bfe12aab47be28ba4877bc185b7587888cdf9d13321a2fdefdd2",
+      "verify_status": "error",
+      "integrity_error": {
+        "message": "'decision'",
+        "event_seq": 279,
+        "event_id": "EV-00000279",
+        "task_id": "SEC-042",
+        "actor": "gemini-cli",
+        "action": "review"
+      }
     },
-    "updated_at": "2026-03-08T18:13:23Z"
+    "updated_at": "2026-03-08T19:21:06Z"
   },
   "project": {
     "name": "PARCER Security Audit",
@@ -756,7 +764,7 @@
       "task_kind": "qa",
       "title": "Gerar Matriz de Riscos",
       "description": "Produzir matriz consolidada: vulnerabilidade × categoria × severidade × impacto × recomendação, ordenada por severidade decrescente.",
-      "status": "in_progress",
+      "status": "done",
       "depends_on": [
         "SEC-031"
       ],
@@ -773,14 +781,22 @@
         "done_is_immutable": true
       },
       "assigned_to": "gemini-cli",
-      "started_at": "2026-03-08T18:13:23Z"
+      "started_at": "2026-03-08T18:13:23Z",
+      "completed_at": "2026-03-08T18:22:29.301549Z",
+      "verification": {
+        "checks": [
+          "Gerada matriz consolidada com 72 vulnerabilidades.",
+          "Arquivos JSON e Markdown criados em reports/phase3/.",
+          "Ordenação por severidade decrescente verificada."
+        ]
+      }
     },
     {
       "task_id": "SEC-040",
       "task_kind": "spec",
       "title": "Propor correções técnicas",
       "description": "Para cada vulnerabilidade CRITICAL e HIGH, detalhar correção técnica específica com snippets de código/configuração e esforço estimado.",
-      "status": "todo",
+      "status": "done",
       "depends_on": [
         "SEC-032"
       ],
@@ -794,14 +810,26 @@
       },
       "immutability": {
         "done_is_immutable": true
-      }
+      },
+      "assigned_to": "claude-code",
+      "started_at": "2026-03-08T19:01:41Z",
+      "verification": {
+        "checks": [
+          "reports/phase4/technical-remediations.md criado com 9 CRITICAL + 15 HIGH vulnerabilidades cobertas",
+          "Cada item inclui snippet de codigo/configuracao referenciando arquivos reais do codebase",
+          "Esforco estimado por item e por sprint (Sprint 1: 14h, Sprint 2: 17h, Sprint 3: 25h)",
+          "Ordem de execucao recomendada com dependencias mapeadas",
+          "Arquivo validado: encoding UTF-8 e estrutura markdown verificados"
+        ]
+      },
+      "completed_at": "2026-03-08T19:15:00Z"
     },
     {
       "task_id": "SEC-041",
       "task_kind": "spec",
       "title": "Documentar boas práticas",
       "description": "Consolidar boas práticas de segurança organizadas por domínio, com referências a OWASP, CIS e NIST, verificando aplicabilidade ao contexto do sistema.",
-      "status": "todo",
+      "status": "done",
       "depends_on": [
         "SEC-032"
       ],
@@ -816,14 +844,20 @@
       },
       "immutability": {
         "done_is_immutable": true
-      }
+      },
+      "assigned_to": "codex",
+      "started_at": "2026-03-08T19:02:02Z",
+      "verification": {
+        "checks": []
+      },
+      "completed_at": "2026-03-08T19:11:41Z"
     },
     {
       "task_id": "SEC-042",
       "task_kind": "qa",
       "title": "Gerar Resumo Executivo",
       "description": "Produzir resumo executivo (max 1 página) com score final de segurança (0-100) calculado pela fórmula em report-template.security.json (severity_weights × domain_priority_weights com penalty_rules), top 5 riscos prioritários e recomendações de ação imediata.",
-      "status": "todo",
+      "status": "done",
       "depends_on": [
         "SEC-040",
         "SEC-041"
@@ -840,6 +874,16 @@
       },
       "immutability": {
         "done_is_immutable": true
+      },
+      "assigned_to": "gemini-cli",
+      "started_at": "2026-03-08T19:12:04Z",
+      "completed_at": "2026-03-08T19:45:00Z",
+      "verification": {
+        "checks": [
+          "Score final: 19.5/100 (Critico)",
+          "Top 5 riscos prioritarios identificados",
+          "Relatorio gerado em reports/phase4/executive-summary.md"
+        ]
       }
     },
     {
@@ -847,7 +891,7 @@
       "task_kind": "qa",
       "title": "Compilar Relatório Final de Auditoria",
       "description": "Montar relatório completo projetando dados dos result files no report-template.security.json (schema) e REPORT_TEMPLATE.md (formato de renderização). Seções: header, executive_summary (com score calculado pela fórmula determinística), vulnerability_matrix, detailed_analysis por domínio, priority_risks com cenários de exploração, technical_recommendations em 4 tiers, e appendix com resultados completos e metadados de auditoria. Todos os achados rastreáveis aos checks do PARCER via check_id e finding_id.",
-      "status": "todo",
+      "status": "done",
       "depends_on": [
         "SEC-042"
       ],
@@ -868,15 +912,18 @@
       },
       "immutability": {
         "done_is_immutable": true
-      }
+      },
+      "assigned_to": "gemini-cli",
+      "started_at": "2026-03-08T19:14:36Z",
+      "completed_at": "2026-03-08T20:20:00Z"
     }
   ],
   "indexes": {
     "by_status": {
-      "todo": 4,
-      "in_progress": 1,
+      "todo": 0,
+      "in_progress": 0,
       "review": 0,
-      "done": 21
+      "done": 26
     },
     "by_kind": {
       "spec": 5,

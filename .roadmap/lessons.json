@@ -1,367 +1,12 @@
 {
-  "meta": {
-    "schema_version": "0.4.0",
-    "esaa_version": "0.4.x",
-    "generated_by": "esaa.project",
-    "source_event_store": ".roadmap/activity.jsonl",
-    "last_event_seq": 114,
-    "updated_at": "2026-03-08T18:13:23Z"
-  },
   "lessons": [
-    {
-      "lesson_id": "LES-0001",
-      "status": "active",
-      "created_at": "2026-03-04T00:00:00Z",
-      "title": "Agente colapsou claim e complete em um unico output",
-      "mistake": "O agente emitiu action=complete em uma tarefa com status=todo, sem ter emitido claim previamente.",
-      "rule": "Cada invocacao de agente deve emitir exatamente uma action. claim e complete sao outputs de invocacoes separadas.",
-      "scope": {
-        "task_kinds": [
-          "spec",
-          "impl",
-          "qa"
-        ]
-      },
-      "enforcement": {
-        "mode": "reject",
-        "applies_to": "workflow_gate"
-      }
-    },
-    {
-      "lesson_id": "LES-0002",
-      "status": "active",
-      "created_at": "2026-03-04T00:00:00Z",
-      "title": "Agente entregou file_updates sem emitir action=complete",
-      "mistake": "O agente produziu file_updates com o trabalho realizado mas o campo action estava ausente ou era diferente de complete.",
-      "rule": "file_updates sem action=complete e output invalido.",
-      "scope": {
-        "task_kinds": [
-          "spec",
-          "impl",
-          "qa"
-        ]
-      },
-      "enforcement": {
-        "mode": "reject",
-        "applies_to": "output_contract"
-      }
-    },
-    {
-      "lesson_id": "LES-0003",
-      "status": "active",
-      "created_at": "2026-03-04T00:00:00Z",
-      "title": "Agente omitiu prior_status ou declarou valor inconsistente com o roadmap",
-      "mistake": "O agente produziu um output sem o campo prior_status, ou declarou prior_status=todo enquanto a tarefa ja estava em in_progress.",
-      "rule": "prior_status e campo obrigatorio em todo output de agente.",
-      "scope": {
-        "task_kinds": [
-          "spec",
-          "impl",
-          "qa"
-        ]
-      },
-      "enforcement": {
-        "mode": "require_field",
-        "applies_to": "output_contract"
-      }
-    },
-    {
-      "lesson_id": "LES-0004",
-      "status": "active",
-      "created_at": "2026-03-07T02:50:08Z",
-      "title": "Task de scaffold nao pode ser dada como completa sem arquivos-base executaveis",
-      "mistake": "Uma task impl de scaffold foi declarada como entregue com apenas parte dos arquivos principais.",
-      "rule": "Em tasks impl de scaffold, o agente deve validar a existencia real de todos os arquivos prometidos.",
-      "scope": {
-        "task_kinds": [
-          "impl"
-        ]
-      },
-      "enforcement": {
-        "mode": "require_step",
-        "applies_to": "verification_gate"
-      }
-    },
     {
       "lesson_id": "LES-0005",
       "status": "active",
-      "created_at": "2026-03-07T03:35:00Z",
-      "title": "Nenhum agente deve gravar activity.jsonl em paralelo sem serializacao central",
-      "mistake": "Dois agentes anexaram eventos no mesmo activity.jsonl sem coordenacao. Resultou em colisao de sequencia e perda de integridade.",
-      "rule": "activity.jsonl e recurso serializado. Apenas um writer logico pode anexar eventos por vez.",
-      "scope": {
-        "task_kinds": [
-          "spec",
-          "impl",
-          "qa"
-        ]
-      },
-      "enforcement": {
-        "mode": "reject",
-        "applies_to": "workflow_gate"
-      }
-    },
-    {
-      "lesson_id": "LES-0006",
-      "status": "active",
-      "created_at": "2026-03-07T01:20:00Z",
-      "title": "PoC local deve oferecer um entrypoint operacional simples na raiz",
-      "mistake": "A entrega da PoC dependia de comandos manuais separados para backend e frontend.",
-      "rule": "Entregas de PoC devem incluir launchers (ex: .bat ou .sh) para subir a stack completa.",
-      "scope": {
-        "task_kinds": [
-          "impl",
-          "qa"
-        ]
-      },
-      "enforcement": {
-        "mode": "require_step",
-        "applies_to": "acceptance_gate"
-      }
-    },
-    {
-      "lesson_id": "LES-0007",
-      "status": "active",
-      "created_at": "2026-03-07T06:30:00Z",
-      "title": "Documentacao final de PoC deve ser multidimensional e organizada por audiencia",
-      "mistake": "Misturar criterios de aceite, runbook e limitacoes em um unico documento dificulta a auditoria.",
-      "rule": "Dividir a documentacao em: checklist de aceite, runbook operacional, limitacoes conhecidas e relatorio de fumaca (smoke report).",
-      "scope": {
-        "task_kinds": [
-          "qa"
-        ]
-      },
-      "enforcement": {
-        "mode": "require_step",
-        "applies_to": "acceptance_gate"
-      }
-    },
-    {
-      "lesson_id": "LES-0010",
-      "status": "active",
-      "created_at": "2026-03-07T11:20:00Z",
-      "title": "Roadmaps concluidos devem manter integridade total para auditoria",
-      "mistake": "Ao sincronizar o roadmap final, os campos de metadados das tarefas (description, depends_on, etc) foram removidos para simplificacao.",
-      "rule": "A imutabilidade de tarefas 'done' tambem se aplica a sua estrutura descritiva. Roadmaps concluidos devem preservar todos os campos originais para permitir auditoria posterior.",
-      "scope": {
-        "task_kinds": [
-          "spec",
-          "impl",
-          "qa"
-        ]
-      },
-      "enforcement": {
-        "mode": "reject",
-        "applies_to": "workflow_gate"
-      }
-    },
-    {
-      "lesson_id": "LES-0011",
-      "status": "active",
-      "created_at": "2026-03-07T11:22:00Z",
-      "title": "Inconsistencias de projecao exigem reconciliacao manual via Activity Log",
-      "mistake": "Falhas recorrentes de replace cirurgico indicam que a projecao materializada (roadmap.json) divergiu da fonte da verdade (activity.jsonl).",
-      "rule": "Diante de erros persistentes de sincronizacao, o agente deve reprocessar o log de atividades completo para reconstruir a projecao, garantindo a monotonicidade e a integridade do estado final.",
-      "scope": {
-        "task_kinds": [
-          "spec",
-          "impl",
-          "qa"
-        ]
-      },
-      "enforcement": {
-        "mode": "require_step",
-        "applies_to": "verification_gate"
-      }
-    },
-    {
-      "lesson_id": "LES-0012",
-      "status": "active",
-      "created_at": "2026-03-07T10:40:00Z",
-      "title": "CLIs de agente no Windows devem receber prompts grandes via stdin e com flags validas do subcomando",
-      "mistake": "O executor tentou passar o envelope completo pela linha de comando e reutilizou flags do comando-raiz em codex exec, causando command line too long e argumento invalido.",
-      "rule": "Ao integrar CLIs de agentes no Windows, resolver o executavel real, usar stdin para prompts grandes e validar flags contra o subcomando especifico antes da execucao.",
-      "scope": {
-        "task_kinds": [
-          "impl",
-          "qa"
-        ]
-      },
-      "enforcement": {
-        "mode": "require_step",
-        "applies_to": "verification_gate"
-      }
-    },
-    {
-      "lesson_id": "LES-0013",
-      "status": "active",
-      "created_at": "2026-03-07T10:40:00Z",
-      "title": "Prompt de execucao supervisionada deve incorporar o init canonico do projeto",
-      "mistake": "A engine de runs usava prompt minimo hardcoded e ignorava .roadmap/init.yaml, o que fazia o agente perder contexto operacional ESAA.",
-      "rule": "Sempre que houver init canonico do projeto, ele deve compor o prompt-base da execucao supervisionada antes das instrucoes da task.",
-      "scope": {
-        "task_kinds": [
-          "spec",
-          "impl",
-          "qa"
-        ]
-      },
-      "enforcement": {
-        "mode": "require_step",
-        "applies_to": "workflow_gate"
-      }
-    },
-    {
-      "lesson_id": "LES-0014",
-      "status": "active",
-      "created_at": "2026-03-07T10:40:00Z",
-      "title": "Sistemas auditaveis precisam permitir leitura operacional direta dos artefatos gerados",
-      "mistake": "A UI listava artefatos, mas nao permitia abrir arquivos relevantes nem navegar por diretorios do projeto para inspecionar evidencias como reports.",
-      "rule": "Quando a auditoria depende de documentos gerados, a interface deve oferecer leitura segura do conteudo e navegacao por diretorios do projeto, com renderizacao adequada para Markdown e texto/codigo.",
-      "scope": {
-        "task_kinds": [
-          "impl",
-          "qa"
-        ]
-      },
-      "enforcement": {
-        "mode": "require_step",
-        "applies_to": "acceptance_gate"
-      }
-    },
-    {
-      "lesson_id": "LES-0015",
-      "status": "active",
-      "created_at": "2026-03-07T10:40:00Z",
-      "title": "Execucao manual de task deve distinguir proxima elegivel de retomada explicita",
-      "mistake": "O mesmo criterio de elegibilidade de selecao automatica foi aplicado a retomada manual, bloqueando tasks em in_progress e impedindo regressao operacional para todo.",
-      "rule": "Selecao automatica continua restrita a todo; ja a retomada manual pode aceitar in_progress. A UI tambem deve expor mutacoes auditaveis de status quando o operador precisar corrigir a trilha.",
-      "scope": {
-        "task_kinds": [
-          "spec",
-          "impl",
-          "qa"
-        ]
-      },
-      "enforcement": {
-        "mode": "require_step",
-        "applies_to": "workflow_gate"
-      }
-    },
-    {
-      "lesson_id": "LES-0016",
-      "status": "active",
-      "created_at": "2026-03-07T07:42:45Z",
-      "title": "Runs ativas devem persistir durante navegacao interna do mesmo projeto",
-      "mistake": "A tela de execucao guardava a sessao apenas em estado local e a limpava ao desmontar, fazendo o operador perder a run ao sair da pagina.",
-      "rule": "Estado de run em andamento, logs e erro operacional devem viver no escopo do projeto e sobreviver a mudancas de rota internas; a limpeza deve ocorrer apenas ao trocar de projeto ou encerrar a run.",
-      "scope": {
-        "task_kinds": [
-          "impl",
-          "qa"
-        ]
-      },
-      "enforcement": {
-        "mode": "require_step",
-        "applies_to": "acceptance_gate"
-      }
-    },
-    {
-      "lesson_id": "LES-0017",
-      "status": "active",
-      "created_at": "2026-03-07T07:42:45Z",
-      "title": "Dashboards operacionais precisam oferecer remediacao, nao apenas leitura",
-      "mistake": "As telas de Issues e Integridade mostravam o estado, mas o operador nao conseguia resolver o problema pela propria interface.",
-      "rule": "Quando a UI expuser um desvio operacional recorrente, ela deve oferecer a acao canônica correspondente (por exemplo issue.resolve ou repair integrity) ou indicar claramente o passo executavel equivalente.",
-      "scope": {
-        "task_kinds": [
-          "impl",
-          "qa"
-        ]
-      },
-      "enforcement": {
-        "mode": "require_step",
-        "applies_to": "acceptance_gate"
-      }
-    },
-    {
-      "lesson_id": "LES-0018",
-      "status": "active",
-      "created_at": "2026-03-07T07:42:45Z",
-      "title": "Validacao de integridade deve distinguir schema artifact de projection instance",
-      "mistake": "O validator tratou roadmap.schema.json como se fosse uma instancia de roadmap, gerando falso positivo de integridade e mascarando o problema real de hash stale no roadmap.",
-      "rule": "Artefatos *.schema.json devem ser validados como fontes de regra, nao como instancias do documento alvo. Alertas de integridade devem separar erro de parse/schema de mismatch de metadata projetada.",
-      "scope": {
-        "task_kinds": [
-          "impl",
-          "qa"
-        ]
-      },
-      "enforcement": {
-        "mode": "require_step",
-        "applies_to": "verification_gate"
-      }
-    },
-    {
-      "lesson_id": "LES-0019",
-      "status": "active",
-      "created_at": "2026-03-07T07:42:45Z",
-      "title": "Cada CLI de agente exige contrato de execucao proprio para modo headless com escrita",
-      "mistake": "Claude e Gemini foram integrados com invocacoes genericas, sem considerar flags especificas de permissao, autoaprovacao, sandbox e entrada por stdin de cada CLI.",
-      "rule": "Adapters de agentes devem ser validados individualmente no ambiente real. Para cada CLI, definir explicitamente o modo headless, a politica de permissao/escrita e o mecanismo de envio do prompt antes de liberar execucao supervisionada.",
-      "scope": {
-        "task_kinds": [
-          "impl",
-          "qa"
-        ]
-      },
-      "enforcement": {
-        "mode": "require_step",
-        "applies_to": "verification_gate"
-      }
-    },
-    {
-      "lesson_id": "LES-0020",
-      "status": "active",
-      "created_at": "2026-03-07T07:42:45Z",
-      "title": "Selects nativos em areas criticas precisam de reset visual especifico",
-      "mistake": "Aplicar apenas a classe generica ao select nao foi suficiente; o controle nativo manteve fundo branco no topbar mesmo dentro do tema dark.",
-      "rule": "Selects nativos usados em superfícies de destaque devem receber regras especificas de appearance, background e options no proprio contexto visual onde aparecem.",
-      "scope": {
-        "task_kinds": [
-          "impl"
-        ]
-      },
-      "enforcement": {
-        "mode": "require_step",
-        "applies_to": "acceptance_gate"
-      }
-    },
-    {
-      "lesson_id": "LES-0021",
-      "status": "active",
-      "created_at": "2026-03-07T08:21:36Z",
-      "title": "Supervisores de agentes precisam oferecer chat persistente no escopo do projeto",
-      "mistake": "Sem uma superficie de chat interna, o operador precisava sair do sistema para iterar com o modelo e perdia contexto, historico e rastreabilidade por projeto.",
-      "rule": "Quando o produto supervisiona execucao de agentes, deve existir chat persistente por projeto, com sessoes livres e sessoes vinculadas à task, preservando contexto operacional sem depender de ferramentas externas.",
-      "scope": {
-        "task_kinds": [
-          "impl",
-          "qa"
-        ]
-      },
-      "enforcement": {
-        "mode": "require_step",
-        "applies_to": "acceptance_gate"
-      }
-    },
-    {
-      "lesson_id": "LES-0022",
-      "status": "active",
-      "created_at": "2026-03-07T08:21:36Z",
-      "title": "Chats operacionais devem distinguir conversa livre de conversa vinculada à task",
-      "mistake": "Misturar brainstorming livre com interacoes ligadas a uma task dificulta saber quando a resposta do agente está sob contexto de entrega auditavel e quando é apenas exploratoria.",
-      "rule": "A UX de chat deve separar explicitamente sessoes livres de sessoes vinculadas à task, carregando contexto adicional apenas quando houver relacao direta com um item do roadmap.",
+      "created_at": "2026-03-08T19:15:00Z",
+      "title": "Projecoes compartilhadas devem ser sincronizadas em todas as variantes e manter meta canonica",
+      "mistake": "A resolucao manual de issues regravava apenas roadmap.json. Com isso, roadmap.security.json podia continuar marcado como verify_status=error mesmo apos a correcao, e as projecoes compartilhadas issues.json e lessons.json eram mantidas sem todos os metadados canonicos exigidos pelos schemas.",
+      "rule": "Sempre que um evento impactar projecoes compartilhadas como issues e lessons, a sincronizacao deve atualizar todas as variantes de roadmap e reserializar os artefatos auxiliares via sync_projection, preenchendo meta canonica, indexes e normalizacao de shape antes da validacao de integridade.",
       "scope": {
         "task_kinds": [
           "impl",
@@ -371,238 +16,51 @@
       "enforcement": {
         "mode": "require_step",
         "applies_to": "workflow_gate"
-      }
-    },
-    {
-      "lesson_id": "LES-0023",
-      "status": "active",
-      "created_at": "2026-03-07T08:21:36Z",
-      "title": "Telemetria de tokens deve ser tratada como dado auditavel de execucao",
-      "mistake": "O sistema mostrava logs e resultados, mas o gasto de tokens/custo nao era persistido no evento aplicado nem consolidado em superficies operacionais.",
-      "rule": "Sempre que o CLI expuser metrica de uso, o supervisor deve normalizar e persistir token_usage junto da execucao do agente, exibindo esse dado em runs, activity e demais superficies de acompanhamento.",
-      "scope": {
-        "task_kinds": [
-          "impl",
-          "qa"
-        ]
       },
-      "enforcement": {
-        "mode": "require_step",
-        "applies_to": "verification_gate"
-      }
-    },
-    {
-      "lesson_id": "LES-0024",
-      "status": "active",
-      "created_at": "2026-03-07T11:45:00Z",
-      "title": "Chats com agentes precisam de timeout operacional proprio e gestao do ciclo de vida das sessoes",
-      "mistake": "A interface reutilizou o timeout HTTP global de 10 segundos e nao oferecia exclusao de sessoes antigas, tornando o chat inutil para respostas longas e acumulando historico morto.",
-      "rule": "Superficies de chat com agentes devem usar timeout compatível com execucao real do modelo e expor criacao, retomada e exclusao de sessoes no proprio fluxo da UI.",
-      "scope": {
-        "task_kinds": [
-          "impl",
-          "qa"
-        ]
-      },
-      "enforcement": {
-        "mode": "require_step",
-        "applies_to": "acceptance_gate"
-      }
-    },
-    {
-      "lesson_id": "LES-0025",
-      "status": "active",
-      "created_at": "2026-03-07T11:45:00Z",
-      "title": "Adapters devem distinguir erro real de ruído conhecido do CLI no ambiente alvo",
-      "mistake": "O gemini-cli no Windows emitia stacktrace repetitivo do node-pty em stderr apesar de devolver resposta valida, e esse ruído aparecia como se a execucao estivesse falhando.",
-      "rule": "Ao integrar CLIs heterogeneos, o adapter deve sanitizar mensagens benignas e conhecidas do ambiente sem descartar a resposta valida nem esconder erros reais.",
-      "scope": {
-        "task_kinds": [
-          "impl",
-          "qa"
-        ]
-      },
-      "enforcement": {
-        "mode": "require_step",
-        "applies_to": "verification_gate"
-      }
-    },
-    {
-      "lesson_id": "LES-0026",
-      "status": "active",
-      "created_at": "2026-03-07T12:12:00Z",
-      "title": "Features cross-layer exigem fechamento completo de contrato antes do merge local",
-      "mistake": "A feature de review de task foi iniciada em partes do stack sem fechar schema, rota, client e UI ao mesmo tempo, causando backend quebrado e service do frontend corrompido.",
-      "rule": "Toda feature que cruza backend e frontend deve ser validada ponta a ponta antes de ser considerada pronta: schema compartilhado, rota, client, UI consumidora e build/compile final.",
-      "scope": {
-        "task_kinds": [
-          "impl",
-          "qa"
-        ]
-      },
-      "enforcement": {
-        "mode": "require_step",
-        "applies_to": "verification_gate"
-      }
-    },
-    {
-      "lesson_id": "LES-0027",
-      "status": "active",
-      "created_at": "2026-03-07T12:12:00Z",
-      "title": "Nao assumir helpers inexistentes em infraestrutura canônica",
-      "mistake": "O endpoint de review tentou usar EventWriter.now_iso(), mas o writer canônico só expunha utc_now_iso(), gerando falha 500 em runtime.",
-      "rule": "Antes de usar helpers de infraestrutura em caminhos de runtime, o agente deve verificar a API real do componente canônico no código, e não inferir métodos por nome.",
-      "scope": {
-        "task_kinds": [
-          "impl",
-          "qa"
-        ]
-      },
-      "enforcement": {
-        "mode": "require_step",
-        "applies_to": "verification_gate"
-      }
-    },
-    {
-      "lesson_id": "LES-0028",
-      "status": "active",
-      "created_at": "2026-03-07T13:40:00Z",
-      "title": "Execucao sequencial precisa separar cancelamento abrupto de parada graciosa",
-      "mistake": "O supervisor tratava toda interrupcao da run como cancelamento imediato, o que impedia continuar sem pausas entre tasks e nao permitia ao operador encerrar a fila de forma segura ao fim da tarefa em andamento.",
-      "rule": "Quando houver modo de execucao continua, o runtime deve distinguir claramente tres controles: decisao manual, cancelamento imediato e parada graciosa apos a task atual, preservando a rastreabilidade do estado da run e das tasks concluidas na sessao.",
-      "scope": {
-        "task_kinds": [
-          "impl",
-          "qa"
-        ]
-      },
-      "enforcement": {
-        "mode": "require_step",
-        "applies_to": "acceptance_gate"
-      }
-    },
-    {
-      "lesson_id": "LES-0029",
-      "status": "active",
-      "created_at": "2026-03-07T19:05:00Z",
-      "title": "Admissao de run deve validar projection contra a fonte canonica antes de executar",
-      "mistake": "O supervisor admitiu execucao com roadmap materializado atrasado em relacao ao activity.jsonl, o que permitiu selecionar task ja concluida no log bruto e só descobrir o conflito dentro da invocacao do agente.",
-      "rule": "Antes de iniciar uma run, o runtime deve bloquear projection nao verificada, hash stale e qualquer lag entre roadmap.last_event_seq e activity.jsonl; quando houver atraso, o operador deve executar integrity repair para reaplicar os eventos pendentes.",
-      "scope": {
-        "task_kinds": [
-          "impl",
-          "qa"
-        ]
-      },
-      "enforcement": {
-        "mode": "reject",
-        "applies_to": "workflow_gate"
-      }
+      "source_refs": [
+        {
+          "type": "code",
+          "ref": "backend/app/api/routes_issues.py",
+          "description": "Sincronizacao de issue.resolve expandida para todas as variantes de roadmap."
+        },
+        {
+          "type": "code",
+          "ref": "backend/app/api/routes_integrity.py",
+          "description": "Repair agora reserializa issues.json e lessons.json mesmo sem novos eventos."
+        },
+        {
+          "type": "code",
+          "ref": "backend/app/core/issues_sync.py",
+          "description": "Normalizacao de meta, evidence e resolution para a projecao de issues."
+        },
+        {
+          "type": "code",
+          "ref": "backend/app/core/lessons_sync.py",
+          "description": "Preenchimento de meta canonica e indexes da projecao de lessons."
+        }
+      ]
     }
   ],
+  "schema_version": "0.4.0",
+  "meta": {
+    "updated_at": "2026-03-08T19:14:12Z",
+    "schema_version": "0.4.0",
+    "esaa_version": "0.4.x",
+    "generated_by": "esaa.project",
+    "source_event_store": ".roadmap/activity.jsonl"
+  },
   "indexes": {
     "by_task_kind": {
-      "spec": [
-        "LES-0001",
-        "LES-0002",
-        "LES-0003",
-        "LES-0005",
-        "LES-0010",
-        "LES-0011",
-        "LES-0013",
-        "LES-0015"
-      ],
       "impl": [
-        "LES-0001",
-        "LES-0002",
-        "LES-0003",
-        "LES-0004",
-        "LES-0005",
-        "LES-0006",
-        "LES-0010",
-        "LES-0011",
-        "LES-0012",
-        "LES-0013",
-        "LES-0014",
-        "LES-0015",
-        "LES-0016",
-        "LES-0017",
-        "LES-0018",
-        "LES-0019",
-        "LES-0020",
-        "LES-0021",
-        "LES-0022",
-        "LES-0023",
-        "LES-0024",
-        "LES-0025",
-        "LES-0026",
-        "LES-0027",
-        "LES-0028",
-        "LES-0029"
+        "LES-0005"
       ],
       "qa": [
-        "LES-0001",
-        "LES-0002",
-        "LES-0003",
-        "LES-0005",
-        "LES-0006",
-        "LES-0007",
-        "LES-0010",
-        "LES-0011",
-        "LES-0012",
-        "LES-0013",
-        "LES-0014",
-        "LES-0015",
-        "LES-0016",
-        "LES-0017",
-        "LES-0018",
-        "LES-0019",
-        "LES-0021",
-        "LES-0022",
-        "LES-0023",
-        "LES-0024",
-        "LES-0025",
-        "LES-0026",
-        "LES-0027",
-        "LES-0028",
-        "LES-0029"
+        "LES-0005"
       ]
     },
     "by_enforcement_applies_to": {
       "workflow_gate": [
-        "LES-0001",
-        "LES-0005",
-        "LES-0010",
-        "LES-0013",
-        "LES-0015",
-        "LES-0022",
-        "LES-0029"
-      ],
-      "output_contract": [
-        "LES-0002",
-        "LES-0003"
-      ],
-      "verification_gate": [
-        "LES-0004",
-        "LES-0011",
-        "LES-0012",
-        "LES-0018",
-        "LES-0019",
-        "LES-0023",
-        "LES-0025",
-        "LES-0026",
-        "LES-0027"
-      ],
-      "acceptance_gate": [
-        "LES-0006",
-        "LES-0007",
-        "LES-0014",
-        "LES-0016",
-        "LES-0017",
-        "LES-0020",
-        "LES-0021",
-        "LES-0024",
-        "LES-0028"
+        "LES-0005"
       ]
     }
   }

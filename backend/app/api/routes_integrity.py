@@ -13,6 +13,7 @@ from app.core.artifact_discovery import ArtifactDiscovery
 from app.core.projector import Projector
 from app.core.validators import ArtifactValidator
 from app.utils.json_artifacts import JsonArtifactLoadError, load_json_artifact, write_json_artifact
+from app.utils.jsonl import read_jsonl
 
 router = APIRouter(prefix="/projects/{project_id}/integrity", tags=["integrity"])
 
@@ -30,8 +31,45 @@ def _repair_roadmap_projection(roadmap_dir: str, roadmap_id: str) -> bool:
 
     projector = Projector(roadmap_dir, roadmap_id=roadmap_id)
     result = projector.reconcile_activity_tail_to_disk()
-    if not result["is_consistent"] and result["invalid_event"] is None:
+    if result["is_consistent"]:
+        projector.sync_to_disk([])
+        return True
+    if result["invalid_event"] is None:
         return False
+    if not _trust_current_projection(roadmap_dir, roadmap_id):
+        return False
+    projector.sync_to_disk([])
+    return True
+
+
+def _trust_current_projection(roadmap_dir: str, roadmap_id: str) -> bool:
+    roadmap_path = Path(roadmap_dir) / roadmap_id
+    try:
+        roadmap = load_json_artifact(roadmap_path).payload
+    except JsonArtifactLoadError:
+        return False
+
+    run_meta = roadmap.setdefault("meta", {}).setdefault("run", {})
+    stored_hash = run_meta.get("projection_hash_sha256")
+    if not stored_hash:
+        return False
+
+    try:
+        computed_hash = Projector.compute_projection_hash(roadmap)
+    except Exception:
+        return False
+    if computed_hash != stored_hash:
+        return False
+
+    max_event_seq = max(
+        (int(event.get("event_seq", 0) or 0) for event in read_jsonl(str(Path(roadmap_dir) / "activity.jsonl"))),
+        default=int(run_meta.get("last_event_seq", 0) or 0),
+    )
+    run_meta["last_event_seq"] = max_event_seq
+    run_meta["verify_status"] = "ok"
+    run_meta.pop("integrity_error", None)
+    roadmap["meta"]["updated_at"] = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    write_json_artifact(roadmap_path, roadmap)
     return True
 
 

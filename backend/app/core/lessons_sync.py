@@ -31,11 +31,42 @@ class LessonsSync:
 
     def sync_projection(self, projection: dict[str, Any], *, updated_at: str | None = None) -> dict[str, Any]:
         synced = deepcopy(projection)
+        synced["schema_version"] = "0.4.0"
+        synced["lessons"] = [self._normalize_lesson(lesson) for lesson in synced.get("lessons", [])]
+        meta = synced.setdefault("meta", {})
+        meta.setdefault("schema_version", "0.4.0")
+        meta.setdefault("esaa_version", "0.4.x")
+        meta.setdefault("generated_by", "esaa.project")
+        meta.setdefault("source_event_store", ".roadmap/activity.jsonl")
         if updated_at is not None:
-            synced.setdefault("meta", {})["updated_at"] = updated_at
+            meta["updated_at"] = updated_at
+        else:
+            meta.setdefault("updated_at", "")
         synced.setdefault("indexes", {})["by_task_kind"] = self._by_task_kind(synced.get("lessons", []))
         synced.setdefault("indexes", {})["by_enforcement_applies_to"] = self._by_enforcement(synced.get("lessons", []))
         return synced
+
+    @staticmethod
+    def _normalize_lesson(lesson: dict[str, Any]) -> dict[str, Any]:
+        normalized = deepcopy(lesson)
+        normalized.setdefault("status", "active")
+        normalized.setdefault("created_at", "")
+        normalized.setdefault("source_refs", [])
+        scope = normalized.get("scope")
+        if not isinstance(scope, dict):
+            scope = {}
+        task_kinds = scope.get("task_kinds")
+        if not isinstance(task_kinds, list):
+            task_kinds = []
+        scope["task_kinds"] = [item for item in task_kinds if isinstance(item, str)]
+        normalized["scope"] = scope
+        enforcement = normalized.get("enforcement")
+        if not isinstance(enforcement, dict):
+            enforcement = {}
+        enforcement.setdefault("mode", "warn")
+        enforcement.setdefault("applies_to", "workflow_gate")
+        normalized["enforcement"] = enforcement
+        return normalized
 
     @staticmethod
     def _find_lesson(projection: dict[str, Any], lesson_id: str) -> dict[str, Any] | None:
@@ -60,4 +91,3 @@ class LessonsSync:
             if applies_to:
                 grouped.setdefault(applies_to, []).append(lesson["lesson_id"])
         return grouped
-

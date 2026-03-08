@@ -224,3 +224,115 @@ def test_projector_persists_task_planning_and_indexes_preferred_runner(tmp_path:
     assert roadmap["tasks"][0]["planning"]["default_model"] == "gemini-2.5-pro"
     assert roadmap["tasks"][0]["planning"]["default_reasoning_effort"] == "high"
     assert roadmap["indexes"]["by_preferred_runner"] == {"gemini-cli": ["SEC-014"]}
+
+
+def test_projector_ignores_unrelated_task_events_for_variant_roadmap(tmp_path: Path) -> None:
+    roadmap_dir = tmp_path
+    _write_json(
+        roadmap_dir / "roadmap.ui-redesign.json",
+        {
+            "meta": {
+                "schema_version": "0.4.0",
+                "esaa_version": "0.4.x",
+                "immutable_done": True,
+                "master_correlation_id": None,
+                "run": {
+                    "run_id": None,
+                    "status": "initialized",
+                    "last_event_seq": 0,
+                    "projection_hash_sha256": "0" * 64,
+                    "verify_status": "ok",
+                },
+                "updated_at": "2026-03-07T00:00:00Z",
+            },
+            "project": {"name": "ui", "audit_scope": "test"},
+            "tasks": [
+                {
+                    "task_id": "UIR-QA-017",
+                    "task_kind": "qa",
+                    "title": "UI regression",
+                    "description": "desc",
+                    "status": "todo",
+                    "depends_on": [],
+                    "targets": [],
+                    "outputs": {"files": []},
+                    "immutability": {"done_is_immutable": True},
+                    "required_verification": [],
+                }
+            ],
+            "indexes": {
+                "by_status": {"todo": 1, "in_progress": 0, "review": 0, "done": 0},
+                "by_kind": {"spec": 0, "impl": 0, "qa": 1},
+                "by_preferred_runner": {},
+            },
+        },
+    )
+    _write_json(
+        roadmap_dir / "issues.json",
+        {
+            "meta": {
+                "schema_version": "0.4.0",
+                "esaa_version": "0.4.x",
+                "generated_by": "esaa.project",
+                "source_event_store": ".roadmap/activity.jsonl",
+                "last_event_seq": 0,
+                "updated_at": "2026-03-07T00:00:00Z",
+            },
+            "issues": [],
+            "indexes": {"open_by_baseline": {}},
+        },
+    )
+    _write_json(
+        roadmap_dir / "lessons.json",
+        {
+            "meta": {
+                "schema_version": "0.4.0",
+                "esaa_version": "0.4.x",
+                "generated_by": "esaa.project",
+                "source_event_store": ".roadmap/activity.jsonl",
+                "updated_at": "2026-03-07T00:00:00Z",
+            },
+            "lessons": [],
+            "indexes": {"by_task_kind": {}, "by_enforcement_applies_to": {}},
+        },
+    )
+
+    projector = Projector(str(roadmap_dir), roadmap_id="roadmap.ui-redesign.json")
+    roadmap, _, _ = projector.apply_events(
+        json.loads((roadmap_dir / "roadmap.ui-redesign.json").read_text(encoding="utf-8")),
+        json.loads((roadmap_dir / "issues.json").read_text(encoding="utf-8")),
+        json.loads((roadmap_dir / "lessons.json").read_text(encoding="utf-8")),
+        [
+            {
+                "schema_version": "0.4.1",
+                "event_id": "EV-00000110",
+                "event_seq": 110,
+                "ts": "2026-03-07T11:00:00Z",
+                "actor": "gemini-cli",
+                "action": "claim",
+                "payload": {"task_id": "ESUP-IMPL-010", "prior_status": "todo"},
+            },
+            {
+                "schema_version": "0.4.1",
+                "event_id": "EV-00000111",
+                "event_seq": 111,
+                "ts": "2026-03-07T12:00:00Z",
+                "actor": "gemini-cli",
+                "action": "complete",
+                "payload": {"task_id": "ESUP-IMPL-010", "prior_status": "in_progress", "verification": {"checks": []}},
+            },
+            {
+                "schema_version": "0.4.1",
+                "event_id": "EV-00000112",
+                "event_seq": 112,
+                "ts": "2026-03-07T12:00:01Z",
+                "actor": "gemini-cli",
+                "action": "review",
+                "payload": {"task_id": "ESUP-IMPL-010", "prior_status": "review", "decision": "approve"},
+            },
+        ],
+    )
+
+    assert roadmap["tasks"][0]["status"] == "todo"
+    assert roadmap["meta"]["run"]["last_event_seq"] == 112
+    assert roadmap["meta"]["run"]["verify_status"] == "ok"

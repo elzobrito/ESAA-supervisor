@@ -7,11 +7,11 @@
     "run": {
       "run_id": null,
       "status": "initialized",
-      "last_event_seq": 111,
-      "projection_hash_sha256": "5e2a90185663fe5b596f378747524aebad83e8b5f28d4730db8f13aa214ac9cc",
+      "last_event_seq": 268,
+      "projection_hash_sha256": "8038053a7d3985ca91804f7f238163860221570cb145d57e418b91b3cec0c95b",
       "verify_status": "ok"
     },
-    "updated_at": "2026-03-07T11:15:00Z"
+    "updated_at": "2026-03-08T18:58:39Z"
   },
   "project": {
     "name": "esaa-supervisor-ui-redesign",
@@ -859,8 +859,18 @@
       "completed_at": "2026-03-07T11:00:00Z",
       "verification": {
         "checks": [
-          { "id": "CHK-001", "title": "Suíte de Testes Visuais", "status": "pass", "evidence": "ui-redesign.spec.ts implementado com casos para app shell, sidebar e navegação" },
-          { "id": "CHK-002", "title": "Relatório de Regressão", "status": "pass", "evidence": "visual-regression-report.md documenta o status de cada componente e comportamento responsivo" }
+          {
+            "id": "CHK-001",
+            "title": "Suíte de Testes Visuais",
+            "status": "pass",
+            "evidence": "ui-redesign.spec.ts implementado com casos para app shell, sidebar e navegação"
+          },
+          {
+            "id": "CHK-002",
+            "title": "Relatório de Regressão",
+            "status": "pass",
+            "evidence": "visual-regression-report.md documenta o status de cada componente e comportamento responsivo"
+          }
         ]
       }
     },
@@ -908,8 +918,18 @@
       "completed_at": "2026-03-07T11:15:00Z",
       "verification": {
         "checks": [
-          { "id": "CHK-001", "title": "Smoke Test E2E", "status": "pass", "evidence": "e2e-smoke-report.md valida navegação, inspeção e execução" },
-          { "id": "CHK-002", "title": "Aceite Final", "status": "pass", "evidence": "final-acceptance-report.md consolida checklists e aprova a entrega do redesign" }
+          {
+            "id": "CHK-001",
+            "title": "Smoke Test E2E",
+            "status": "pass",
+            "evidence": "e2e-smoke-report.md valida navegação, inspeção e execução"
+          },
+          {
+            "id": "CHK-002",
+            "title": "Aceite Final",
+            "status": "pass",
+            "evidence": "final-acceptance-report.md consolida checklists e aprova a entrega do redesign"
+          }
         ]
       }
     }
@@ -948,6 +968,32 @@
       ],
       "agent-qa": [
         "UIR-QA-016",
+        "UIR-QA-017",
+        "UIR-QA-018"
+      ]
+    },
+    "by_preferred_runner": {
+      "claude-code": [
+        "UIR-SPEC-001",
+        "UIR-SPEC-002",
+        "UIR-SPEC-006",
+        "UIR-IMPL-007",
+        "UIR-IMPL-008",
+        "UIR-IMPL-010",
+        "UIR-IMPL-013",
+        "UIR-IMPL-015"
+      ],
+      "codex": [
+        "UIR-SPEC-003",
+        "UIR-SPEC-004",
+        "UIR-SPEC-005",
+        "UIR-IMPL-009",
+        "UIR-IMPL-011",
+        "UIR-IMPL-012",
+        "UIR-IMPL-014",
+        "UIR-QA-016"
+      ],
+      "gemini-cli": [
         "UIR-QA-017",
         "UIR-QA-018"
       ]

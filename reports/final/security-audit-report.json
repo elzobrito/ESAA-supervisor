@@ -1,0 +1,164 @@
+{
+  "header": {
+    "report_id": "RPT-SEC-20260308-28c4ac86-d27f-4471-b53d-a7020672ddba",
+    "generated_at": "2026-03-08T20:15:00Z",
+    "run_id": "28c4ac86-d27f-4471-b53d-a7020672ddba",
+    "projection_hash_sha256": "61b804e269a9bfe12aab47be28ba4877bc185b7587888cdf9d13321a2fdefdd2",
+    "audit_scope": "Full-stack security audit covering 16 domains (secrets, dependencies, authentication, authorization, API security, input validation, file upload, session security, cryptography, security headers, logging, infrastructure, DevSecOps, data security, frontend security, AI/LLM security) with agent-executable playbooks and ESAA lifecycle governance.",
+    "target": {
+      "repo_path": "C:/xampp/htdocs/ESAA-supervisor",
+      "endpoint_base_url": "http://localhost:8000",
+      "tech_stack_summary": "Python (FastAPI), React (TypeScript/Vite), JSON/JSONL/YAML filesystem-based canonical state, Agent CLI integration via subprocess."
+    }
+  },
+  "executive_summary": {
+    "overall_assessment": "O sistema ESAA-supervisor, em seu estágio atual de PoC, apresenta uma postura de segurança Crítica. A ausência de controles fundamentais de autenticação, autorização e sanitização de entradas expõe o sistema a riscos severos, incluindo Execução Remota de Código (RCE) via Prompt Injection, Path Traversal em arquivos de sessão e vazamento de credenciais em logs. O design atual privilegia a funcionalidade local sobre a segurança, tornando-o inadequado para qualquer ambiente além do desenvolvimento local isolado.",
+    "security_score": {
+      "value": 19.5,
+      "classification": "critical",
+      "breakdown": {
+        "secrets_config": 36.4,
+        "dependencies_supply_chain": 92.3,
+        "authentication": 0.0,
+        "authorization": 0.0,
+        "api_security": 28.6,
+        "input_validation": 28.6,
+        "file_upload": 33.3,
+        "session_security": 16.7,
+        "cryptography": 37.5,
+        "security_headers": 0.0,
+        "logging_monitoring": 40.0,
+        "infrastructure": 0.0,
+        "devsecops": 0.0,
+        "data_security": 20.0,
+        "frontend_security": 80.0,
+        "ai_llm_security": 5.3
+      }
+    },
+    "top_risks": [
+      {
+        "rank": 1,
+        "check_id": "AZ-001",
+        "vulnerability": "Controle de acesso ausente",
+        "domain": "authorization",
+        "severity": "CRITICAL",
+        "impact_summary": "Permite que qualquer usuário ou script local/remoto execute ações mutativas (reset, claim, run) sem autenticação.",
+        "immediate_action": "Implementar middleware de Auth (API Key ou JWT) no FastAPI."
+      },
+      {
+        "rank": 2,
+        "check_id": "AI-001",
+        "vulnerability": "Prompt injection possível",
+        "domain": "ai_llm_security",
+        "severity": "CRITICAL",
+        "impact_summary": "Pode ser explorado para forçar o agente a realizar ações destrutivas ou exfiltrar dados via ferramentas (shell, write).",
+        "immediate_action": "Utilizar delimitadores XML e filtros de detecção de injeção no prompt."
+      },
+      {
+        "rank": 3,
+        "check_id": "IV-007",
+        "vulnerability": "Sanitização Ausente - Path Traversal",
+        "domain": "input_validation",
+        "severity": "CRITICAL",
+        "impact_summary": "Permite leitura e deleção arbitrária de arquivos canônicos (.roadmap/*.json) através do parâmetro session_id.",
+        "immediate_action": "Validar que o session_id segue o formato UUID e sanitizar caminhos."
+      },
+      {
+        "rank": 4,
+        "check_id": "SC-004",
+        "vulnerability": "CORS Permissivo",
+        "domain": "secrets_config",
+        "severity": "CRITICAL",
+        "impact_summary": "Permite que sites maliciosos façam requisições ao backend a partir do browser do operador.",
+        "immediate_action": "Restringir allow_origins à URL específica do frontend."
+      },
+      {
+        "rank": 5,
+        "check_id": "LM-001",
+        "vulnerability": "Logs contendo dados sensíveis",
+        "domain": "logging_monitoring",
+        "severity": "CRITICAL",
+        "impact_summary": "Exposição de API keys e segredos em tempo real via streaming SSE sem autenticação.",
+        "immediate_action": "Implementar máscara de segredos via regex no LogStreamer."
+      }
+    ],
+    "stats": {
+      "total_checks_executed": 95,
+      "checks_pass": 15,
+      "checks_fail": 72,
+      "checks_partial": 5,
+      "checks_na": 3,
+      "domains_audited": 16,
+      "critical_findings": 9,
+      "high_findings": 23,
+      "medium_findings": 31,
+      "low_findings": 9,
+      "info_findings": 0
+    }
+  },
+  "vulnerability_matrix": [
+    { "finding_id": "FIND-001", "check_id": "SC-004", "vulnerability": "CORS Permissivo", "domain": "secrets_config", "severity": "CRITICAL", "impact_cia": { "confidentiality": "high", "integrity": "high", "availability": "low" }, "status": "fail", "remediation_summary": "Configurar lista restrita de domínios no CORSMiddleware." },
+    { "finding_id": "FIND-002", "check_id": "SC-008", "vulnerability": "Variáveis Sensíveis em Logs", "domain": "secrets_config", "severity": "CRITICAL", "impact_cia": { "confidentiality": "high", "integrity": "low", "availability": "low" }, "status": "fail", "remediation_summary": "Implementar sanitização e autenticação no streaming SSE." },
+    { "finding_id": "FIND-003", "check_id": "AU-001", "vulnerability": "Senhas em texto plano", "domain": "authentication", "severity": "CRITICAL", "impact_cia": { "confidentiality": "high", "integrity": "high", "availability": "medium" }, "status": "fail", "remediation_summary": "Implementar hash bcrypt/argon2 e banco de usuários." },
+    { "finding_id": "FIND-004", "check_id": "AZ-001", "vulnerability": "Controle de acesso ausente", "domain": "authorization", "severity": "CRITICAL", "impact_cia": { "confidentiality": "high", "integrity": "high", "availability": "medium" }, "status": "fail", "remediation_summary": "Adicionar middleware de Auth em todas as rotas." },
+    { "finding_id": "FIND-005", "check_id": "AZ-002", "vulnerability": "IDOR / Path Traversal", "domain": "authorization", "severity": "CRITICAL", "impact_cia": { "confidentiality": "high", "integrity": "high", "availability": "medium" }, "status": "fail", "remediation_summary": "Restringir escopo de navegação a diretório isolado." },
+    { "finding_id": "FIND-006", "check_id": "AZ-003", "vulnerability": "Permissão só no Frontend", "domain": "authorization", "severity": "CRITICAL", "impact_cia": { "confidentiality": "high", "integrity": "high", "availability": "medium" }, "status": "fail", "remediation_summary": "Mover lógica de autorização para o backend." },
+    { "finding_id": "FIND-007", "check_id": "LM-001", "vulnerability": "Logs sensíveis via SSE", "domain": "logging_monitoring", "severity": "CRITICAL", "impact_cia": { "confidentiality": "low", "integrity": "low", "availability": "low" }, "status": "fail", "remediation_summary": "Aplicar filtro de redação por regex no LogStreamer." },
+    { "finding_id": "FIND-008", "check_id": "AI-001", "vulnerability": "Prompt injection possível", "domain": "ai_llm_security", "severity": "CRITICAL", "impact_cia": { "confidentiality": "high", "integrity": "high", "availability": "high" }, "status": "fail", "remediation_summary": "Usar delimitadores XML e filtros de detecção." },
+    { "finding_id": "FIND-009", "check_id": "AI-002", "vulnerability": "Acesso irrestrito a ferramentas", "domain": "ai_llm_security", "severity": "CRITICAL", "impact_cia": { "confidentiality": "high", "integrity": "high", "availability": "high" }, "status": "fail", "remediation_summary": "Desabilitar modo YOLO e exigir aprovação humana." }
+  ],
+  "detailed_analysis": {
+    "secrets_config": {
+      "domain_title": "Secrets & Configuração",
+      "domain_score": 36.4,
+      "summary": "Múltiplas falhas críticas na gestão de segredos e configuração, principalmente CORS permissivo e vazamento de chaves em logs.",
+      "checks": [
+        { "check_id": "SC-004", "status": "fail", "severity_if_fail": "CRITICAL", "evidence": { "description": "CORS allow_origins=['*'] em main.py." } },
+        { "check_id": "SC-008", "status": "fail", "severity_if_fail": "CRITICAL", "evidence": { "description": "Logs de agentes em texto plano via SSE." } }
+      ]
+    },
+    "authentication": {
+      "domain_title": "Autenticação",
+      "domain_score": 0.0,
+      "summary": "Domínio totalmente inexistente na implementação atual. O sistema não exige login para nenhuma operação.",
+      "checks": [
+        { "check_id": "AU-001", "status": "fail", "severity_if_fail": "CRITICAL", "evidence": { "description": "Inexistência de camada de auth." } }
+      ]
+    }
+  },
+  "priority_risks": [
+    {
+      "rank": 1,
+      "finding_id": "FIND-004",
+      "title": "Execução Não Autorizada de Tarefas",
+      "severity": "CRITICAL",
+      "impact_analysis": "Um atacante pode resetar o roadmap, claimar tarefas ou disparar novas execuções de agentes com ferramentas habilitadas.",
+      "exploitation_scenario": "Atacante envia POST para /api/v1/projects/{id}/runs/next via script cross-origin.",
+      "remediation_roadmap": {
+        "immediate": "Bloquear endpoints mutativos atrás de API Key.",
+        "short_term": "Implementar OAuth2/JWT.",
+        "long_term": "RBAC completo."
+      },
+      "effort_estimate": "days"
+    }
+  ],
+  "technical_recommendations": {
+    "tier_1_immediate": [
+      { "finding_id": "FIND-001", "action": "Restringir CORS origins no backend/app/main.py.", "verification_command": "curl -I -H \"Origin: http://malicious.com\" http://localhost:8000" }
+    ],
+    "tier_2_short_term": [
+      { "finding_id": "FIND-003", "action": "Implementar passlib + bcrypt para hash de senhas.", "verification_command": "pytest backend/tests/test_auth.py" }
+    ]
+  },
+  "appendix": {
+    "audit_metadata": {
+      "run_id": "28c4ac86-d27f-4471-b53d-a7020672ddba",
+      "projection_hash_sha256": "61b804e269a9bfe12aab47be28ba4877bc185b7587888cdf9d13321a2fdefdd2",
+      "audit_start": "2026-03-07T08:15:25Z",
+      "audit_end": "2026-03-08T20:15:00Z",
+      "agent_model": "gemini-3-flash-preview",
+      "playbooks_version": "v1.0.0",
+      "roadmap_schema_version": "0.4.0"
+    }
+  }
+}
