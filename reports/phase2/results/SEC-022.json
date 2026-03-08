@@ -1,0 +1,83 @@
+{
+  "task_id": "SEC-022",
+  "domain": "devsecops",
+  "audit_date": "2026-03-08T02:20:00Z",
+  "auditor": "gemini-cli",
+  "checks_total": 6,
+  "checks_pass": 0,
+  "checks_fail": 6,
+  "checks_partial": 0,
+  "checks_na": 0,
+  "worst_severity": "HIGH",
+  "results": [
+    {
+      "check_id": "DO-001",
+      "check_name": "Ausência de code review",
+      "status": "fail",
+      "severity": "MEDIUM",
+      "evidence": {
+        "files_audited": [".", ".github/", "backend/", "frontend/", "src/"],
+        "description": "Nenhum arquivo de CODEOWNERS ou configurações de branch protection encontrados via análise estática do repositório."
+      },
+      "remediation": "Configurar branch protection no GitHub/GitLab. Exigir reviews obrigatórios para áreas críticas via CODEOWNERS."
+    },
+    {
+      "check_id": "DO-002",
+      "check_name": "Pipeline sem análise de segurança",
+      "status": "fail",
+      "severity": "MEDIUM",
+      "evidence": {
+        "files_audited": [".github/workflows/", ".gitlab-ci.yml", "Jenkinsfile"],
+        "description": "Nenhuma configuração de CI/CD encontrada no repositório. O script scripts/run_poc_smoke.sh foca em testes funcionais e de fumaça, sem integração de ferramentas de segurança."
+      },
+      "remediation": "Implementar esteira de CI/CD (ex: GitHub Actions) com validações de segurança em cada Pull Request."
+    },
+    {
+      "check_id": "DO-003",
+      "check_name": "Secrets scanning ausente",
+      "status": "fail",
+      "severity": "HIGH",
+      "evidence": {
+        "files_audited": [".pre-commit-config.yaml", ".github/workflows/"],
+        "description": "Ausência de gitleaks, trufflehog ou detect-secrets no repositório. Risco crítico de exposição de credenciais no histórico do Git."
+      },
+      "remediation": "Integrar gitleaks ou trufflehog na CI/CD. Adicionar hook de pre-commit para validação local de segredos."
+    },
+    {
+      "check_id": "DO-004",
+      "check_name": "SAST não implementado",
+      "status": "fail",
+      "severity": "MEDIUM",
+      "evidence": {
+        "files_audited": ["backend/requirements.txt", "frontend/package.json", "pyproject.toml"],
+        "description": "Nenhuma ferramenta de Static Application Security Testing (como Semgrep, Bandit ou linters de segurança) configurada no stack atual."
+      },
+      "remediation": "Adicionar Semgrep e linters de segurança (ex: bandit para Python, eslint-plugin-security para JS) ao pipeline de desenvolvimento."
+    },
+    {
+      "check_id": "DO-005",
+      "check_name": "DAST não implementado",
+      "status": "fail",
+      "severity": "LOW",
+      "evidence": {
+        "description": "O sistema não possui testes dinâmicos automatizados (OWASP ZAP, Nuclei) integrados ao ciclo de vida."
+      },
+      "remediation": "Implementar scan dinâmico (ZAP) em ambiente de staging antes de qualquer deploy em produção."
+    },
+    {
+      "check_id": "DO-006",
+      "check_name": "Deploy sem auditoria",
+      "status": "fail",
+      "severity": "MEDIUM",
+      "evidence": {
+        "description": "Processo de deploy não formalizado via código. Não há registro de auditoria de publicações (quem, quando, o quê)."
+      },
+      "remediation": "Desenvolver scripts de deploy automatizados que gerem uma trilha de auditoria persistente ligada aos commits do repositório."
+    }
+  ],
+  "recommendations": [
+    "Priorizar a implementação de CI/CD (GitHub Actions) com steps de SAST e Secrets Scanning.",
+    "Adotar pre-commit hooks para mitigar riscos de segurança no commit local.",
+    "Formalizar a política de revisão de código via CODEOWNERS para o núcleo do ESAA e backend."
+  ]
+}

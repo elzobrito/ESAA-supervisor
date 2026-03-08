@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import hashlib
 import json
+from datetime import datetime, timezone
 from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
 from app.core.issues_sync import IssuesSync
 from app.core.lessons_sync import LessonsSync
+from app.utils.json_artifacts import load_json_artifact
 from app.utils.jsonl import read_jsonl
 
 
@@ -35,15 +37,88 @@ class Projector:
         return self.roadmap_dir / "activity.jsonl"
 
     def load_projection(self) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
-        roadmap = json.loads(self.roadmap_path.read_text(encoding="utf-8"))
-        issues = json.loads(self.issues_path.read_text(encoding="utf-8"))
-        lessons = json.loads(self.lessons_path.read_text(encoding="utf-8"))
+        roadmap = load_json_artifact(self.roadmap_path).payload
+        issues = load_json_artifact(self.issues_path).payload
+        lessons = load_json_artifact(self.lessons_path).payload
         return roadmap, issues, lessons
 
     def replay_activity(self) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
         events = read_jsonl(str(self.activity_path))
         roadmap, issues, lessons = self.load_projection()
         return self.apply_events(roadmap, issues, lessons, events)
+
+    def reconcile_activity_tail_to_disk(self) -> dict[str, Any]:
+        roadmap, issues, lessons = self.load_projection()
+        projected_seq = int(roadmap.get("meta", {}).get("run", {}).get("last_event_seq", 0) or 0)
+        pending_events = [
+            event
+            for event in read_jsonl(str(self.activity_path))
+            if int(event.get("event_seq", 0) or 0) > projected_seq
+        ]
+
+        if not pending_events:
+            self._mark_integrity_status(roadmap, "ok", None)
+            self._write_json(self.roadmap_path, roadmap)
+            return {
+                "applied_events": 0,
+                "projected_event_seq": projected_seq,
+                "is_consistent": True,
+                "invalid_event": None,
+            }
+
+        valid_prefix: list[dict[str, Any]] = []
+        trial_roadmap = deepcopy(roadmap)
+        trial_issues = deepcopy(issues)
+        trial_lessons = deepcopy(lessons)
+        invalid_event: dict[str, Any] | None = None
+        invalid_error: str | None = None
+
+        for event in pending_events:
+            try:
+                self._apply_roadmap_event(trial_roadmap, event)
+                self.issues_sync.apply_event(trial_issues, event)
+                self.lessons_sync.apply_event(trial_lessons, event)
+            except Exception as exc:
+                invalid_event = event
+                invalid_error = str(exc)
+                break
+            valid_prefix.append(event)
+
+        if valid_prefix:
+            roadmap, issues, lessons = self.apply_events(roadmap, issues, lessons, valid_prefix)
+
+        if invalid_event is not None:
+            self._mark_integrity_status(
+                roadmap,
+                "error",
+                {
+                    "message": invalid_error or "Invalid activity tail detected.",
+                    "event_seq": invalid_event.get("event_seq"),
+                    "event_id": invalid_event.get("event_id"),
+                    "task_id": invalid_event.get("payload", {}).get("task_id"),
+                    "actor": invalid_event.get("actor"),
+                    "action": invalid_event.get("action"),
+                },
+            )
+        else:
+            self._mark_integrity_status(roadmap, "ok", None)
+
+        self._write_json(self.roadmap_path, roadmap)
+        self._write_json(self.issues_path, issues)
+        self._write_json(self.lessons_path, lessons)
+        return {
+            "applied_events": len(valid_prefix),
+            "projected_event_seq": roadmap["meta"]["run"]["last_event_seq"],
+            "is_consistent": invalid_event is None,
+            "invalid_event": None if invalid_event is None else {
+                "event_seq": invalid_event.get("event_seq"),
+                "event_id": invalid_event.get("event_id"),
+                "task_id": invalid_event.get("payload", {}).get("task_id"),
+                "actor": invalid_event.get("actor"),
+                "action": invalid_event.get("action"),
+                "message": invalid_error or "Invalid activity tail detected.",
+            },
+        }
 
     def apply_events(
         self,
@@ -91,6 +166,10 @@ class Projector:
 
         if action == "complete":
             task = self._find_task(roadmap, payload["task_id"])
+            if task.get("status") in {"review", "done"}:
+                if task.get("assigned_to") and task["assigned_to"] != event["actor"]:
+                    raise ValueError(f"Task {task['task_id']} assigned to {task['assigned_to']}, not {event['actor']}")
+                return
             self._expect_status(task, "in_progress")
             if task.get("assigned_to") and task["assigned_to"] != event["actor"]:
                 raise ValueError(f"Task {task['task_id']} assigned to {task['assigned_to']}, not {event['actor']}")
@@ -105,8 +184,10 @@ class Projector:
 
         if action == "review":
             task = self._find_task(roadmap, payload["task_id"])
-            self._expect_status(task, "review")
             decision = payload["decision"]
+            if decision == "approve" and task.get("status") == "done":
+                return
+            self._expect_status(task, "review")
             if decision == "approve":
                 task["status"] = "done"
             elif decision == "request_changes":
@@ -147,6 +228,18 @@ class Projector:
         roadmap["indexes"]["by_kind"] = self._count_by_kind(roadmap["tasks"])
         roadmap["indexes"]["by_preferred_runner"] = self._group_by_preferred_runner(roadmap["tasks"])
         roadmap["meta"]["run"]["projection_hash_sha256"] = self.compute_projection_hash(roadmap)
+        roadmap["meta"]["run"]["verify_status"] = "ok"
+        roadmap["meta"]["run"].pop("integrity_error", None)
+
+    @staticmethod
+    def _mark_integrity_status(roadmap: dict[str, Any], verify_status: str, integrity_error: dict[str, Any] | None) -> None:
+        roadmap.setdefault("meta", {}).setdefault("run", {})
+        roadmap["meta"]["run"]["verify_status"] = verify_status
+        roadmap["meta"]["updated_at"] = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+        if integrity_error:
+            roadmap["meta"]["run"]["integrity_error"] = integrity_error
+        else:
+            roadmap["meta"]["run"].pop("integrity_error", None)
 
     @staticmethod
     def compute_projection_hash(roadmap: dict[str, Any]) -> str:

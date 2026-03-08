@@ -42,6 +42,10 @@ export function IntegrityPage() {
           <p>
             Estado geral: <span className={`integrity-badge ${state.is_consistent ? 'ok' : 'mismatch'}`}>{state.is_consistent ? 'ok' : 'mismatch'}</span>
           </p>
+          <p>
+            Roadmap selecionado: <span className={`integrity-badge ${state.selected_roadmap_load_status === 'error' ? 'mismatch' : state.selected_roadmap_load_status === 'warning' ? 'warn' : 'ok'}`}>{state.selected_roadmap_load_status}</span>
+          </p>
+          {state.selected_roadmap_warning ? <p className="task-blocked-hint">{state.selected_roadmap_warning}</p> : null}
           <p>Artefatos com atenção: {brokenArtifacts.length}</p>
           <div className="run-actions">
             <button type="button" className="btn-primary-ds" onClick={() => void handleRepairIntegrity()} disabled={isRepairing}>

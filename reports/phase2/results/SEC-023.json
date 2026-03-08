@@ -1,0 +1,100 @@
+{
+  "task_id": "SEC-023",
+  "title": "Auditar Segurança de Dados",
+  "playbook": "data_security",
+  "auditor": "claude-code",
+  "audit_date": "2026-03-08",
+  "status": "complete",
+  "overall_posture": "INSUFFICIENT for production with real data",
+  "checks": [
+    {
+      "id": "DA-001",
+      "title": "PII Protection",
+      "status": "partial",
+      "severity": "MEDIUM",
+      "evidence": "No classical PII fields (email, phone, CPF) in data models. However: (1) chat_service.py:_run_subprocess stores full stdout, stderr, and command in message metadata verbatim — agent outputs may contain sensitive data; (2) chat_store.py:87 derives session title from first 72 chars of user message, exposing prompt content in session listings.",
+      "files": [
+        "backend/app/core/chat_service.py",
+        "backend/app/core/chat_store.py"
+      ],
+      "lines": [
+        "chat_service.py:151-160 (_run_subprocess metadata dict)",
+        "chat_store.py:87 (session title derivation)"
+      ]
+    },
+    {
+      "id": "DA-002",
+      "title": "Data Minimization",
+      "status": "fail",
+      "severity": "MEDIUM",
+      "evidence": "Full subprocess stdout, stderr, and command list persisted unconditionally in every chat message metadata (chat_service.py). No truncation, no filtering. ChatMessageCreateRequest.content has no max_length constraint (schemas.py:249). Activity event payloads accept arbitrary dicts without size constraints (event_writer.py:build_event).",
+      "files": [
+        "backend/app/core/chat_service.py",
+        "backend/app/api/schemas.py",
+        "backend/app/core/event_writer.py"
+      ],
+      "lines": [
+        "chat_service.py:127-161 (_run_subprocess)",
+        "schemas.py:249 (ChatMessageCreateRequest.content — no max_length)",
+        "event_writer.py:39-56 (build_event — unconstrained payload)"
+      ]
+    },
+    {
+      "id": "DA-003",
+      "title": "Retention Policy",
+      "status": "fail",
+      "severity": "HIGH",
+      "evidence": "No retention policy defined or documented for any data category. Chat sessions (.roadmap/chat_sessions/*.json) accumulate indefinitely with no TTL or automatic cleanup. activity.jsonl is append-only with no rotation, archival, or maximum size constraint. No RETENTION_POLICY.md or equivalent documentation found in docs/ or .roadmap/.",
+      "files": [
+        "backend/app/core/chat_store.py",
+        "backend/app/core/event_writer.py",
+        "backend/app/utils/jsonl.py"
+      ],
+      "lines": [
+        "chat_store.py:60-65 (delete_session — only manual deletion path)",
+        "event_writer.py:58-68 (append_event — unbounded append)"
+      ]
+    },
+    {
+      "id": "DA-004",
+      "title": "Anonymization / Pseudonymization",
+      "status": "partial",
+      "severity": "LOW",
+      "evidence": "Positive: actor fields in activity events use agent identifiers (claude-code, gemini-cli, codex) — implicit pseudonymization of operator identity. Gap: no anonymization of agent output content before persistence; no regex/pattern scrubbing for PII in stored stdout/stderr; no documented anonymization architecture.",
+      "files": [
+        "backend/app/core/event_writer.py",
+        "backend/app/core/chat_store.py"
+      ],
+      "lines": [
+        "event_writer.py:44-56 (actor field — agent-id only, no personal identity)"
+      ]
+    },
+    {
+      "id": "DA-005",
+      "title": "LGPD/GDPR Compliance",
+      "status": "fail",
+      "severity": "HIGH",
+      "evidence": "No privacy notice, no consent mechanism, no data subject rights endpoints, no ROPA, no DPO designation. CORS misconfiguration (main.py:28-34): allow_origins='*' combined with allow_credentials=True contradicts CORS spec and signals absence of meaningful cross-origin access control. No encryption at rest for chat_sessions/ or activity.jsonl. System label as 'PoC' does not exempt from LGPD/GDPR if deployed with real operator or project data.",
+      "files": [
+        "backend/app/main.py"
+      ],
+      "lines": [
+        "main.py:28-34 (CORSMiddleware — allow_origins='*' + allow_credentials=True)"
+      ]
+    }
+  ],
+  "additional_findings": [
+    {
+      "ref": "SEC-015/IV-007",
+      "title": "Path Traversal in chat_store.py impacts data confidentiality",
+      "severity": "HIGH",
+      "evidence": "chat_store.py:load_session and delete_session use session_id as a filename without traversal sanitization. session_id='../../roadmap/roadmap' reads or deletes canonical audit artifacts. Cross-cutting data integrity and confidentiality impact.",
+      "files": ["backend/app/core/chat_store.py"],
+      "lines": ["chat_store.py:48-52 (load_session)", "chat_store.py:60-65 (delete_session)"]
+    }
+  ],
+  "output_files": [
+    "reports/phase2/data-security-audit.md",
+    "reports/phase2/results/SEC-023.json"
+  ]
+}

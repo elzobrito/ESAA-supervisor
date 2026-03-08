@@ -3,7 +3,7 @@
 from fastapi import APIRouter, HTTPException
 
 from app.api.routes_projects import store
-from app.api.routes_state import _load_roadmap_variants
+from app.api.routes_state import _discover_roadmap_variants
 from app.api.schemas import TaskMutationResponse, TaskPlanningMutationResponse, TaskPlanningUpdateRequest, TaskResetRequest, TaskReviewRequest
 from app.core.agent_router import AgentRouter
 from app.core.event_writer import EventWriter, utc_now_iso
@@ -23,10 +23,13 @@ def _get_project_roadmap_dir(project_id: str) -> str:
 async def reset_task_to_todo(project_id: str, request: TaskResetRequest):
     roadmap_dir = _get_project_roadmap_dir(project_id)
     roadmap_id = request.roadmap_id or "roadmap.json"
-    variants = _load_roadmap_variants(roadmap_dir)
-    roadmap = variants.get(roadmap_id)
-    if not roadmap:
+    variants = _discover_roadmap_variants(roadmap_dir)
+    roadmap_entry = variants.get(roadmap_id)
+    if not roadmap_entry:
         raise HTTPException(status_code=404, detail="Requested roadmap not found.")
+    if roadmap_entry.get("payload") is None:
+        raise HTTPException(status_code=409, detail=roadmap_entry.get("load_warning") or "Requested roadmap could not be loaded.")
+    roadmap = roadmap_entry["payload"]
 
     task = next((item for item in roadmap.get("tasks", []) if item.get("task_id") == request.task_id), None)
     if not task:
@@ -69,10 +72,13 @@ async def reset_task_to_todo(project_id: str, request: TaskResetRequest):
 async def review_task(project_id: str, task_id: str, request: TaskReviewRequest):
     roadmap_dir = _get_project_roadmap_dir(project_id)
     roadmap_id = request.roadmap_id or "roadmap.json"
-    variants = _load_roadmap_variants(roadmap_dir)
-    roadmap = variants.get(roadmap_id)
-    if not roadmap:
+    variants = _discover_roadmap_variants(roadmap_dir)
+    roadmap_entry = variants.get(roadmap_id)
+    if not roadmap_entry:
         raise HTTPException(status_code=404, detail="Requested roadmap not found.")
+    if roadmap_entry.get("payload") is None:
+        raise HTTPException(status_code=409, detail=roadmap_entry.get("load_warning") or "Requested roadmap could not be loaded.")
+    roadmap = roadmap_entry["payload"]
 
     task = next((item for item in roadmap.get("tasks", []) if item.get("task_id") == task_id), None)
     if not task:
@@ -123,10 +129,13 @@ async def review_task(project_id: str, task_id: str, request: TaskReviewRequest)
 async def update_task_planning(project_id: str, task_id: str, request: TaskPlanningUpdateRequest):
     roadmap_dir = _get_project_roadmap_dir(project_id)
     roadmap_id = request.roadmap_id or "roadmap.json"
-    variants = _load_roadmap_variants(roadmap_dir)
-    roadmap = variants.get(roadmap_id)
-    if not roadmap:
+    variants = _discover_roadmap_variants(roadmap_dir)
+    roadmap_entry = variants.get(roadmap_id)
+    if not roadmap_entry:
         raise HTTPException(status_code=404, detail="Requested roadmap not found.")
+    if roadmap_entry.get("payload") is None:
+        raise HTTPException(status_code=409, detail=roadmap_entry.get("load_warning") or "Requested roadmap could not be loaded.")
+    roadmap = roadmap_entry["payload"]
 
     task = next((item for item in roadmap.get("tasks", []) if item.get("task_id") == task_id), None)
     if not task:

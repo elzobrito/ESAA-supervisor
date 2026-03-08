@@ -7,11 +7,11 @@
     "run": {
       "run_id": null,
       "status": "initialized",
-      "last_event_seq": 198,
-      "projection_hash_sha256": "7c7fca68b66aef90b3199b9a57036626fefcdd0b0518519c5c4e5f7e0ad74283",
+      "last_event_seq": 254,
+      "projection_hash_sha256": "01621e24985ae6db01204a7c1c0d3a74ae3f7d81f923aaeed0d0c90418edfd95",
       "verify_status": "ok"
     },
-    "updated_at": "2026-03-07T18:40:28Z"
+    "updated_at": "2026-03-08T18:13:23Z"
   },
   "project": {
     "name": "PARCER Security Audit",
@@ -279,7 +279,7 @@
       "task_kind": "impl",
       "title": "Auditar Validação de Entrada",
       "description": "Testar SQL injection, command injection, template injection, SSRF, XSS, inputs não validados e sanitização ausente. Playbook: input_validation (IV-001 a IV-007).",
-      "status": "in_progress",
+      "status": "done",
       "depends_on": [
         "SEC-003"
       ],
@@ -300,8 +300,55 @@
       "immutability": {
         "done_is_immutable": true
       },
-      "assigned_to": "gemini-cli",
-      "started_at": "2026-03-07T13:43:08Z"
+      "assigned_to": "claude-code",
+      "started_at": "2026-03-07T19:02:22Z",
+      "completed_at": "2026-03-07T19:10:47Z",
+      "verification": {
+        "checks": [
+          {
+            "id": "IV-001",
+            "status": "pass",
+            "title": "SQL Injection N/A",
+            "evidence": "No SQL database/ORM in codebase. All persistence is JSON/JSONL file-based."
+          },
+          {
+            "id": "IV-002",
+            "status": "pass",
+            "title": "Command Injection PASS",
+            "evidence": "subprocess.run() uses list args, no shell=True. User content via stdin. Residual: ESAA_*_COMMAND env var and Windows .bat wrapping."
+          },
+          {
+            "id": "IV-003",
+            "status": "fail",
+            "title": "Prompt Injection FAIL MEDIUM",
+            "evidence": "chat_service.py:_build_prompt() interpolates user_message directly. Agents in bypassPermissions/yolo mode amplify impact."
+          },
+          {
+            "id": "IV-004",
+            "status": "pass",
+            "title": "SSRF N/A",
+            "evidence": "No HTTP client in backend. Browse/artifact paths validated against BROWSE_ROOT and project_root."
+          },
+          {
+            "id": "IV-005",
+            "status": "pass",
+            "title": "XSS PASS",
+            "evidence": "React JSX auto-escaping. No dangerouslySetInnerHTML/innerHTML/eval() in frontend/src/**/*.tsx."
+          },
+          {
+            "id": "IV-006",
+            "status": "partial",
+            "title": "Inputs Não Validados PARTIAL MEDIUM",
+            "evidence": "Missing max_length on chat content, resolution_summary, UUID check on run_id, agent_id not validated at session creation."
+          },
+          {
+            "id": "IV-007",
+            "status": "fail",
+            "title": "Sanitização Ausente FAIL HIGH - Path Traversal",
+            "evidence": "chat_store.py:load_session/delete_session use session_id directly as filename without traversal check. session_id='../../roadmap' reads/deletes .roadmap/roadmap.json."
+          }
+        ]
+      }
     },
     {
       "task_id": "SEC-016",
@@ -371,7 +418,7 @@
       "task_kind": "impl",
       "title": "Auditar Criptografia",
       "description": "Verificar HTTPS obrigatório, algoritmos criptográficos, encryption at-rest, chaves expostas e rotação de chaves. Playbook: cryptography (CR-001 a CR-005).",
-      "status": "in_progress",
+      "status": "done",
       "depends_on": [
         "SEC-003"
       ],
@@ -391,15 +438,19 @@
       "immutability": {
         "done_is_immutable": true
       },
-      "assigned_to": "codex",
-      "started_at": "2026-03-07T17:36:51Z"
+      "assigned_to": "claude-code",
+      "started_at": "2026-03-08T01:10:22Z",
+      "completed_at": "2026-03-08T01:12:13Z",
+      "verification": {
+        "checks": []
+      }
     },
     {
       "task_id": "SEC-019",
       "task_kind": "impl",
       "title": "Auditar Headers de Segurança",
       "description": "Verificar CSP, HSTS, X-Frame-Options, X-Content-Type-Options e Referrer-Policy. Playbook: security_headers (SH-001 a SH-005).",
-      "status": "todo",
+      "status": "done",
       "depends_on": [
         "SEC-003"
       ],
@@ -417,14 +468,20 @@
       },
       "immutability": {
         "done_is_immutable": true
-      }
+      },
+      "assigned_to": "codex",
+      "started_at": "2026-03-08T01:10:42Z",
+      "verification": {
+        "checks": []
+      },
+      "completed_at": "2026-03-08T01:16:31Z"
     },
     {
       "task_id": "SEC-020",
       "task_kind": "impl",
       "title": "Auditar Logs e Monitoramento",
       "description": "Avaliar dados sensíveis em logs, audit trail, logs estruturados, alertas de segurança e correlation IDs. Playbook: logging_monitoring (LM-001 a LM-005).",
-      "status": "todo",
+      "status": "done",
       "depends_on": [
         "SEC-003"
       ],
@@ -442,14 +499,20 @@
       },
       "immutability": {
         "done_is_immutable": true
-      }
+      },
+      "assigned_to": "gemini-cli",
+      "started_at": "2026-03-08T01:11:09Z",
+      "verification": {
+        "checks": []
+      },
+      "completed_at": "2026-03-08T01:14:37Z"
     },
     {
       "task_id": "SEC-021",
       "task_kind": "impl",
       "title": "Auditar Infraestrutura",
       "description": "Verificar HTTPS, firewall, WAF, segmentação de rede, backups e proteção DDoS. Playbook: infrastructure (IF-001 a IF-006).",
-      "status": "todo",
+      "status": "done",
       "depends_on": [
         "SEC-002"
       ],
@@ -469,14 +532,20 @@
       },
       "immutability": {
         "done_is_immutable": true
-      }
+      },
+      "assigned_to": "claude-code",
+      "started_at": "2026-03-08T01:20:04Z",
+      "verification": {
+        "checks": []
+      },
+      "completed_at": "2026-03-08T01:22:38Z"
     },
     {
       "task_id": "SEC-022",
       "task_kind": "impl",
       "title": "Auditar DevSecOps",
       "description": "Avaliar code review, pipeline de segurança, secrets scanning, SAST, DAST e audit trail de deploy. Playbook: devsecops (DO-001 a DO-006).",
-      "status": "todo",
+      "status": "done",
       "depends_on": [
         "SEC-011"
       ],
@@ -496,6 +565,12 @@
       },
       "immutability": {
         "done_is_immutable": true
+      },
+      "assigned_to": "gemini-cli",
+      "started_at": "2026-03-08T01:32:22Z",
+      "completed_at": "2026-03-08T01:35:31Z",
+      "verification": {
+        "checks": []
       }
     },
     {
@@ -503,7 +578,7 @@
       "task_kind": "impl",
       "title": "Auditar Segurança de Dados",
       "description": "Verificar proteção de PII, minimização, política de retenção, anonimização e conformidade LGPD/GDPR. Playbook: data_security (DA-001 a DA-005).",
-      "status": "todo",
+      "status": "done",
       "depends_on": [
         "SEC-003"
       ],
@@ -522,6 +597,12 @@
       },
       "immutability": {
         "done_is_immutable": true
+      },
+      "assigned_to": "claude-code",
+      "started_at": "2026-03-08T17:47:41Z",
+      "completed_at": "2026-03-08T17:49:29Z",
+      "verification": {
+        "checks": []
       }
     },
     {
@@ -529,7 +610,7 @@
       "task_kind": "impl",
       "title": "Auditar Segurança de Frontend",
       "description": "Verificar tokens em localStorage, HTML não sanitizado, dependências JS vulneráveis e lógica crítica no frontend. Playbook: frontend_security (FE-001 a FE-004).",
-      "status": "todo",
+      "status": "done",
       "depends_on": [
         "SEC-003"
       ],
@@ -549,6 +630,12 @@
       },
       "immutability": {
         "done_is_immutable": true
+      },
+      "assigned_to": "codex",
+      "started_at": "2026-03-08T17:47:49Z",
+      "completed_at": "2026-03-08T17:50:55Z",
+      "verification": {
+        "checks": []
       }
     },
     {
@@ -556,7 +643,7 @@
       "task_kind": "impl",
       "title": "Auditar Segurança de IA/LLM",
       "description": "Avaliar prompt injection, escopo de ferramentas do LLM, filtragem de input, exfiltração de dados e audit log de decisões. Playbook: ai_llm_security (AI-001 a AI-005).",
-      "status": "todo",
+      "status": "done",
       "depends_on": [
         "SEC-003"
       ],
@@ -576,14 +663,24 @@
       },
       "immutability": {
         "done_is_immutable": true
-      }
+      },
+      "assigned_to": "gemini-cli",
+      "started_at": "2026-03-08T01:35:56Z",
+      "verification": {
+        "checks": [
+          "Auditoria de segurança de IA/LLM concluída.",
+          "Identificadas falhas críticas em prompt injection (AI-001) e controle de ferramentas (AI-002).",
+          "Gerados relatórios reports/phase2/ai-llm-security-audit.md e reports/phase2/results/SEC-025.json."
+        ]
+      },
+      "completed_at": "2026-03-08T17:37:09Z"
     },
     {
       "task_id": "SEC-030",
       "task_kind": "qa",
       "title": "Consolidar vulnerabilidades identificadas",
       "description": "Agregar todas as vulnerabilidades encontradas na fase de auditoria em inventário único com IDs, domínio de origem e evidências técnicas.",
-      "status": "todo",
+      "status": "done",
       "depends_on": [
         "SEC-010",
         "SEC-011",
@@ -612,6 +709,16 @@
       },
       "immutability": {
         "done_is_immutable": true
+      },
+      "assigned_to": "gemini-cli",
+      "started_at": "2026-03-08T17:53:04Z",
+      "completed_at": "2026-03-08T18:15:00Z",
+      "verification": {
+        "checks": [
+          "Consolidados 16 arquivos JSON de auditoria de resultados.",
+          "Identificadas 72 vulnerabilidades únicas com IDs e domínio de origem.",
+          "Gerado arquivo reports/phase3/vulnerability-inventory.json."
+        ]
       }
     },
     {
@@ -619,7 +726,7 @@
       "task_kind": "qa",
       "title": "Classificar severidade e impacto",
       "description": "Atribuir severidade (CRITICAL/HIGH/MEDIUM/LOW/INFO) e avaliar impacto CIA (confidencialidade, integridade, disponibilidade) de cada vulnerabilidade com justificativa técnica.",
-      "status": "todo",
+      "status": "done",
       "depends_on": [
         "SEC-030"
       ],
@@ -633,6 +740,15 @@
       },
       "immutability": {
         "done_is_immutable": true
+      },
+      "assigned_to": "gemini-cli",
+      "started_at": "2026-03-08T18:02:00Z",
+      "completed_at": "2026-03-08T18:45:00Z",
+      "verification": {
+        "checks": [
+          "Atribuídos severidade e impacto CIA para 72 vulnerabilidades com justificativa técnica.",
+          "Gerado arquivo reports/phase3/classified-vulnerabilities.json."
+        ]
       }
     },
     {
@@ -640,7 +756,7 @@
       "task_kind": "qa",
       "title": "Gerar Matriz de Riscos",
       "description": "Produzir matriz consolidada: vulnerabilidade × categoria × severidade × impacto × recomendação, ordenada por severidade decrescente.",
-      "status": "todo",
+      "status": "in_progress",
       "depends_on": [
         "SEC-031"
       ],
@@ -655,7 +771,9 @@
       },
       "immutability": {
         "done_is_immutable": true
-      }
+      },
+      "assigned_to": "gemini-cli",
+      "started_at": "2026-03-08T18:13:23Z"
     },
     {
       "task_id": "SEC-040",
@@ -755,10 +873,10 @@
   ],
   "indexes": {
     "by_status": {
-      "todo": 14,
-      "in_progress": 2,
+      "todo": 4,
+      "in_progress": 1,
       "review": 0,
-      "done": 10
+      "done": 21
     },
     "by_kind": {
       "spec": 5,

@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-import json
-
 from fastapi import APIRouter, HTTPException
 
 from app.api.routes_projects import store
 from app.api.schemas import IssueMutationResponse, IssueResolveRequest
 from app.core.event_writer import EventWriter
 from app.core.projector import Projector
+from app.utils.json_artifacts import JsonArtifactLoadError, load_json_artifact
 
 router = APIRouter(prefix="/projects/{project_id}/issues", tags=["issues"])
 
@@ -23,8 +22,10 @@ async def resolve_issue(project_id: str, request: IssueResolveRequest):
     roadmap_dir = _get_project_roadmap_dir(project_id)
     issues_path = f"{roadmap_dir}/issues.json"
 
-    with open(issues_path, "r", encoding="utf-8") as handle:
-        issues_projection = json.load(handle)
+    try:
+        issues_projection = load_json_artifact(issues_path).payload
+    except JsonArtifactLoadError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
 
     issue = next((item for item in issues_projection.get("issues", []) if item.get("issue_id") == request.issue_id), None)
     if issue is None:

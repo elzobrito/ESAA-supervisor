@@ -22,11 +22,19 @@ def _parse_json_objects(line: str) -> List[Any]:
 
 def read_jsonl(file_path: str) -> List[Any]:
     data: List[Any] = []
-    with open(file_path, "r", encoding="utf-8") as f:
-        for line in f:
+    with open(file_path, "rb") as f:
+        for raw_line in f:
+            try:
+                line = raw_line.decode("utf-8")
+            except UnicodeDecodeError:
+                line = raw_line.decode("utf-8", errors="replace")
             line = line.strip().lstrip("\ufeff")
-            if line:
+            if not line:
+                continue
+            try:
                 data.extend(_parse_json_objects(line))
+            except json.JSONDecodeError:
+                continue
     return data
 
 

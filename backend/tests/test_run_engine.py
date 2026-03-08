@@ -329,7 +329,7 @@ def test_parallel_runs_reject_same_agent_and_same_task(tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Agent codex is already executing another run"):
             await engine.start_run("TASK-2", "codex", roadmap_dir=roadmap_dir, roadmap=roadmap)
 
-        with pytest.raises(RuntimeError, match="Task TASK-1 is already executing in another run"):
+        with pytest.raises(RuntimeError, match="assigned to codex"):
             await engine.start_run("TASK-1", "claude-code", roadmap_dir=roadmap_dir, roadmap=roadmap, allow_in_progress=True)
 
         gate.set()
@@ -357,9 +357,12 @@ def test_dependencies_block_task_execution(tmp_path: Path) -> None:
     asyncio.run(scenario())
 
 
-def test_start_run_rejects_stale_projection_against_activity(tmp_path: Path) -> None:
+def test_start_run_allows_independent_task_when_projection_is_behind_activity(tmp_path: Path) -> None:
     async def scenario() -> None:
-        roadmap_dir, roadmap = _seed_runtime_dir(tmp_path, [_task("TASK-1", runner="codex")])
+        roadmap_dir, roadmap = _seed_runtime_dir(tmp_path, [
+            _task("TASK-1", runner="claude-code"),
+            _task("TASK-2", runner="codex"),
+        ])
         roadmap["meta"]["run"]["last_event_seq"] = 1
         roadmap["meta"]["run"]["projection_hash_sha256"] = Projector.compute_projection_hash(roadmap)
         _write_json(tmp_path / "roadmap.json", roadmap)
@@ -370,6 +373,14 @@ def test_start_run_rejects_stale_projection_against_activity(tmp_path: Path) -> 
                 "event_seq": 2,
                 "ts": "2026-03-07T15:00:00Z",
                 "actor": "claude-code",
+                "action": "claim",
+                "payload": {"task_id": "TASK-1", "prior_status": "todo"},
+            }) + "\n" + json.dumps({
+                "schema_version": "0.4.1",
+                "event_id": "EV-00000003",
+                "event_seq": 3,
+                "ts": "2026-03-07T15:00:10Z",
+                "actor": "claude-code",
                 "action": "complete",
                 "payload": {"task_id": "TASK-1", "prior_status": "in_progress"},
             }) + "\n",
@@ -378,7 +389,36 @@ def test_start_run_rejects_stale_projection_against_activity(tmp_path: Path) -> 
         engine = RunEngine("project-stale")
         engine.agent_router = _Router({"codex": _Adapter("codex")})
 
-        with pytest.raises(RuntimeError, match="behind activity.jsonl"):
-            await engine.start_run("TASK-1", "codex", roadmap_dir=roadmap_dir, roadmap=roadmap)
+        run = await engine.start_run(
+            "TASK-2",
+            "codex",
+            execution_mode=RunExecutionMode.CONTINUOUS,
+            roadmap_dir=roadmap_dir,
+            roadmap=roadmap,
+        )
+        for _ in range(80):
+            if run.status in (RunStatus.DONE, RunStatus.ERROR, RunStatus.CANCELLED):
+                break
+            await asyncio.sleep(0.05)
+        assert run.status == RunStatus.DONE
+
+    asyncio.run(scenario())
+
+
+def test_start_run_rejects_in_progress_task_owned_by_other_agent(tmp_path: Path) -> None:
+    async def scenario() -> None:
+        roadmap_dir, roadmap = _seed_runtime_dir(tmp_path, [
+            _task("TASK-1", runner="codex", status="in_progress"),
+        ])
+        roadmap["tasks"][0]["assigned_to"] = "codex"
+        roadmap["tasks"][0]["started_at"] = "2026-03-07T15:00:00Z"
+        roadmap["indexes"]["by_status"] = {"todo": 0, "in_progress": 1, "review": 0, "done": 0}
+        roadmap["meta"]["run"]["projection_hash_sha256"] = Projector.compute_projection_hash(roadmap)
+        _write_json(tmp_path / "roadmap.json", roadmap)
+        engine = RunEngine("project-owner")
+        engine.agent_router = _Router({"claude-code": _Adapter("claude-code")})
+
+        with pytest.raises(RuntimeError, match="assigned to codex"):
+            await engine.start_run("TASK-1", "claude-code", roadmap_dir=roadmap_dir, roadmap=roadmap, allow_in_progress=True)
 
     asyncio.run(scenario())

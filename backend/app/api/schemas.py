@@ -55,6 +55,8 @@ class RoadmapOptionResponse(BaseModel):
     task_count: int
     is_default: bool = False
     is_consistent: bool = False
+    load_status: str = "ok"
+    load_warning: Optional[str] = None
 
 
 class ArtifactResponse(BaseModel):
@@ -152,6 +154,8 @@ class StateResponse(BaseModel):
     project: ProjectResponse
     last_event_seq: int
     is_consistent: bool
+    selected_roadmap_load_status: str = "ok"
+    selected_roadmap_warning: Optional[str] = None
     roadmap_mode: str = "single"
     selected_roadmap_id: str = "roadmap.json"
     available_roadmaps: List[RoadmapOptionResponse] = []
@@ -232,6 +236,8 @@ class IntegrityRepairRequest(BaseModel):
 
 class IntegrityRepairResponse(BaseModel):
     repaired_roadmaps: List[str] = []
+    normalized_files: List[str] = []
+    unrecoverable_files: List[str] = []
     artifact_issues_after: int
     is_consistent: bool
     message: str

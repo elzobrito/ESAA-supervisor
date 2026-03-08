@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Outlet, useParams, useSearchParams } from 'react-router-dom';
 import { AppShell } from '../components/layout/AppShell';
+import { extractErrorMessage } from '../services/api';
 import { fetchProjectState, type StateResponse } from '../services/projects';
 import { ProjectContext } from '../services/projectContext';
 
@@ -47,7 +48,7 @@ export function ProjectLayout() {
       setState(data);
       setError(null);
     } catch (err) {
-      setError(String(err));
+      setError(extractErrorMessage(err));
     } finally {
       setIsLoading(false);
     }

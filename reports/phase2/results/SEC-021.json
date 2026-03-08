@@ -1,0 +1,64 @@
+{
+  "task_id": "SEC-021",
+  "audit_date": "2026-03-08T00:00:00Z",
+  "domain": "infrastructure",
+  "summary": {
+    "total_checks": 6,
+    "pass": 0,
+    "fail": 6,
+    "partial": 0,
+    "na": 0
+  },
+  "results": [
+    {
+      "check_id": "IF-001",
+      "name": "HTTPS / TLS termination",
+      "status": "FAIL",
+      "severity": "HIGH",
+      "evidence": "Backend FastAPI configurado em HTTP puro (ESAA_HOST=127.0.0.1, ESAA_PORT=8000). Frontend VITE_API_BASE_URL=http://localhost:8000. Sem proxy reverso (nginx.conf ausente do repositório), sem ssl_keyfile/ssl_certfile no Uvicorn, sem redirecionamento HTTP->HTTPS. Severidade HIGH para deploy em produção; LOW no contexto PoC local."
+    },
+    {
+      "check_id": "IF-002",
+      "name": "Firewall / regras de rede",
+      "status": "FAIL",
+      "severity": "MEDIUM",
+      "evidence": "Sem regras de firewall configuradas via código. Sem iptables, ufw ou Windows Firewall rules documentadas. Backend potencialmente exposto sem restrição de IP de origem. Severidade MEDIUM para deploy em produção; INFO no contexto PoC local."
+    },
+    {
+      "check_id": "IF-003",
+      "name": "WAF (Web Application Firewall)",
+      "status": "FAIL",
+      "severity": "MEDIUM",
+      "evidence": "Sem WAF configurado em nenhuma camada. Nenhum middleware FastAPI de bloqueio de padrões maliciosos, nenhum serviço de borda (Cloudflare WAF, AWS WAF, ModSecurity). Requisições chegam diretamente ao backend sem filtragem de infraestrutura. Severidade MEDIUM para produção; INFO no contexto PoC local."
+    },
+    {
+      "check_id": "IF-004",
+      "name": "Segmentação de rede",
+      "status": "FAIL",
+      "severity": "MEDIUM",
+      "evidence": "Frontend (porta 5173) e backend (porta 8000) na mesma máquina sem isolamento. Sem Docker network, VLAN ou namespace. CORS allow_origins=['*'] em backend/app/main.py:29 — qualquer origem pode realizar requisições à API. Severidade MEDIUM para produção; INFO no contexto PoC local."
+    },
+    {
+      "check_id": "IF-005",
+      "name": "Backups",
+      "status": "FAIL",
+      "severity": "HIGH",
+      "evidence": "Sem mecanismo de backup para artefatos ESAA críticos: activity.jsonl (event store canônico), roadmap*.json, issues.json, lessons.json, chat_sessions/*.json. Sem cron job, script de backup ou política de retenção documentada. Perda do activity.jsonl destrói trilha de auditoria irrecuperável. Severidade HIGH independente do contexto de deploy."
+    },
+    {
+      "check_id": "IF-006",
+      "name": "Proteção DDoS",
+      "status": "FAIL",
+      "severity": "MEDIUM",
+      "evidence": "Sem proteção DDoS em nenhuma camada. Sem CDN, sem rate limiting de infraestrutura, sem circuit breaker. Backend FastAPI/Uvicorn exposto diretamente. Worker single-process vulnerável a exaustão por requisições concorrentes. Severidade MEDIUM para produção; INFO no contexto PoC local."
+    }
+  ],
+  "recommendations": [
+    "IF-001: Provisionar proxy reverso com TLS (Nginx, Caddy ou Traefik) para qualquer deploy além de localhost. Bloquear start se ESAA_ENV=production sem TLS configurado.",
+    "IF-005: Implementar script de backup automático para .roadmap/activity.jsonl e demais artefatos canônicos. Considerar snapshot pré-run.",
+    "IF-004: Substituir allow_origins=['*'] por lista explícita de origens. Em dev: ['http://localhost:5173']. Em produção: apenas origem do frontend.",
+    "IF-002: Documentar guia de hardening de rede no README: bloquear portas 8000 e 5173 externamente.",
+    "IF-003: Documentar requisito de WAF (Cloudflare, AWS WAF ou ModSecurity) para deploy em ambiente exposto à internet.",
+    "IF-006: Configurar rate limiting de infraestrutura (ex: Nginx limit_req_zone) para deploy em produção."
+  ]
+}

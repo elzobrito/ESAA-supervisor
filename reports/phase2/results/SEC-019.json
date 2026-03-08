@@ -1,0 +1,56 @@
+{
+  "task_id": "SEC-019",
+  "audit_date": "2026-03-08T00:00:00Z",
+  "domain": "security_headers",
+  "summary": {
+    "total_checks": 5,
+    "pass": 0,
+    "fail": 5,
+    "partial": 0,
+    "na": 0
+  },
+  "results": [
+    {
+      "check_id": "SH-001",
+      "name": "Content-Security-Policy (CSP)",
+      "status": "FAIL",
+      "severity": "HIGH",
+      "evidence": "Requisicao real a http://127.0.0.1:8000/ retornou apenas Date, Server, Content-Length e Content-Type. Nenhum header Content-Security-Policy presente. frontend/index.html nao possui meta tag CSP e frontend/vite.config.ts nao configura headers de resposta."
+    },
+    {
+      "check_id": "SH-002",
+      "name": "Strict-Transport-Security (HSTS)",
+      "status": "FAIL",
+      "severity": "MEDIUM",
+      "evidence": "Nenhum header Strict-Transport-Security retornado pelo backend em runtime. O stack opera em HTTP puro: backend exposto em http://127.0.0.1:8000 e frontend/vite.config.ts faz proxy para http://localhost:8000, sem TLS."
+    },
+    {
+      "check_id": "SH-003",
+      "name": "X-Frame-Options",
+      "status": "FAIL",
+      "severity": "MEDIUM",
+      "evidence": "Nenhum header X-Frame-Options retornado pela API FastAPI. Tambem nao existe CSP com frame-ancestors como controle substituto, porque nenhuma politica CSP foi configurada."
+    },
+    {
+      "check_id": "SH-004",
+      "name": "X-Content-Type-Options",
+      "status": "FAIL",
+      "severity": "MEDIUM",
+      "evidence": "Nenhum header X-Content-Type-Options: nosniff retornado pela API em http://127.0.0.1:8000/. backend/app/main.py adiciona apenas CORSMiddleware, sem middleware de hardening ou headers customizados."
+    },
+    {
+      "check_id": "SH-005",
+      "name": "Referrer-Policy",
+      "status": "FAIL",
+      "severity": "LOW",
+      "evidence": "Nenhum header Referrer-Policy retornado no runtime e nenhuma meta tag correspondente em frontend/index.html. O comportamento atual depende apenas do default do navegador."
+    }
+  ],
+  "recommendations": [
+    "Adicionar middleware de seguranca no backend para anexar Content-Security-Policy, X-Frame-Options, X-Content-Type-Options e Referrer-Policy nas respostas HTTP.",
+    "Definir uma CSP minima para a PoC com default-src 'self', object-src 'none' e frame-ancestors 'none', ajustando connect-src para o backend local.",
+    "Migrar ambientes nao-locais para HTTPS via proxy reverso e habilitar Strict-Transport-Security somente apos TLS estar ativo.",
+    "Adotar X-Frame-Options: DENY ou frame-ancestors 'none' para mitigar clickjacking.",
+    "Definir X-Content-Type-Options: nosniff e Referrer-Policy: strict-origin-when-cross-origin como baseline de browser hardening."
+  ]
+}

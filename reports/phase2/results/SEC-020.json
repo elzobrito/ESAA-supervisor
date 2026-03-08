@@ -1,0 +1,67 @@
+{
+  "task_id": "SEC-020",
+  "domain": "logging_monitoring",
+  "checks_total": 5,
+  "checks_pass": 2,
+  "checks_fail": 3,
+  "checks_partial": 0,
+  "checks_na": 0,
+  "worst_severity": "CRITICAL",
+  "results": [
+    {
+      "check_id": "LM-001",
+      "check_name": "Logs contendo dados sensíveis",
+      "status": "fail",
+      "severity_if_fail": "CRITICAL",
+      "evidence": {
+        "files": ["backend/app/api/routes_logs.py", "backend/app/core/log_stream.py"],
+        "description": "Agent stdout/stderr logs are streamed raw via SSE without any redaction or masking for API keys, tokens, or PII."
+      },
+      "remediation": "Implement a regex-based redaction filter in the LogStreamer class to mask sensitive patterns before streaming and storage."
+    },
+    {
+      "check_id": "LM-002",
+      "check_name": "Ausência de logs de auditoria",
+      "status": "pass",
+      "severity_if_fail": "MEDIUM",
+      "evidence": {
+        "files": ["backend/app/core/event_writer.py", ".roadmap/activity.jsonl"],
+        "description": "System implements a high-fidelity audit trail via EventWriter, capturing all canonical state transitions in a structured JSONL format."
+      },
+      "remediation": "Extend audit logging to include read access to sensitive artifacts."
+    },
+    {
+      "check_id": "LM-003",
+      "check_name": "Logs não estruturados",
+      "status": "pass",
+      "severity_if_fail": "LOW",
+      "evidence": {
+        "files": [".roadmap/activity.jsonl"],
+        "description": "Core activity logs and agent run logs are handled as structured JSON/Pydantic models."
+      },
+      "remediation": "None required for core artifacts; optional for system-level uvicorn logs."
+    },
+    {
+      "check_id": "LM-004",
+      "check_name": "Ausência de alertas de segurança",
+      "status": "fail",
+      "severity_if_fail": "MEDIUM",
+      "evidence": {
+        "files": ["backend/app/main.py"],
+        "description": "No integration with alerting platforms (Sentry, Slack, Webhooks) for critical errors or security events."
+      },
+      "remediation": "Integrate a central alerting service to notify operators of integrity failures or system crashes."
+    },
+    {
+      "check_id": "LM-005",
+      "check_name": "Ausência de correlação de requisições",
+      "status": "fail",
+      "severity_if_fail": "LOW",
+      "evidence": {
+        "files": ["backend/app/main.py"],
+        "description": "Lack of correlation ID middleware to trace requests across the asynchronous API and agent subprocess boundaries."
+      },
+      "remediation": "Add correlation ID middleware to FastAPI and propagate the ID to all downstream logging calls."
+    }
+  ]
+}

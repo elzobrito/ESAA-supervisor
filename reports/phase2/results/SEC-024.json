@@ -1,0 +1,98 @@
+{
+  "task_id": "SEC-024",
+  "title": "Auditar Segurança de Frontend",
+  "playbook": "frontend_security",
+  "auditor": "codex",
+  "audit_date": "2026-03-08",
+  "status": "complete",
+  "overall_posture": "ACCEPTABLE for audited frontend patterns, pending network-enabled dependency advisory verification",
+  "checks": [
+    {
+      "id": "FE-001",
+      "title": "Tokens stored in browser storage",
+      "status": "pass",
+      "severity": "LOW",
+      "evidence": "Browser storage usage is limited to non-sensitive UI state. AppShell persists only the sidebar expansion flag in localStorage, and ProjectLayout persists only the selected roadmap id in sessionStorage. No JWT/auth token storage, document.cookie access, or Authorization header injection code was found in frontend/src.",
+      "files": [
+        "frontend/src/components/layout/AppShell.tsx",
+        "frontend/src/pages/ProjectLayout.tsx",
+        "frontend/src/services/api.ts"
+      ],
+      "lines": [
+        "AppShell.tsx:43-51",
+        "AppShell.tsx:81-85",
+        "ProjectLayout.tsx:7-28",
+        "api.ts:3-6"
+      ]
+    },
+    {
+      "id": "FE-002",
+      "title": "Unsanitized HTML rendering",
+      "status": "pass",
+      "severity": "LOW",
+      "evidence": "No dangerouslySetInnerHTML, innerHTML, v-html, or equivalent raw DOM HTML sinks were found in frontend/src. Dynamic rich content is rendered through ReactMarkdown in ChatPage and ArtifactDetailDrawer, and no rehypeRaw or comparable plugin was found that would render raw HTML from markdown input.",
+      "files": [
+        "frontend/src/pages/ChatPage.tsx",
+        "frontend/src/components/artifacts/ArtifactDetailDrawer.tsx"
+      ],
+      "lines": [
+        "ChatPage.tsx:369-370",
+        "ArtifactDetailDrawer.tsx:49-52"
+      ]
+    },
+    {
+      "id": "FE-003",
+      "title": "Vulnerable JavaScript dependencies",
+      "status": "partial",
+      "severity": "MEDIUM",
+      "evidence": "The frontend uses a committed package-lock.json and no third-party CDN scripts were found in index.html. However, npm audit could not complete because the npm advisories bulk endpoint was unreachable from this environment, so current high/critical dependency advisories could not be verified during this run.",
+      "files": [
+        "frontend/package.json",
+        "frontend/package-lock.json",
+        "frontend/index.html"
+      ],
+      "lines": [
+        "package.json:1-20",
+        "index.html:1-10"
+      ]
+    },
+    {
+      "id": "FE-004",
+      "title": "Critical business logic in frontend",
+      "status": "pass",
+      "severity": "LOW",
+      "evidence": "Client-side logic is limited to presentation and operator UX concerns such as token usage summaries and button enabling. Task eligibility, run limits, and review transitions are driven by backend-provided state fields and server API calls rather than client-only enforcement. No pricing, coupon, purchase, or quota business logic unique to the frontend was found.",
+      "files": [
+        "frontend/src/pages/RunsPage.tsx",
+        "frontend/src/components/tasks/TasksDataGrid.tsx",
+        "frontend/src/services/projects.ts",
+        "frontend/src/services/runs.ts"
+      ],
+      "lines": [
+        "RunsPage.tsx:19-75",
+        "RunsPage.tsx:142-154",
+        "TasksDataGrid.tsx:41-71",
+        "projects.ts:34-151",
+        "runs.ts:42-86"
+      ]
+    }
+  ],
+  "verification": {
+    "checks": [
+      "Static search across frontend/src for localStorage/sessionStorage/token/auth/cookie patterns",
+      "Static search across frontend/src for dangerouslySetInnerHTML/innerHTML and equivalent sinks",
+      "Manual inspection of ReactMarkdown rendering paths in ChatPage and ArtifactDetailDrawer",
+      "Manual inspection of run/task execution flows and backend API coupling",
+      "npm audit --json attempted in frontend but advisories endpoint was unreachable",
+      "npx tsc --noEmit passed in frontend"
+    ],
+    "limitations": [
+      "Live dependency advisory status could not be confirmed because npm audit could not reach registry.npmjs.org from this environment.",
+      "vite build could not be executed end-to-end in this sandbox because esbuild process spawn failed with EPERM."
+    ]
+  },
+  "output_files": [
+    "reports/phase2/frontend-security-audit.md",
+    "reports/phase2/results/SEC-024.json"
+  ]
+}

@@ -1,11 +1,9 @@
 from __future__ import annotations
 
 import asyncio
-import json
 import os
 import uuid
 from datetime import datetime
-from pathlib import Path
 from typing import Any, Dict, Optional
 
 from app.core.agent_router import AgentRouter
@@ -17,7 +15,7 @@ from app.core.run_coordinator import RunCoordinator
 from app.core.selector import TaskSelector
 from app.models.run_state import RunDecisionEntry, RunExecutionMode, RunLogEntry, RunState, RunStatus
 from app.models.task_context import ActiveLesson, TaskContext, TaskOutputs
-from app.utils.jsonl import read_jsonl
+from app.utils.json_artifacts import load_json_artifact
 
 
 class RunEngine:
@@ -69,11 +67,12 @@ class RunEngine:
                     raise ValueError("; ".join(reasons) or "Task is not runnable")
 
                 selected_agent = self._resolve_agent_id(task=task, override_agent_id=agent_id)
+                self._ensure_task_ownership(task=task, selected_agent=selected_agent, allow_in_progress=allow_in_progress)
                 RunCoordinator.ensure_capacity(self.project_id, selected_agent, task_id)
 
                 if task.get("status") == "todo" and roadmap_dir:
                     writer = EventWriter(roadmap_dir=roadmap_dir)
-                    claim_event = writer.append_event(
+                    claim_event = writer.build_event(
                         actor=selected_agent,
                         action="claim",
                         payload={
@@ -81,7 +80,14 @@ class RunEngine:
                             "prior_status": task.get("status", "todo"),
                         },
                     )
-                    Projector(roadmap_dir, roadmap_id=roadmap_id or "roadmap.json").sync_to_disk([claim_event])
+                    projector = Projector(roadmap_dir, roadmap_id=roadmap_id or "roadmap.json")
+                    self._validate_projection_events(projector=projector, events=[claim_event])
+                    writer.append_prebuilt([claim_event])
+                    self._reconcile_projection_best_effort(
+                        projector=projector,
+                        run_id=run_id,
+                        context="claim",
+                    )
 
                 RunCoordinator.register_run(self.project_id, run_id, selected_agent, task_id)
 
@@ -246,7 +252,7 @@ class RunEngine:
                         continue
 
                     writer = EventWriter(roadmap_dir=roadmap_dir)
-                    claim_event = writer.append_event(
+                    claim_event = writer.build_event(
                         actor=run_state.agent_id,
                         action="claim",
                         payload={
@@ -254,7 +260,14 @@ class RunEngine:
                             "prior_status": candidate.get("status", "todo"),
                         },
                     )
-                    Projector(roadmap_dir, roadmap_id=run_state.roadmap_id or "roadmap.json").sync_to_disk([claim_event])
+                    projector = Projector(roadmap_dir, roadmap_id=run_state.roadmap_id or "roadmap.json")
+                    self._validate_projection_events(projector=projector, events=[claim_event])
+                    writer.append_prebuilt([claim_event])
+                    self._reconcile_projection_best_effort(
+                        projector=projector,
+                        run_id=run_state.run_id,
+                        context=f"claim next task {candidate_id}",
+                    )
                     RunCoordinator.claim_task(self.project_id, run_state.run_id, candidate_id)
                     return candidate
         return None
@@ -321,9 +334,15 @@ class RunEngine:
             )
 
         async with RunCoordinator.event_write(self.project_id):
+            projector = Projector(roadmap_dir, roadmap_id=run_state.roadmap_id or "roadmap.json")
+            self._validate_projection_events(projector=projector, events=events)
             written = writer.append_events(events)
             if written:
-                Projector(roadmap_dir, roadmap_id=run_state.roadmap_id or "roadmap.json").sync_to_disk(written)
+                self._reconcile_projection_best_effort(
+                    projector=projector,
+                    run_id=run_state.run_id,
+                    context=f"apply {selected_action}",
+                )
                 self._log(run_state.run_id, "system", f"Persisted {len(written)} event(s) for action '{selected_action}'.")
 
     async def _resolve_selected_action(
@@ -400,8 +419,7 @@ class RunEngine:
 
     @staticmethod
     def _load_json(path: str) -> dict[str, Any]:
-        with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
+        return load_json_artifact(path).payload
 
     def _load_runtime_roadmap(
         self,
@@ -445,18 +463,6 @@ class RunEngine:
         if computed_hash != stored_hash:
             raise RuntimeError("Roadmap projection hash is stale. Run integrity repair before executing tasks.")
 
-        activity_path = Path(roadmap_dir) / "activity.jsonl"
-        if not activity_path.exists():
-            return
-
-        projected_seq = int(run_meta.get("last_event_seq", 0) or 0)
-        activity = read_jsonl(str(activity_path))
-        latest_activity_seq = max((int(event.get("event_seq", 0) or 0) for event in activity), default=0)
-        if latest_activity_seq > projected_seq:
-            raise RuntimeError(
-                "Roadmap projection is behind activity.jsonl. Run integrity repair before executing tasks."
-            )
-
     def _build_context(
         self,
         *,
@@ -497,6 +503,33 @@ class RunEngine:
             self.agent_router.get_adapter(preferred_runner)
             return preferred_runner
         return self.agent_router.default_runner_for_kind(task.get("task_kind", "impl"))
+
+    @staticmethod
+    def _ensure_task_ownership(*, task: dict[str, Any], selected_agent: str, allow_in_progress: bool) -> None:
+        if not allow_in_progress or task.get("status") != "in_progress":
+            return
+        assigned_to = task.get("assigned_to")
+        if assigned_to and assigned_to != selected_agent:
+            raise RuntimeError(
+                f"Task {task['task_id']} is in_progress and assigned to {assigned_to}. Regress it to todo before switching to {selected_agent}."
+            )
+
+    @staticmethod
+    def _validate_projection_events(*, projector: Projector, events: list[dict[str, Any]]) -> None:
+        roadmap, issues, lessons = projector.load_projection()
+        projector.apply_events(roadmap, issues, lessons, events)
+
+    def _reconcile_projection_best_effort(self, *, projector: Projector, run_id: str, context: str) -> None:
+        result = projector.reconcile_activity_tail_to_disk()
+        if result["invalid_event"] is not None:
+            invalid_event = result["invalid_event"]
+            self._log(
+                run_id,
+                "system",
+                "Projection reconciliation is pending due to an invalid activity tail "
+                f"after {context} at event_seq {invalid_event['event_seq']} "
+                f"({invalid_event['action']} {invalid_event['task_id']} by {invalid_event['actor']}).",
+            )
 
     @staticmethod
     def _build_execution_metadata(*, run_state: RunState, result: dict[str, Any]) -> dict[str, Any]:

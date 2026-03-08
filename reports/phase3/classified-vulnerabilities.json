@@ -1,0 +1,1305 @@
+{
+  "meta": {
+    "version": "1.0.0",
+    "project": "ESAA Security Audit",
+    "phase": "Phase 3 - Classification"
+  },
+  "vulnerabilities": [
+    {
+      "id": "SC-003",
+      "domain": "secrets_config",
+      "title": "Arquivos Sensíveis Expostos",
+      "status": "fail",
+      "severity": "MEDIUM",
+      "evidence": {
+        "files": [
+          "backend/.env",
+          "frontend/.env"
+        ],
+        "description": "Arquivos .env estão presentes mas não há .gitignore na raiz para evitar commit acidental."
+      },
+      "remediation": "Adicionar .gitignore na raiz do projeto com exclusões adequadas.",
+      "cia_impact": {
+        "confidentiality": "LOW",
+        "integrity": "LOW",
+        "availability": "LOW"
+      },
+      "technical_justification": "Risco identificado durante a auditoria técnica que compromete a postura de segurança do domínio afetado."
+    },
+    {
+      "id": "SC-004",
+      "domain": "secrets_config",
+      "title": "CORS Permissivo",
+      "status": "fail",
+      "severity": "CRITICAL",
+      "evidence": {
+        "files": [
+          "backend/app/main.py"
+        ],
+        "lines": [
+          "allow_origins=[\"*\"]"
+        ],
+        "description": "O middleware de CORS está configurado para aceitar qualquer origem."
+      },
+      "remediation": "Configurar uma lista restrita de domínios permitidos no CORSMiddleware.",
+      "cia_impact": {
+        "confidentiality": "HIGH",
+        "integrity": "HIGH",
+        "availability": "LOW"
+      },
+      "technical_justification": "Permite que scripts de qualquer origem leiam dados da API (C) e realizem ações em nome do usuário se houver sessão ativa (I)."
+    },
+    {
+      "id": "SC-005",
+      "domain": "secrets_config",
+      "title": "Modo Debug Enabled",
+      "status": "partial",
+      "severity": "MEDIUM",
+      "evidence": {
+        "description": "Runbook sugere execução do Uvicorn com log level debug, aumentando exposição de informações técnicas."
+      },
+      "remediation": "Utilizar log level info em ambientes de produção.",
+      "cia_impact": {
+        "confidentiality": "LOW",
+        "integrity": "LOW",
+        "availability": "LOW"
+      },
+      "technical_justification": "Risco identificado durante a auditoria técnica que compromete a postura de segurança do domínio afetado."
+    },
+    {
+      "id": "SC-007",
+      "domain": "secrets_config",
+      "title": "Configs de Exemplo",
+      "status": "fail",
+      "severity": "LOW",
+      "evidence": {
+        "files": [
+          "backend/.env",
+          "backend/.env.example"
+        ],
+        "description": "Arquivos .env e .env.example são idênticos, expondo hosts e portas padrão."
+      },
+      "remediation": "Garantir que .env.example contenha apenas placeholders.",
+      "cia_impact": {
+        "confidentiality": "LOW",
+        "integrity": "LOW",
+        "availability": "LOW"
+      },
+      "technical_justification": "Risco identificado durante a auditoria técnica que compromete a postura de segurança do domínio afetado."
+    },
+    {
+      "id": "SC-008",
+      "domain": "secrets_config",
+      "title": "Variáveis Sensíveis em Logs",
+      "status": "fail",
+      "severity": "CRITICAL",
+      "evidence": {
+        "files": [
+          "backend/app/api/routes_logs.py",
+          "backend/app/core/log_stream.py"
+        ],
+        "description": "Logs brutos dos agentes são transmitidos via SSE e persistidos sem sanitização ou autenticação."
+      },
+      "remediation": "Implementar sanitização de logs e autenticação para o endpoint de streaming.",
+      "cia_impact": {
+        "confidentiality": "HIGH",
+        "integrity": "LOW",
+        "availability": "LOW"
+      },
+      "technical_justification": "Exposição direta de segredos e tokens de autenticação em fluxos de log não protegidos."
+    },
+    {
+      "id": "DS-001",
+      "domain": "dependencies_supply_chain",
+      "title": "Dependências com vulnerabilidades conhecidas",
+      "status": "partial",
+      "severity": "MEDIUM",
+      "evidence": {
+        "files": [
+          "frontend/package.json",
+          "frontend/package-lock.json"
+        ],
+        "lines": [],
+        "commands_output": [
+          "2 moderate vulnerabilities: esbuild (<=0.24.2), vite (0.11.0 - 6.1.6). CVE-346 (CVSS 5.3)"
+        ],
+        "description": "2 vulnerabilidades moderadas no frontend. Ferramentas de auditoria para backend não disponíveis no ambiente."
+      },
+      "remediation": "Atualizar vite para >= 7.3.1 no frontend.",
+      "cia_impact": {
+        "confidentiality": "LOW",
+        "integrity": "LOW",
+        "availability": "LOW"
+      },
+      "technical_justification": "Risco identificado durante a auditoria técnica que compromete a postura de segurança do domínio afetado."
+    },
+    {
+      "id": "AU-001",
+      "domain": "authentication",
+      "title": "Senhas armazenadas em texto plano",
+      "status": "fail",
+      "severity": "CRITICAL",
+      "evidence": {
+        "files": [
+          "backend/app/main.py",
+          "reports/phase1/attack-surface-inventory.md"
+        ],
+        "description": "Ausencia total de banco de dados de usuarios e camada de autenticacao."
+      },
+      "remediation": "Implementar armazenamento seguro com bcrypt/argon2.",
+      "cia_impact": {
+        "confidentiality": "HIGH",
+        "integrity": "HIGH",
+        "availability": "MEDIUM"
+      },
+      "technical_justification": "A ausência ou falha na autenticação permite acesso total à conta do usuário ou sistema."
+    },
+    {
+      "id": "AU-002",
+      "domain": "authentication",
+      "title": "Hash de senha inseguro",
+      "status": "fail",
+      "severity": "HIGH",
+      "evidence": {
+        "description": "Nao ha implementacao de hash de senhas no sistema."
+      },
+      "remediation": "Adicionar biblioteca passlib ou similar para hashing seguro.",
+      "cia_impact": {
+        "confidentiality": "HIGH",
+        "integrity": "HIGH",
+        "availability": "MEDIUM"
+      },
+      "technical_justification": "A ausência ou falha na autenticação permite acesso total à conta do usuário ou sistema."
+    },
+    {
+      "id": "AU-003",
+      "domain": "authentication",
+      "title": "Ausencia de MFA",
+      "status": "fail",
+      "severity": "MEDIUM",
+      "evidence": {
+        "description": "MFA nao implementado."
+      },
+      "remediation": "Integrar TOTP/2FA.",
+      "cia_impact": {
+        "confidentiality": "MEDIUM",
+        "integrity": "MEDIUM",
+        "availability": "LOW"
+      },
+      "technical_justification": "Fragilidades no processo de autenticação facilitam ataques de força bruta ou sequestro de sessão."
+    },
+    {
+      "id": "AU-004",
+      "domain": "authentication",
+      "title": "Reset de senha inseguro",
+      "status": "fail",
+      "severity": "HIGH",
+      "evidence": {
+        "description": "Fluxo de reset de senha inexistente."
+      },
+      "remediation": "Implementar fluxo de reset com tokens seguros e expiracao.",
+      "cia_impact": {
+        "confidentiality": "HIGH",
+        "integrity": "HIGH",
+        "availability": "MEDIUM"
+      },
+      "technical_justification": "A ausência ou falha na autenticação permite acesso total à conta do usuário ou sistema."
+    },
+    {
+      "id": "AU-005",
+      "domain": "authentication",
+      "title": "Sessoes sem expiração",
+      "status": "fail",
+      "severity": "HIGH",
+      "evidence": {
+        "description": "O sistema nao possui controle de sessao ou expiracao."
+      },
+      "remediation": "Implementar sessoes com TTL e cookies HttpOnly/Secure.",
+      "cia_impact": {
+        "confidentiality": "HIGH",
+        "integrity": "HIGH",
+        "availability": "MEDIUM"
+      },
+      "technical_justification": "A ausência ou falha na autenticação permite acesso total à conta do usuário ou sistema."
+    },
+    {
+      "id": "AU-006",
+      "domain": "authentication",
+      "title": "Ausência de proteção contra brute force",
+      "status": "fail",
+      "severity": "HIGH",
+      "evidence": {
+        "description": "Nenhum rate limiting configurado nos endpoints da API."
+      },
+      "remediation": "Adicionar middleware de rate limiting (ex: slowapi).",
+      "cia_impact": {
+        "confidentiality": "HIGH",
+        "integrity": "HIGH",
+        "availability": "MEDIUM"
+      },
+      "technical_justification": "A ausência ou falha na autenticação permite acesso total à conta do usuário ou sistema."
+    },
+    {
+      "id": "AU-007",
+      "domain": "authentication",
+      "title": "Tokens permanentes",
+      "status": "fail",
+      "severity": "HIGH",
+      "evidence": {
+        "description": "Ausencia de tokens de autenticacao."
+      },
+      "remediation": "Utilizar JWT com tempo de expiracao curto e refresh tokens.",
+      "cia_impact": {
+        "confidentiality": "HIGH",
+        "integrity": "HIGH",
+        "availability": "MEDIUM"
+      },
+      "technical_justification": "A ausência ou falha na autenticação permite acesso total à conta do usuário ou sistema."
+    },
+    {
+      "id": "AU-008",
+      "domain": "authentication",
+      "title": "Session fixation",
+      "status": "fail",
+      "severity": "HIGH",
+      "evidence": {
+        "description": "Sem gerenciamento de sessao."
+      },
+      "remediation": "Regenerar ID de sessao apos login.",
+      "cia_impact": {
+        "confidentiality": "HIGH",
+        "integrity": "HIGH",
+        "availability": "MEDIUM"
+      },
+      "technical_justification": "A ausência ou falha na autenticação permite acesso total à conta do usuário ou sistema."
+    },
+    {
+      "id": "AZ-001",
+      "domain": "authorization",
+      "title": "Controle de acesso ausente",
+      "status": "fail",
+      "severity": "CRITICAL",
+      "evidence": {
+        "files": [
+          "backend/app/api/routes_tasks.py",
+          "backend/app/api/routes_projects.py",
+          "backend/app/api/routes_runs.py"
+        ],
+        "description": "Nenhum endpoint do backend possui middleware de autenticação ou autorização. Rotas de modificação de estado são públicas."
+      },
+      "remediation": "Implementar middleware de autenticação (JWT/Session) em todas as rotas da API.",
+      "cia_impact": {
+        "confidentiality": "HIGH",
+        "integrity": "HIGH",
+        "availability": "MEDIUM"
+      },
+      "technical_justification": "Falhas de autorização (IDOR, falta de verificação) permitem acesso e modificação de dados de terceiros ou funções administrativas."
+    },
+    {
+      "id": "AZ-002",
+      "domain": "authorization",
+      "title": "IDOR (Insecure Direct Object Reference)",
+      "status": "fail",
+      "severity": "CRITICAL",
+      "evidence": {
+        "files": [
+          "backend/app/api/routes_projects.py"
+        ],
+        "description": "Endpoints /browse e /open permitem navegar e abrir qualquer diretório do sistema de arquivos do servidor como um projeto ESAA."
+      },
+      "remediation": "Restringir o escopo de navegação a um diretório de dados específico (sandboxing).",
+      "cia_impact": {
+        "confidentiality": "HIGH",
+        "integrity": "HIGH",
+        "availability": "MEDIUM"
+      },
+      "technical_justification": "Falhas de autorização (IDOR, falta de verificação) permitem acesso e modificação de dados de terceiros ou funções administrativas."
+    },
+    {
+      "id": "AZ-003",
+      "domain": "authorization",
+      "title": "Verificação de permissão apenas no frontend",
+      "status": "fail",
+      "severity": "CRITICAL",
+      "evidence": {
+        "files": [
+          "frontend/src/components/tasks/TaskDetailDrawer.tsx"
+        ],
+        "description": "Ações críticas como 'reset' e 'review' estão disponíveis sem qualquer verificação de papel ou permissão no backend ou frontend."
+      },
+      "remediation": "Implementar lógica de autorização no backend e refletir roles no frontend para controle de UI.",
+      "cia_impact": {
+        "confidentiality": "HIGH",
+        "integrity": "HIGH",
+        "availability": "MEDIUM"
+      },
+      "technical_justification": "Falhas de autorização (IDOR, falta de verificação) permitem acesso e modificação de dados de terceiros ou funções administrativas."
+    },
+    {
+      "id": "AZ-004",
+      "domain": "authorization",
+      "title": "Admin routes expostas",
+      "status": "fail",
+      "severity": "HIGH",
+      "evidence": {
+        "files": [
+          "backend/app/api/routes_tasks.py",
+          "backend/app/api/routes_runs.py"
+        ],
+        "description": "Rotas operacionais administrativas estão em paths previsíveis e sem proteção de acesso."
+      },
+      "remediation": "Proteger rotas operacionais com controle de acesso baseado em roles (RBAC).",
+      "cia_impact": {
+        "confidentiality": "HIGH",
+        "integrity": "HIGH",
+        "availability": "MEDIUM"
+      },
+      "technical_justification": "Falhas de autorização (IDOR, falta de verificação) permitem acesso e modificação de dados de terceiros ou funções administrativas."
+    },
+    {
+      "id": "AZ-005",
+      "domain": "authorization",
+      "title": "Escopo de permissões mal definido",
+      "status": "fail",
+      "severity": "MEDIUM",
+      "evidence": {
+        "description": "O sistema não possui definição de papéis (Roles) ou permissões granulares."
+      },
+      "remediation": "Definir matriz de permissões (ex: Admin, Operator, Auditor) e implementar enforcement.",
+      "cia_impact": {
+        "confidentiality": "HIGH",
+        "integrity": "HIGH",
+        "availability": "MEDIUM"
+      },
+      "technical_justification": "Falhas de autorização (IDOR, falta de verificação) permitem acesso e modificação de dados de terceiros ou funções administrativas."
+    },
+    {
+      "id": "AZ-006",
+      "domain": "authorization",
+      "title": "Ações sensíveis sem confirmação",
+      "status": "fail",
+      "severity": "LOW",
+      "evidence": {
+        "files": [
+          "frontend/src/components/tasks/TaskDetailDrawer.tsx"
+        ],
+        "description": "Ações de regressão de estado e aprovação de review ocorrem instantaneamente após o clique, sem diálogo de confirmação."
+      },
+      "remediation": "Adicionar steps de confirmação no frontend para todas as ações mutativas críticas.",
+      "cia_impact": {
+        "confidentiality": "HIGH",
+        "integrity": "HIGH",
+        "availability": "MEDIUM"
+      },
+      "technical_justification": "Falhas de autorização (IDOR, falta de verificação) permitem acesso e modificação de dados de terceiros ou funções administrativas."
+    },
+    {
+      "id": "AP-001",
+      "domain": "api_security",
+      "title": "Endpoints sem rate limit",
+      "status": "fail",
+      "severity": "HIGH",
+      "evidence": {
+        "files": [
+          "backend/app/main.py"
+        ],
+        "description": "Nenhum middleware de rate limiting (como slowapi) ou decorador de limite de requisicao foi encontrado no backend. O sistema esta vulneravel a ataques de forca bruta e exaustao de recursos."
+      },
+      "remediation": "Implementar middleware de rate limiting no FastAPI (ex: slowapi) e aplicar limites especificos por endpoint e IP.",
+      "cia_impact": {
+        "confidentiality": "LOW",
+        "integrity": "LOW",
+        "availability": "HIGH"
+      },
+      "technical_justification": "A falta de limite de taxa permite ataques de negação de serviço (DoS) por exaustão de recursos."
+    },
+    {
+      "id": "AP-002",
+      "domain": "api_security",
+      "title": "Endpoints retornando dados excessivos",
+      "status": "fail",
+      "severity": "MEDIUM",
+      "evidence": {
+        "files": [
+          "backend/app/api/routes_state.py",
+          "backend/app/api/routes_chat.py"
+        ],
+        "description": "O endpoint /state retorna o estado completo do projeto (tarefas, issues, lessons, artifacts, activity) em um unico payload. O historico de chat tambem e retornado integralmente em cada interacao, gerando over-fetching significativo."
+      },
+      "remediation": "Utilizar DTOs mais enxutos, filtrar campos sensiveis e implementar carregamento sob demanda para listas grandes.",
+      "cia_impact": {
+        "confidentiality": "MEDIUM",
+        "integrity": "MEDIUM",
+        "availability": "LOW"
+      },
+      "technical_justification": "Exposição excessiva de dados ou falta de controle de replay compromete a privacidade e consistência dos dados."
+    },
+    {
+      "id": "AP-003",
+      "domain": "api_security",
+      "title": "Enumeração de usuários",
+      "status": "fail",
+      "severity": "MEDIUM",
+      "evidence": {
+        "files": [
+          "backend/app/api/routes_projects.py"
+        ],
+        "description": "Embora nao haja usuarios autenticaveis, o endpoint /projects/browse permite a enumeracao de diretorios e arquivos em todo o sistema de arquivos do host (root C:\\ no Windows), expondo a estrutura interna do servidor."
+      },
+      "remediation": "Restringir o BROWSE_ROOT a um diretorio de dados isolado e validar rigorosamente os caminhos acessados.",
+      "cia_impact": {
+        "confidentiality": "MEDIUM",
+        "integrity": "MEDIUM",
+        "availability": "LOW"
+      },
+      "technical_justification": "Exposição excessiva de dados ou falta de controle de replay compromete a privacidade e consistência dos dados."
+    },
+    {
+      "id": "AP-006",
+      "domain": "api_security",
+      "title": "Ausência de paginação",
+      "status": "fail",
+      "severity": "MEDIUM",
+      "evidence": {
+        "files": [
+          "backend/app/api/routes_state.py",
+          "backend/app/api/routes_projects.py"
+        ],
+        "description": "Endpoints de listagem como /state (activity, tasks), /projects (list) e /browse (files) nao possuem parametros de paginacao (limit, offset), retornando todos os registros de uma vez."
+      },
+      "remediation": "Implementar paginacao obrigatoria em todos os endpoints que retornam listas, com limites default e maximos.",
+      "cia_impact": {
+        "confidentiality": "MEDIUM",
+        "integrity": "MEDIUM",
+        "availability": "LOW"
+      },
+      "technical_justification": "Exposição excessiva de dados ou falta de controle de replay compromete a privacidade e consistência dos dados."
+    },
+    {
+      "id": "AP-007",
+      "domain": "api_security",
+      "title": "Replay attacks possíveis",
+      "status": "fail",
+      "severity": "MEDIUM",
+      "evidence": {
+        "files": [
+          "backend/app/api/routes_runs.py",
+          "backend/app/api/routes_tasks.py",
+          "backend/app/api/routes_chat.py"
+        ],
+        "description": "Operacoes criticas como iniciar uma execucao (run), resetar uma tarefa ou enviar mensagens de chat nao possuem tokens de idempotencia (idempotency keys) ou nonces, permitindo a repeticao de acoes por reenvio de pacotes."
+      },
+      "remediation": "Implementar suporte a headers de idempotencia (ex: X-Idempotency-Key) para todas as operacoes de escrita (POST/PUT/DELETE).",
+      "cia_impact": {
+        "confidentiality": "MEDIUM",
+        "integrity": "MEDIUM",
+        "availability": "LOW"
+      },
+      "technical_justification": "Exposição excessiva de dados ou falta de controle de replay compromete a privacidade e consistência dos dados."
+    },
+    {
+      "id": "IV-003",
+      "domain": "input_validation",
+      "title": "Template Injection / Prompt Injection",
+      "status": "fail",
+      "severity": "MEDIUM",
+      "evidence": "chat_service.py:_build_prompt() interpolates user_message directly: f'USER: {user_message}'. Agents run with bypassPermissions (claude) and yolo (gemini), meaning prompt injection can trigger unrestricted tool calls (file writes, shell commands) without user confirmation.",
+      "remediation": "Delimit user content with structural markers (XML tags). Evaluate if bypassPermissions/yolo is needed for interactive chat sessions.",
+      "cia_impact": {
+        "confidentiality": "LOW",
+        "integrity": "LOW",
+        "availability": "LOW"
+      },
+      "technical_justification": "Risco identificado durante a auditoria técnica que compromete a postura de segurança do domínio afetado."
+    },
+    {
+      "id": "IV-006",
+      "domain": "input_validation",
+      "title": "Inputs Não Validados",
+      "status": "partial",
+      "severity": "MEDIUM",
+      "evidence": "Pydantic schemas present but missing: (1) max_length on chat message content (routes_chat.py:124), (2) max_length on resolution_summary (routes_issues.py:40), (3) UUID format validation on run_id path param (routes_logs.py:9), (4) agent_id validated only at use-time — invalid sessions created freely.",
+      "remediation": "Add Field(..., max_length=N) to Pydantic models for free-text inputs. Validate agent_id on session creation.",
+      "cia_impact": {
+        "confidentiality": "LOW",
+        "integrity": "LOW",
+        "availability": "LOW"
+      },
+      "technical_justification": "Risco identificado durante a auditoria técnica que compromete a postura de segurança do domínio afetado."
+    },
+    {
+      "id": "IV-007",
+      "domain": "input_validation",
+      "title": "Sanitização Ausente",
+      "status": "fail",
+      "severity": "HIGH",
+      "evidence": "PATH TRAVERSAL in chat_store.py:load_session() and delete_session(): session_id from URL path is used directly as path = sessions_dir / f'{session_id}.json' without validation. Payload '../../roadmap' resolves to .roadmap/roadmap.json — readable AND deletable via GET/DELETE /chat/sessions/{session_id}. Reachable files: roadmap.json, roadmap.security.json, issues.json, lessons.json. Secondary: AgentResult.metadata exposes full command list including absolute installation paths via GET /runs/{run_id}.",
+      "remediation": "Validate session_id matches UUID format before constructing file path. Optionally resolve path and assert it stays within sessions_dir. Strip or omit command array from public API responses.",
+      "cia_impact": {
+        "confidentiality": "HIGH",
+        "integrity": "HIGH",
+        "availability": "MEDIUM"
+      },
+      "technical_justification": "Permite leitura e deleção de arquivos críticos do sistema (roadmap, configurações), impactando C e I diretamente."
+    },
+    {
+      "id": "FU-001",
+      "domain": "file_upload",
+      "title": "Uploads sem validação de tipo",
+      "status": "fail",
+      "severity": "HIGH",
+      "evidence": "src/esaa/validator.py ignores file content, validating only path against contract allowlist.",
+      "remediation": "",
+      "cia_impact": {
+        "confidentiality": "LOW",
+        "integrity": "LOW",
+        "availability": "LOW"
+      },
+      "technical_justification": "Risco identificado durante a auditoria técnica que compromete a postura de segurança do domínio afetado."
+    },
+    {
+      "id": "FU-002",
+      "domain": "file_upload",
+      "title": "Uploads sem limite de tamanho",
+      "status": "fail",
+      "severity": "MEDIUM",
+      "evidence": "No file size enforcement in backend or ESAA core; subprocess output captured in memory without limits.",
+      "remediation": "",
+      "cia_impact": {
+        "confidentiality": "LOW",
+        "integrity": "LOW",
+        "availability": "LOW"
+      },
+      "technical_justification": "Risco identificado durante a auditoria técnica que compromete a postura de segurança do domínio afetado."
+    },
+    {
+      "id": "FU-004",
+      "domain": "file_upload",
+      "title": "Ausência de antivírus",
+      "status": "fail",
+      "severity": "MEDIUM",
+      "evidence": "No malware scanning integrated into the agent result processing pipeline.",
+      "remediation": "",
+      "cia_impact": {
+        "confidentiality": "LOW",
+        "integrity": "LOW",
+        "availability": "LOW"
+      },
+      "technical_justification": "Risco identificado durante a auditoria técnica que compromete a postura de segurança do domínio afetado."
+    },
+    {
+      "id": "FU-005",
+      "domain": "file_upload",
+      "title": "Possibilidade de upload executável",
+      "status": "fail",
+      "severity": "HIGH",
+      "evidence": "Agents with 'impl' task_kind can write executable files (.py, .sh, .js) to src/ directory.",
+      "remediation": "",
+      "cia_impact": {
+        "confidentiality": "LOW",
+        "integrity": "LOW",
+        "availability": "LOW"
+      },
+      "technical_justification": "Risco identificado durante a auditoria técnica que compromete a postura de segurança do domínio afetado."
+    },
+    {
+      "id": "SS-001",
+      "domain": "session_security",
+      "title": "Cookies sem httpOnly",
+      "status": "fail",
+      "severity": "HIGH",
+      "evidence": {
+        "files": [
+          "backend/app/main.py",
+          "backend/app/core/chat_store.py"
+        ],
+        "description": "O sistema nao utiliza cookies para gerenciar sessoes, dependendo de UUIDs no client-side expostos ao JS."
+      },
+      "remediation": "Implementar cookies HttpOnly para sessoes de autenticacao e chat.",
+      "cia_impact": {
+        "confidentiality": "LOW",
+        "integrity": "LOW",
+        "availability": "LOW"
+      },
+      "technical_justification": "Risco identificado durante a auditoria técnica que compromete a postura de segurança do domínio afetado."
+    },
+    {
+      "id": "SS-002",
+      "domain": "session_security",
+      "title": "Cookies sem Secure flag",
+      "status": "fail",
+      "severity": "HIGH",
+      "evidence": {
+        "description": "Ausencia de cookies de sessao e falta de configuracao 'Secure' global."
+      },
+      "remediation": "Configurar Secure=True em todos os cookies sensiveis.",
+      "cia_impact": {
+        "confidentiality": "LOW",
+        "integrity": "LOW",
+        "availability": "LOW"
+      },
+      "technical_justification": "Risco identificado durante a auditoria técnica que compromete a postura de segurança do domínio afetado."
+    },
+    {
+      "id": "SS-003",
+      "domain": "session_security",
+      "title": "SameSite ausente",
+      "status": "fail",
+      "severity": "MEDIUM",
+      "evidence": {
+        "description": "Atributo SameSite nao utilizado por falta de uso de cookies."
+      },
+      "remediation": "Configurar SameSite=Strict em cookies de sessao.",
+      "cia_impact": {
+        "confidentiality": "LOW",
+        "integrity": "LOW",
+        "availability": "LOW"
+      },
+      "technical_justification": "Risco identificado durante a auditoria técnica que compromete a postura de segurança do domínio afetado."
+    },
+    {
+      "id": "SS-005",
+      "domain": "session_security",
+      "title": "Sessões sem expiração",
+      "status": "fail",
+      "severity": "HIGH",
+      "evidence": {
+        "files": [
+          "backend/app/core/chat_store.py"
+        ],
+        "description": "Sessoes de chat sao persistentes indefinidamente no disco sem TTL."
+      },
+      "remediation": "Implementar expiraÃ§Ã£o (TTL) e rotina de limpeza de sessoes.",
+      "cia_impact": {
+        "confidentiality": "LOW",
+        "integrity": "LOW",
+        "availability": "LOW"
+      },
+      "technical_justification": "Risco identificado durante a auditoria técnica que compromete a postura de segurança do domínio afetado."
+    },
+    {
+      "id": "SS-006",
+      "domain": "session_security",
+      "title": "Tokens reutilizáveis",
+      "status": "fail",
+      "severity": "MEDIUM",
+      "evidence": {
+        "description": "Session IDs (UUIDs) sao permanentes e podem ser reutilizados sem limites após vazamento."
+      },
+      "remediation": "Implementar rotaca§Ã£o de IDs de sessao e invalidacao manual.",
+      "cia_impact": {
+        "confidentiality": "LOW",
+        "integrity": "LOW",
+        "availability": "LOW"
+      },
+      "technical_justification": "Risco identificado durante a auditoria técnica que compromete a postura de segurança do domínio afetado."
+    },
+    {
+      "id": "CR-001",
+      "domain": "cryptography",
+      "title": "HTTPS obrigatório",
+      "status": "fail",
+      "severity": "HIGH",
+      "evidence": "Backend FastAPI configurado em HTTP puro (ESAA_HOST=127.0.0.1, port=8000). Frontend .env: VITE_API_BASE_URL=http://localhost:8000. Nenhum middleware TLS, ssl_keyfile ou ssl_certfile configurado em main.py. Sem redirecionamento HTTP->HTTPS.",
+      "remediation": "",
+      "cia_impact": {
+        "confidentiality": "HIGH",
+        "integrity": "MEDIUM",
+        "availability": "LOW"
+      },
+      "technical_justification": "A falta de criptografia em trânsito ou repouso permite a interceptação e leitura de dados sensíveis."
+    },
+    {
+      "id": "CR-003",
+      "domain": "cryptography",
+      "title": "Encryption at-rest",
+      "status": "fail",
+      "severity": "MEDIUM",
+      "evidence": "Artefatos ESAA armazenados em texto plano: roadmap.json, activity.jsonl, issues.json, lessons.json e .roadmap/chat_sessions/*.json. ChatStore.save_session() usa path.write_text() sem criptografia (chat_store.py:57). Nenhuma camada de criptografia de arquivo ou banco de dados encontrada.",
+      "remediation": "",
+      "cia_impact": {
+        "confidentiality": "HIGH",
+        "integrity": "MEDIUM",
+        "availability": "LOW"
+      },
+      "technical_justification": "A falta de criptografia em trânsito ou repouso permite a interceptação e leitura de dados sensíveis."
+    },
+    {
+      "id": "CR-004",
+      "domain": "cryptography",
+      "title": "Chaves expostas",
+      "status": "partial",
+      "severity": "MEDIUM",
+      "evidence": "POSITIVO: nenhuma chave API hardcoded no código-fonte; backend .env contém apenas variáveis operacionais. NEGATIVO: (1) array 'command' com caminhos absolutos do executável exposto na resposta da API de chat (chat_service.py:158); (2) ausência de .gitignore na raiz do repositório expõe arquivos .env a commit acidental.",
+      "remediation": "",
+      "cia_impact": {
+        "confidentiality": "HIGH",
+        "integrity": "MEDIUM",
+        "availability": "LOW"
+      },
+      "technical_justification": "A falta de criptografia em trânsito ou repouso permite a interceptação e leitura de dados sensíveis."
+    },
+    {
+      "id": "CR-005",
+      "domain": "cryptography",
+      "title": "Rotação de chaves",
+      "status": "fail",
+      "severity": "LOW",
+      "evidence": "Nenhum mecanismo de rotação de chaves. API keys injetadas via os.environ.copy() sem ciclo de vida gerenciado. Sem integração com sistema de gerenciamento de segredos (Vault, AWS Secrets Manager, etc.).",
+      "remediation": "",
+      "cia_impact": {
+        "confidentiality": "HIGH",
+        "integrity": "MEDIUM",
+        "availability": "LOW"
+      },
+      "technical_justification": "A falta de criptografia em trânsito ou repouso permite a interceptação e leitura de dados sensíveis."
+    },
+    {
+      "id": "SH-001",
+      "domain": "security_headers",
+      "title": "Content-Security-Policy (CSP)",
+      "status": "fail",
+      "severity": "HIGH",
+      "evidence": "Requisicao real a http://127.0.0.1:8000/ retornou apenas Date, Server, Content-Length e Content-Type. Nenhum header Content-Security-Policy presente. frontend/index.html nao possui meta tag CSP e frontend/vite.config.ts nao configura headers de resposta.",
+      "remediation": "",
+      "cia_impact": {
+        "confidentiality": "MEDIUM",
+        "integrity": "MEDIUM",
+        "availability": "LOW"
+      },
+      "technical_justification": "Ausência de headers de hardening facilita ataques de XSS, Clickjacking e sniffing de conteúdo."
+    },
+    {
+      "id": "SH-002",
+      "domain": "security_headers",
+      "title": "Strict-Transport-Security (HSTS)",
+      "status": "fail",
+      "severity": "MEDIUM",
+      "evidence": "Nenhum header Strict-Transport-Security retornado pelo backend em runtime. O stack opera em HTTP puro: backend exposto em http://127.0.0.1:8000 e frontend/vite.config.ts faz proxy para http://localhost:8000, sem TLS.",
+      "remediation": "",
+      "cia_impact": {
+        "confidentiality": "MEDIUM",
+        "integrity": "MEDIUM",
+        "availability": "LOW"
+      },
+      "technical_justification": "Ausência de headers de hardening facilita ataques de XSS, Clickjacking e sniffing de conteúdo."
+    },
+    {
+      "id": "SH-003",
+      "domain": "security_headers",
+      "title": "X-Frame-Options",
+      "status": "fail",
+      "severity": "MEDIUM",
+      "evidence": "Nenhum header X-Frame-Options retornado pela API FastAPI. Tambem nao existe CSP com frame-ancestors como controle substituto, porque nenhuma politica CSP foi configurada.",
+      "remediation": "",
+      "cia_impact": {
+        "confidentiality": "MEDIUM",
+        "integrity": "MEDIUM",
+        "availability": "LOW"
+      },
+      "technical_justification": "Ausência de headers de hardening facilita ataques de XSS, Clickjacking e sniffing de conteúdo."
+    },
+    {
+      "id": "SH-004",
+      "domain": "security_headers",
+      "title": "X-Content-Type-Options",
+      "status": "fail",
+      "severity": "MEDIUM",
+      "evidence": "Nenhum header X-Content-Type-Options: nosniff retornado pela API em http://127.0.0.1:8000/. backend/app/main.py adiciona apenas CORSMiddleware, sem middleware de hardening ou headers customizados.",
+      "remediation": "",
+      "cia_impact": {
+        "confidentiality": "MEDIUM",
+        "integrity": "MEDIUM",
+        "availability": "LOW"
+      },
+      "technical_justification": "Ausência de headers de hardening facilita ataques de XSS, Clickjacking e sniffing de conteúdo."
+    },
+    {
+      "id": "SH-005",
+      "domain": "security_headers",
+      "title": "Referrer-Policy",
+      "status": "fail",
+      "severity": "LOW",
+      "evidence": "Nenhum header Referrer-Policy retornado no runtime e nenhuma meta tag correspondente em frontend/index.html. O comportamento atual depende apenas do default do navegador.",
+      "remediation": "",
+      "cia_impact": {
+        "confidentiality": "MEDIUM",
+        "integrity": "MEDIUM",
+        "availability": "LOW"
+      },
+      "technical_justification": "Ausência de headers de hardening facilita ataques de XSS, Clickjacking e sniffing de conteúdo."
+    },
+    {
+      "id": "LM-001",
+      "domain": "logging_monitoring",
+      "title": "Logs contendo dados sensíveis",
+      "status": "fail",
+      "severity": "CRITICAL",
+      "evidence": {
+        "files": [
+          "backend/app/api/routes_logs.py",
+          "backend/app/core/log_stream.py"
+        ],
+        "description": "Agent stdout/stderr logs are streamed raw via SSE without any redaction or masking for API keys, tokens, or PII."
+      },
+      "remediation": "Implement a regex-based redaction filter in the LogStreamer class to mask sensitive patterns before streaming and storage.",
+      "cia_impact": {
+        "confidentiality": "LOW",
+        "integrity": "LOW",
+        "availability": "LOW"
+      },
+      "technical_justification": "Risco identificado durante a auditoria técnica que compromete a postura de segurança do domínio afetado."
+    },
+    {
+      "id": "LM-004",
+      "domain": "logging_monitoring",
+      "title": "Ausência de alertas de segurança",
+      "status": "fail",
+      "severity": "MEDIUM",
+      "evidence": {
+        "files": [
+          "backend/app/main.py"
+        ],
+        "description": "No integration with alerting platforms (Sentry, Slack, Webhooks) for critical errors or security events."
+      },
+      "remediation": "Integrate a central alerting service to notify operators of integrity failures or system crashes.",
+      "cia_impact": {
+        "confidentiality": "LOW",
+        "integrity": "LOW",
+        "availability": "LOW"
+      },
+      "technical_justification": "Risco identificado durante a auditoria técnica que compromete a postura de segurança do domínio afetado."
+    },
+    {
+      "id": "LM-005",
+      "domain": "logging_monitoring",
+      "title": "Ausência de correlação de requisições",
+      "status": "fail",
+      "severity": "LOW",
+      "evidence": {
+        "files": [
+          "backend/app/main.py"
+        ],
+        "description": "Lack of correlation ID middleware to trace requests across the asynchronous API and agent subprocess boundaries."
+      },
+      "remediation": "Add correlation ID middleware to FastAPI and propagate the ID to all downstream logging calls.",
+      "cia_impact": {
+        "confidentiality": "LOW",
+        "integrity": "LOW",
+        "availability": "LOW"
+      },
+      "technical_justification": "Risco identificado durante a auditoria técnica que compromete a postura de segurança do domínio afetado."
+    },
+    {
+      "id": "IF-001",
+      "domain": "infrastructure",
+      "title": "HTTPS / TLS termination",
+      "status": "fail",
+      "severity": "HIGH",
+      "evidence": "Backend FastAPI configurado em HTTP puro (ESAA_HOST=127.0.0.1, ESAA_PORT=8000). Frontend VITE_API_BASE_URL=http://localhost:8000. Sem proxy reverso (nginx.conf ausente do repositório), sem ssl_keyfile/ssl_certfile no Uvicorn, sem redirecionamento HTTP->HTTPS. Severidade HIGH para deploy em produção; LOW no contexto PoC local.",
+      "remediation": "",
+      "cia_impact": {
+        "confidentiality": "MEDIUM",
+        "integrity": "MEDIUM",
+        "availability": "MEDIUM"
+      },
+      "technical_justification": "Fragilidades na infraestrutura básica expõem o sistema a vetores de ataque genéricos e interrupções."
+    },
+    {
+      "id": "IF-002",
+      "domain": "infrastructure",
+      "title": "Firewall / regras de rede",
+      "status": "fail",
+      "severity": "MEDIUM",
+      "evidence": "Sem regras de firewall configuradas via código. Sem iptables, ufw ou Windows Firewall rules documentadas. Backend potencialmente exposto sem restrição de IP de origem. Severidade MEDIUM para deploy em produção; INFO no contexto PoC local.",
+      "remediation": "",
+      "cia_impact": {
+        "confidentiality": "MEDIUM",
+        "integrity": "MEDIUM",
+        "availability": "MEDIUM"
+      },
+      "technical_justification": "Fragilidades na infraestrutura básica expõem o sistema a vetores de ataque genéricos e interrupções."
+    },
+    {
+      "id": "IF-003",
+      "domain": "infrastructure",
+      "title": "WAF (Web Application Firewall)",
+      "status": "fail",
+      "severity": "MEDIUM",
+      "evidence": "Sem WAF configurado em nenhuma camada. Nenhum middleware FastAPI de bloqueio de padrões maliciosos, nenhum serviço de borda (Cloudflare WAF, AWS WAF, ModSecurity). Requisições chegam diretamente ao backend sem filtragem de infraestrutura. Severidade MEDIUM para produção; INFO no contexto PoC local.",
+      "remediation": "",
+      "cia_impact": {
+        "confidentiality": "MEDIUM",
+        "integrity": "MEDIUM",
+        "availability": "MEDIUM"
+      },
+      "technical_justification": "Fragilidades na infraestrutura básica expõem o sistema a vetores de ataque genéricos e interrupções."
+    },
+    {
+      "id": "IF-004",
+      "domain": "infrastructure",
+      "title": "Segmentação de rede",
+      "status": "fail",
+      "severity": "MEDIUM",
+      "evidence": "Frontend (porta 5173) e backend (porta 8000) na mesma máquina sem isolamento. Sem Docker network, VLAN ou namespace. CORS allow_origins=['*'] em backend/app/main.py:29 — qualquer origem pode realizar requisições à API. Severidade MEDIUM para produção; INFO no contexto PoC local.",
+      "remediation": "",
+      "cia_impact": {
+        "confidentiality": "MEDIUM",
+        "integrity": "MEDIUM",
+        "availability": "MEDIUM"
+      },
+      "technical_justification": "Fragilidades na infraestrutura básica expõem o sistema a vetores de ataque genéricos e interrupções."
+    },
+    {
+      "id": "IF-005",
+      "domain": "infrastructure",
+      "title": "Backups",
+      "status": "fail",
+      "severity": "HIGH",
+      "evidence": "Sem mecanismo de backup para artefatos ESAA críticos: activity.jsonl (event store canônico), roadmap*.json, issues.json, lessons.json, chat_sessions/*.json. Sem cron job, script de backup ou política de retenção documentada. Perda do activity.jsonl destrói trilha de auditoria irrecuperável. Severidade HIGH independente do contexto de deploy.",
+      "remediation": "",
+      "cia_impact": {
+        "confidentiality": "LOW",
+        "integrity": "HIGH",
+        "availability": "HIGH"
+      },
+      "technical_justification": "A ausência de backups impossibilita a recuperação de dados em caso de corrupção ou perda física."
+    },
+    {
+      "id": "IF-006",
+      "domain": "infrastructure",
+      "title": "Proteção DDoS",
+      "status": "fail",
+      "severity": "MEDIUM",
+      "evidence": "Sem proteção DDoS em nenhuma camada. Sem CDN, sem rate limiting de infraestrutura, sem circuit breaker. Backend FastAPI/Uvicorn exposto diretamente. Worker single-process vulnerável a exaustão por requisições concorrentes. Severidade MEDIUM para produção; INFO no contexto PoC local.",
+      "remediation": "",
+      "cia_impact": {
+        "confidentiality": "MEDIUM",
+        "integrity": "MEDIUM",
+        "availability": "MEDIUM"
+      },
+      "technical_justification": "Fragilidades na infraestrutura básica expõem o sistema a vetores de ataque genéricos e interrupções."
+    },
+    {
+      "id": "DO-001",
+      "domain": "devsecops",
+      "title": "Ausência de code review",
+      "status": "fail",
+      "severity": "MEDIUM",
+      "evidence": {
+        "files_audited": [
+          ".",
+          ".github/",
+          "backend/",
+          "frontend/",
+          "src/"
+        ],
+        "description": "Nenhum arquivo de CODEOWNERS ou configurações de branch protection encontrados via análise estática do repositório."
+      },
+      "remediation": "Configurar branch protection no GitHub/GitLab. Exigir reviews obrigatórios para áreas críticas via CODEOWNERS.",
+      "cia_impact": {
+        "confidentiality": "MEDIUM",
+        "integrity": "MEDIUM",
+        "availability": "LOW"
+      },
+      "technical_justification": "A falta de governança no ciclo de vida do software permite a introdução de vulnerabilidades e código malicioso sem detecção."
+    },
+    {
+      "id": "DO-002",
+      "domain": "devsecops",
+      "title": "Pipeline sem análise de segurança",
+      "status": "fail",
+      "severity": "MEDIUM",
+      "evidence": {
+        "files_audited": [
+          ".github/workflows/",
+          ".gitlab-ci.yml",
+          "Jenkinsfile"
+        ],
+        "description": "Nenhuma configuração de CI/CD encontrada no repositório. O script scripts/run_poc_smoke.sh foca em testes funcionais e de fumaça, sem integração de ferramentas de segurança."
+      },
+      "remediation": "Implementar esteira de CI/CD (ex: GitHub Actions) com validações de segurança em cada Pull Request.",
+      "cia_impact": {
+        "confidentiality": "MEDIUM",
+        "integrity": "MEDIUM",
+        "availability": "LOW"
+      },
+      "technical_justification": "A falta de governança no ciclo de vida do software permite a introdução de vulnerabilidades e código malicioso sem detecção."
+    },
+    {
+      "id": "DO-003",
+      "domain": "devsecops",
+      "title": "Secrets scanning ausente",
+      "status": "fail",
+      "severity": "HIGH",
+      "evidence": {
+        "files_audited": [
+          ".pre-commit-config.yaml",
+          ".github/workflows/"
+        ],
+        "description": "Ausência de gitleaks, trufflehog ou detect-secrets no repositório. Risco crítico de exposição de credenciais no histórico do Git."
+      },
+      "remediation": "Integrar gitleaks ou trufflehog na CI/CD. Adicionar hook de pre-commit para validação local de segredos.",
+      "cia_impact": {
+        "confidentiality": "MEDIUM",
+        "integrity": "MEDIUM",
+        "availability": "LOW"
+      },
+      "technical_justification": "A falta de governança no ciclo de vida do software permite a introdução de vulnerabilidades e código malicioso sem detecção."
+    },
+    {
+      "id": "DO-004",
+      "domain": "devsecops",
+      "title": "SAST não implementado",
+      "status": "fail",
+      "severity": "MEDIUM",
+      "evidence": {
+        "files_audited": [
+          "backend/requirements.txt",
+          "frontend/package.json",
+          "pyproject.toml"
+        ],
+        "description": "Nenhuma ferramenta de Static Application Security Testing (como Semgrep, Bandit ou linters de segurança) configurada no stack atual."
+      },
+      "remediation": "Adicionar Semgrep e linters de segurança (ex: bandit para Python, eslint-plugin-security para JS) ao pipeline de desenvolvimento.",
+      "cia_impact": {
+        "confidentiality": "MEDIUM",
+        "integrity": "MEDIUM",
+        "availability": "LOW"
+      },
+      "technical_justification": "A falta de governança no ciclo de vida do software permite a introdução de vulnerabilidades e código malicioso sem detecção."
+    },
+    {
+      "id": "DO-005",
+      "domain": "devsecops",
+      "title": "DAST não implementado",
+      "status": "fail",
+      "severity": "LOW",
+      "evidence": {
+        "description": "O sistema não possui testes dinâmicos automatizados (OWASP ZAP, Nuclei) integrados ao ciclo de vida."
+      },
+      "remediation": "Implementar scan dinâmico (ZAP) em ambiente de staging antes de qualquer deploy em produção.",
+      "cia_impact": {
+        "confidentiality": "MEDIUM",
+        "integrity": "MEDIUM",
+        "availability": "LOW"
+      },
+      "technical_justification": "A falta de governança no ciclo de vida do software permite a introdução de vulnerabilidades e código malicioso sem detecção."
+    },
+    {
+      "id": "DO-006",
+      "domain": "devsecops",
+      "title": "Deploy sem auditoria",
+      "status": "fail",
+      "severity": "MEDIUM",
+      "evidence": {
+        "description": "Processo de deploy não formalizado via código. Não há registro de auditoria de publicações (quem, quando, o quê)."
+      },
+      "remediation": "Desenvolver scripts de deploy automatizados que gerem uma trilha de auditoria persistente ligada aos commits do repositório.",
+      "cia_impact": {
+        "confidentiality": "MEDIUM",
+        "integrity": "MEDIUM",
+        "availability": "LOW"
+      },
+      "technical_justification": "A falta de governança no ciclo de vida do software permite a introdução de vulnerabilidades e código malicioso sem detecção."
+    },
+    {
+      "id": "DA-001",
+      "domain": "unknown",
+      "title": "PII Protection",
+      "status": "partial",
+      "severity": "MEDIUM",
+      "evidence": "No classical PII fields (email, phone, CPF) in data models. However: (1) chat_service.py:_run_subprocess stores full stdout, stderr, and command in message metadata verbatim — agent outputs may contain sensitive data; (2) chat_store.py:87 derives session title from first 72 chars of user message, exposing prompt content in session listings.",
+      "remediation": "",
+      "cia_impact": {
+        "confidentiality": "LOW",
+        "integrity": "LOW",
+        "availability": "LOW"
+      },
+      "technical_justification": "Risco identificado durante a auditoria técnica que compromete a postura de segurança do domínio afetado."
+    },
+    {
+      "id": "DA-002",
+      "domain": "unknown",
+      "title": "Data Minimization",
+      "status": "fail",
+      "severity": "MEDIUM",
+      "evidence": "Full subprocess stdout, stderr, and command list persisted unconditionally in every chat message metadata (chat_service.py). No truncation, no filtering. ChatMessageCreateRequest.content has no max_length constraint (schemas.py:249). Activity event payloads accept arbitrary dicts without size constraints (event_writer.py:build_event).",
+      "remediation": "",
+      "cia_impact": {
+        "confidentiality": "LOW",
+        "integrity": "LOW",
+        "availability": "LOW"
+      },
+      "technical_justification": "Risco identificado durante a auditoria técnica que compromete a postura de segurança do domínio afetado."
+    },
+    {
+      "id": "DA-003",
+      "domain": "unknown",
+      "title": "Retention Policy",
+      "status": "fail",
+      "severity": "HIGH",
+      "evidence": "No retention policy defined or documented for any data category. Chat sessions (.roadmap/chat_sessions/*.json) accumulate indefinitely with no TTL or automatic cleanup. activity.jsonl is append-only with no rotation, archival, or maximum size constraint. No RETENTION_POLICY.md or equivalent documentation found in docs/ or .roadmap/.",
+      "remediation": "",
+      "cia_impact": {
+        "confidentiality": "HIGH",
+        "integrity": "MEDIUM",
+        "availability": "LOW"
+      },
+      "technical_justification": "Não conformidade com leis de proteção de dados e falta de políticas de retenção expõem dados pessoais permanentemente."
+    },
+    {
+      "id": "DA-004",
+      "domain": "unknown",
+      "title": "Anonymization / Pseudonymization",
+      "status": "partial",
+      "severity": "LOW",
+      "evidence": "Positive: actor fields in activity events use agent identifiers (claude-code, gemini-cli, codex) — implicit pseudonymization of operator identity. Gap: no anonymization of agent output content before persistence; no regex/pattern scrubbing for PII in stored stdout/stderr; no documented anonymization architecture.",
+      "remediation": "",
+      "cia_impact": {
+        "confidentiality": "LOW",
+        "integrity": "LOW",
+        "availability": "LOW"
+      },
+      "technical_justification": "Risco identificado durante a auditoria técnica que compromete a postura de segurança do domínio afetado."
+    },
+    {
+      "id": "DA-005",
+      "domain": "unknown",
+      "title": "LGPD/GDPR Compliance",
+      "status": "fail",
+      "severity": "HIGH",
+      "evidence": "No privacy notice, no consent mechanism, no data subject rights endpoints, no ROPA, no DPO designation. CORS misconfiguration (main.py:28-34): allow_origins='*' combined with allow_credentials=True contradicts CORS spec and signals absence of meaningful cross-origin access control. No encryption at rest for chat_sessions/ or activity.jsonl. System label as 'PoC' does not exempt from LGPD/GDPR if deployed with real operator or project data.",
+      "remediation": "",
+      "cia_impact": {
+        "confidentiality": "HIGH",
+        "integrity": "MEDIUM",
+        "availability": "LOW"
+      },
+      "technical_justification": "Não conformidade com leis de proteção de dados e falta de políticas de retenção expõem dados pessoais permanentemente."
+    },
+    {
+      "id": "FE-003",
+      "domain": "unknown",
+      "title": "Vulnerable JavaScript dependencies",
+      "status": "partial",
+      "severity": "MEDIUM",
+      "evidence": "The frontend uses a committed package-lock.json and no third-party CDN scripts were found in index.html. However, npm audit could not complete because the npm advisories bulk endpoint was unreachable from this environment, so current high/critical dependency advisories could not be verified during this run.",
+      "remediation": "",
+      "cia_impact": {
+        "confidentiality": "LOW",
+        "integrity": "LOW",
+        "availability": "LOW"
+      },
+      "technical_justification": "Risco identificado durante a auditoria técnica que compromete a postura de segurança do domínio afetado."
+    },
+    {
+      "id": "AI-001",
+      "domain": "ai_llm_security",
+      "title": "Prompt injection possível",
+      "status": "fail",
+      "severity": "CRITICAL",
+      "evidence": {
+        "files": [
+          "backend/app/core/chat_service.py"
+        ],
+        "lines": [
+          "lines.append(f\"USER: {user_message}\")"
+        ],
+        "description": "User input is directly concatenated into the system prompt without sanitization or secure delimiters."
+      },
+      "remediation": "Use secure delimiters (e.g., XML tags) and implement prompt injection detection filters.",
+      "cia_impact": {
+        "confidentiality": "HIGH",
+        "integrity": "HIGH",
+        "availability": "HIGH"
+      },
+      "technical_justification": "Controle total sobre o agente permite execução de comandos arbitrários, acesso a arquivos e manipulação do sistema."
+    },
+    {
+      "id": "AI-002",
+      "domain": "ai_llm_security",
+      "title": "LLM com acesso irrestrito a ferramentas",
+      "status": "fail",
+      "severity": "CRITICAL",
+      "evidence": {
+        "files": [
+          "backend/app/adapters/gemini_adapter.py",
+          "backend/app/core/chat_service.py"
+        ],
+        "commands_output": [
+          "--approval-mode yolo",
+          "--permission-mode bypassPermissions"
+        ],
+        "description": "Agent adapters are configured to bypass human-in-the-loop approvals for tool execution."
+      },
+      "remediation": "Disable YOLO/bypass modes and implement explicit human approval for destructive or high-risk tool calls.",
+      "cia_impact": {
+        "confidentiality": "HIGH",
+        "integrity": "HIGH",
+        "availability": "HIGH"
+      },
+      "technical_justification": "Controle total sobre o agente permite execução de comandos arbitrários, acesso a arquivos e manipulação do sistema."
+    },
+    {
+      "id": "AI-003",
+      "domain": "ai_llm_security",
+      "title": "Ausência de filtragem de input",
+      "status": "fail",
+      "severity": "HIGH",
+      "evidence": {
+        "files": [
+          "backend/app/core/chat_service.py"
+        ],
+        "description": "No content moderation or input length limits are enforced before sending data to LLM providers."
+      },
+      "remediation": "Implement input moderation, rate limiting, and maximum context window constraints.",
+      "cia_impact": {
+        "confidentiality": "LOW",
+        "integrity": "LOW",
+        "availability": "LOW"
+      },
+      "technical_justification": "Risco identificado durante a auditoria técnica que compromete a postura de segurança do domínio afetado."
+    },
+    {
+      "id": "AI-004",
+      "domain": "ai_llm_security",
+      "title": "Possibilidade de exfiltração de dados",
+      "status": "fail",
+      "severity": "HIGH",
+      "evidence": {
+        "files": [
+          "backend/app/api/routes_chat.py"
+        ],
+        "description": "LLM output is returned raw without sanitization, potentially allowing data exfiltration via malicious markdown/HTML."
+      },
+      "remediation": "Sanitize LLM output to strip external links or images and use output guardrails to prevent system prompt leakage.",
+      "cia_impact": {
+        "confidentiality": "LOW",
+        "integrity": "LOW",
+        "availability": "LOW"
+      },
+      "technical_justification": "Risco identificado durante a auditoria técnica que compromete a postura de segurança do domínio afetado."
+    },
+    {
+      "id": "AI-005",
+      "domain": "ai_llm_security",
+      "title": "Logs de decisão da IA inexistentes",
+      "status": "partial",
+      "severity": "MEDIUM",
+      "evidence": {
+        "files": [
+          "backend/app/core/chat_service.py"
+        ],
+        "description": "Only technical metadata is logged; structured reasoning and agent decision logs are missing."
+      },
+      "remediation": "Implement structured event sourcing (ESAA) for all agent tool choices and internal reasoning steps.",
+      "cia_impact": {
+        "confidentiality": "LOW",
+        "integrity": "LOW",
+        "availability": "LOW"
+      },
+      "technical_justification": "Risco identificado durante a auditoria técnica que compromete a postura de segurança do domínio afetado."
+    }
+  ]
+}

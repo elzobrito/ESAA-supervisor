@@ -24,23 +24,55 @@ from app.core.agent_router import AgentRouter
 from app.core.run_coordinator import RunCoordinator
 from app.core.run_engine import RunEngine
 from app.core.selector import TaskSelector
+from app.utils.json_artifacts import JsonArtifactLoadError, load_json_artifact
 
 router = APIRouter(prefix="/projects/{project_id}/state", tags=["state"])
 
 
-def _load_roadmap_variants(base_path: str) -> Dict[str, Dict[str, Any]]:
+def _discover_roadmap_variants(base_path: str) -> Dict[str, Dict[str, Any]]:
     variants: Dict[str, Dict[str, Any]] = {}
     for entry in sorted(os.scandir(base_path), key=lambda item: item.name.lower()):
         if not entry.is_file():
             continue
         if not entry.name.startswith("roadmap") or not entry.name.endswith(".json"):
             continue
-        with open(entry.path, "r", encoding="utf-8") as f:
-            payload = json.load(f)
-        if not isinstance(payload.get("tasks"), list):
+        try:
+            loaded = load_json_artifact(entry.path)
+        except JsonArtifactLoadError as exc:
+            variants[entry.name] = {
+                "roadmap_id": entry.name,
+                "payload": None,
+                "task_count": 0,
+                "load_status": "error",
+                "load_warning": str(exc),
+            }
             continue
-        variants[entry.name] = payload
+        payload = loaded.payload
+        if not isinstance(payload.get("tasks"), list):
+            variants[entry.name] = {
+                "roadmap_id": entry.name,
+                "payload": None,
+                "task_count": 0,
+                "load_status": "error",
+                "load_warning": f"{entry.name} does not contain a valid roadmap tasks list.",
+            }
+            continue
+        variants[entry.name] = {
+            "roadmap_id": entry.name,
+            "payload": payload,
+            "task_count": len(payload.get("tasks", [])),
+            "load_status": "warning" if loaded.is_fallback else "ok",
+            "load_warning": loaded.warning,
+        }
     return variants
+
+
+def _load_roadmap_variants(base_path: str) -> Dict[str, Dict[str, Any]]:
+    return {
+        roadmap_id: item["payload"]
+        for roadmap_id, item in _discover_roadmap_variants(base_path).items()
+        if item.get("payload") is not None
+    }
 
 
 def _roadmap_label(roadmap_id: str) -> str:
@@ -119,7 +151,7 @@ async def get_project_state(project_id: str, roadmap: Optional[str] = Query(defa
     store.load_project(project_id, store.active_project.base_path)
     raw = store.get_state()
 
-    roadmap_variants = _load_roadmap_variants(store.active_project.base_path)
+    roadmap_variants = _discover_roadmap_variants(store.active_project.base_path)
     if not roadmap_variants:
         raise HTTPException(status_code=404, detail="No roadmap files found for project.")
 
@@ -127,6 +159,8 @@ async def get_project_state(project_id: str, roadmap: Optional[str] = Query(defa
     aggregate_mode = selected_roadmap_id == "aggregate"
     if not aggregate_mode and selected_roadmap_id not in roadmap_variants:
         raise HTTPException(status_code=404, detail="Requested roadmap not found.")
+    if not aggregate_mode and roadmap_variants[selected_roadmap_id].get("payload") is None:
+        raise HTTPException(status_code=409, detail=roadmap_variants[selected_roadmap_id].get("load_warning") or "Requested roadmap could not be loaded.")
 
     issues_data = raw.issues
     lessons_data = raw.lessons
@@ -149,9 +183,11 @@ async def get_project_state(project_id: str, roadmap: Optional[str] = Query(defa
         RoadmapOptionResponse(
             roadmap_id=roadmap_id,
             label=_roadmap_label(roadmap_id),
-            task_count=len(candidate.get("tasks", [])),
+            task_count=candidate.get("task_count", 0),
             is_default=roadmap_id == "roadmap.json",
-            is_consistent=store._is_consistent(candidate),
+            is_consistent=store._is_consistent(candidate["payload"]) if candidate.get("payload") is not None else False,
+            load_status=candidate.get("load_status", "ok"),
+            load_warning=candidate.get("load_warning"),
         )
         for roadmap_id, candidate in roadmap_variants.items()
     ]
@@ -190,16 +226,26 @@ async def get_project_state(project_id: str, roadmap: Optional[str] = Query(defa
     eligible_ids: List[str] = []
     if aggregate_mode:
         for roadmap_id, candidate in roadmap_variants.items():
-            rows, eligible = _build_task_rows(project_id, roadmap_id, _roadmap_label(roadmap_id), candidate, open_issues)
+            if candidate.get("payload") is None:
+                continue
+            rows, eligible = _build_task_rows(project_id, roadmap_id, _roadmap_label(roadmap_id), candidate["payload"], open_issues)
             tasks.extend(rows)
             eligible_ids.extend(eligible)
-        last_event_seq = max(candidate.get("meta", {}).get("run", {}).get("last_event_seq", 0) for candidate in roadmap_variants.values())
-        is_consistent = all(store._is_consistent(candidate) for candidate in roadmap_variants.values())
+        valid_candidates = [candidate["payload"] for candidate in roadmap_variants.values() if candidate.get("payload") is not None]
+        last_event_seq = max((candidate.get("meta", {}).get("run", {}).get("last_event_seq", 0) for candidate in valid_candidates), default=0)
+        is_consistent = all(
+            item.get("payload") is not None and store._is_consistent(item["payload"])
+            for item in roadmap_variants.values()
+        )
+        selected_load_status = "warning" if any(item.get("load_status") == "warning" for item in roadmap_variants.values()) else "ok"
+        selected_load_warning = None
     else:
-        selected = roadmap_variants[selected_roadmap_id]
+        selected = roadmap_variants[selected_roadmap_id]["payload"]
         tasks, eligible_ids = _build_task_rows(project_id, selected_roadmap_id, _roadmap_label(selected_roadmap_id), selected, open_issues)
         last_event_seq = selected.get("meta", {}).get("run", {}).get("last_event_seq", 0)
         is_consistent = store._is_consistent(selected)
+        selected_load_status = roadmap_variants[selected_roadmap_id].get("load_status", "ok")
+        selected_load_warning = roadmap_variants[selected_roadmap_id].get("load_warning")
 
     open_issue_responses = [
         IssueResponse(
@@ -256,6 +302,8 @@ async def get_project_state(project_id: str, roadmap: Optional[str] = Query(defa
         ),
         last_event_seq=last_event_seq,
         is_consistent=is_consistent,
+        selected_roadmap_load_status=selected_load_status,
+        selected_roadmap_warning=selected_load_warning,
         roadmap_mode="aggregate" if aggregate_mode else "single",
         selected_roadmap_id=selected_roadmap_id,
         available_roadmaps=available_roadmaps,

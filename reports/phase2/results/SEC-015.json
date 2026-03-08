@@ -1,68 +1,120 @@
 {
   "task_id": "SEC-015",
-  "audit_date": "2026-03-07T14:15:00Z",
+  "audit_date": "2026-03-07T19:15:00Z",
+  "auditor": "claude-code",
   "domain": "input_validation",
+  "playbook_version": "IV-001 a IV-007",
   "summary": {
     "total_checks": 7,
     "pass": 2,
-    "fail": 1,
+    "fail": 2,
     "partial": 1,
-    "na": 3
+    "na": 2
   },
   "results": [
     {
       "check_id": "IV-001",
-      "name": "SQL injection",
+      "name": "SQL Injection",
       "status": "NA",
-      "evidence": "No SQL database or ORM used. Persistence is JSON-based.",
-      "severity": "CRITICAL"
+      "severity": "CRITICAL",
+      "evidence": "No SQL database, ORM or SQL driver used. All persistence is JSON/JSONL file-based in .roadmap/ directory.",
+      "files_audited": ["backend/app/", "src/esaa/"]
     },
     {
       "check_id": "IV-002",
-      "name": "Command injection",
+      "name": "Command Injection",
       "status": "PASS",
-      "evidence": "subprocess.run used with list arguments. User input via stdin.",
-      "severity": "CRITICAL"
+      "severity": "LOW",
+      "evidence": "subprocess.run() uses list arguments in both base.py:70 and chat_service.py:137 — no shell=True. User content delivered via stdin, not CLI args. Residual risk: ESAA_*_COMMAND env vars and .bat wrapping via cmd /c on Windows.",
+      "files_audited": [
+        "backend/app/adapters/base.py",
+        "backend/app/core/chat_service.py",
+        "backend/app/adapters/claude_adapter.py",
+        "backend/app/adapters/gemini_adapter.py"
+      ]
     },
     {
       "check_id": "IV-003",
-      "name": "Template injection",
-      "status": "NA",
-      "evidence": "No template engines processing user input found.",
-      "severity": "HIGH"
+      "name": "Template Injection / Prompt Injection",
+      "status": "FAIL",
+      "severity": "MEDIUM",
+      "evidence": "chat_service.py:_build_prompt() interpolates user_message directly: f'USER: {user_message}'. Agents run with bypassPermissions (claude) and yolo (gemini), meaning prompt injection can trigger unrestricted tool calls (file writes, shell commands) without user confirmation.",
+      "files_audited": [
+        "backend/app/core/chat_service.py",
+        "backend/app/adapters/claude_adapter.py",
+        "backend/app/adapters/gemini_adapter.py"
+      ],
+      "recommendation": "Delimit user content with structural markers (XML tags). Evaluate if bypassPermissions/yolo is needed for interactive chat sessions."
     },
     {
       "check_id": "IV-004",
       "name": "SSRF",
       "status": "NA",
-      "evidence": "No HTTP client used in backend. No outbound requests.",
-      "severity": "HIGH"
+      "severity": "LOW",
+      "evidence": "No HTTP client in backend. No user-supplied URLs processed. Browse and artifact endpoints validate paths against BROWSE_ROOT and project_root. Indirect SSRF risk via prompt injection into LLM agents that have HTTP tool access.",
+      "files_audited": [
+        "backend/app/api/routes_projects.py",
+        "backend/app/api/routes_state.py"
+      ]
     },
     {
       "check_id": "IV-005",
-      "name": "Cross-site scripting (XSS)",
+      "name": "Cross-Site Scripting (XSS)",
       "status": "PASS",
-      "evidence": "React auto-escaping in place. No dangerous DOM patterns found.",
-      "severity": "HIGH"
+      "severity": "LOW",
+      "evidence": "React JSX auto-escaping in all frontend components. No dangerouslySetInnerHTML, innerHTML, eval() or document.write found in frontend/src/**/*.tsx. ReactMarkdown used without rehype-raw plugin. Note: CORS configured with allow_origins=['*'] and allow_credentials=True — bad practice rejected by browsers per spec.",
+      "files_audited": [
+        "frontend/src/**/*.tsx",
+        "backend/app/main.py"
+      ]
     },
     {
       "check_id": "IV-006",
-      "name": "Inputs não validados",
+      "name": "Inputs Não Validados",
       "status": "PARTIAL",
-      "evidence": "Pydantic schemas present but lack field constraints (length, range).",
-      "severity": "MEDIUM"
+      "severity": "MEDIUM",
+      "evidence": "Pydantic schemas present but missing: (1) max_length on chat message content (routes_chat.py:124), (2) max_length on resolution_summary (routes_issues.py:40), (3) UUID format validation on run_id path param (routes_logs.py:9), (4) agent_id validated only at use-time — invalid sessions created freely.",
+      "files_audited": [
+        "backend/app/api/routes_chat.py",
+        "backend/app/api/routes_issues.py",
+        "backend/app/api/routes_logs.py",
+        "backend/app/api/routes_runs.py"
+      ],
+      "recommendation": "Add Field(..., max_length=N) to Pydantic models for free-text inputs. Validate agent_id on session creation."
     },
     {
       "check_id": "IV-007",
-      "name": "Sanitização ausente",
+      "name": "Sanitização Ausente",
       "status": "FAIL",
-      "evidence": "User data stored raw in JSON files without contextual sanitization.",
-      "severity": "MEDIUM"
+      "severity": "HIGH",
+      "evidence": "PATH TRAVERSAL in chat_store.py:load_session() and delete_session(): session_id from URL path is used directly as path = sessions_dir / f'{session_id}.json' without validation. Payload '../../roadmap' resolves to .roadmap/roadmap.json — readable AND deletable via GET/DELETE /chat/sessions/{session_id}. Reachable files: roadmap.json, roadmap.security.json, issues.json, lessons.json. Secondary: AgentResult.metadata exposes full command list including absolute installation paths via GET /runs/{run_id}.",
+      "files_audited": [
+        "backend/app/core/chat_store.py",
+        "backend/app/api/routes_chat.py",
+        "backend/app/models/agent_result.py"
+      ],
+      "recommendation": "Validate session_id matches UUID format before constructing file path. Optionally resolve path and assert it stays within sessions_dir. Strip or omit command array from public API responses."
+    }
+  ],
+  "open_issues": [
+    {
+      "severity": "HIGH",
+      "vector": "IV-007",
+      "location": "backend/app/core/chat_store.py:49,60",
+      "title": "Path traversal via session_id allows read/delete of .roadmap/*.json files"
+    },
+    {
+      "severity": "MEDIUM",
+      "vector": "IV-003",
+      "location": "backend/app/core/chat_service.py:66",
+      "title": "Prompt injection via unescaped user_message with agents in bypassPermissions/yolo mode"
     }
   ],
   "recommendations": [
-    "Add length constraints to Pydantic models in app/api/schemas.py.",
-    "Implement basic sanitization for free text before persistence.",
-    "Verify security posture if a SQL database is introduced in the future."
+    "PRIORITY HIGH: Validate session_id matches UUID pattern before file path construction in chat_store.py.",
+    "PRIORITY MEDIUM: Delimit user content with structural XML markers in _build_prompt(). Review bypassPermissions/yolo for interactive chat.",
+    "PRIORITY MEDIUM: Add max_length constraints to Pydantic models for chat content and resolution_summary.",
+    "PRIORITY LOW: Restrict CORS allow_origins to specific frontend origin in production.",
+    "PRIORITY LOW: Strip command/path metadata from public API run responses."
   ]
 }

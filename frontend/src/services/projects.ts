@@ -105,6 +105,8 @@ export type StateResponse = {
     task_count: number;
     is_default: boolean;
     is_consistent: boolean;
+    load_status: 'ok' | 'warning' | 'error';
+    load_warning?: string | null;
   }>;
   available_agents: Array<{
     agent_id: string;
@@ -147,6 +149,8 @@ export type StateResponse = {
   eligible_task_ids: string[];
   last_event_seq: number;
   is_consistent: boolean;
+  selected_roadmap_load_status: 'ok' | 'warning' | 'error';
+  selected_roadmap_warning?: string | null;
 };
 
 export type TaskMutationResponse = {
@@ -173,6 +177,8 @@ export type IssueMutationResponse = {
 
 export type IntegrityRepairResponse = {
   repaired_roadmaps: string[];
+  normalized_files: string[];
+  unrecoverable_files: string[];
   artifact_issues_after: number;
   is_consistent: boolean;
   message: string;

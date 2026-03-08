@@ -1,0 +1,587 @@
+{
+  "meta": {
+    "version": "1.0.0",
+    "project": "ESAA Security Audit",
+    "phase": "Phase 3 - Risk Matrix",
+    "total_vulnerabilities": 72,
+    "generated_at": "2026-03-08T18:15:56.961716Z"
+  },
+  "risk_matrix": [
+    {
+      "id": "SC-004",
+      "vulnerability": "CORS Permissivo",
+      "category": "secrets_config",
+      "severity": "CRITICAL",
+      "impact": "C: HIGH, I: HIGH, A: LOW",
+      "recommendation": "Configurar uma lista restrita de domínios permitidos no CORSMiddleware."
+    },
+    {
+      "id": "SC-008",
+      "vulnerability": "Variáveis Sensíveis em Logs",
+      "category": "secrets_config",
+      "severity": "CRITICAL",
+      "impact": "C: HIGH, I: LOW, A: LOW",
+      "recommendation": "Implementar sanitização de logs e autenticação para o endpoint de streaming."
+    },
+    {
+      "id": "AU-001",
+      "vulnerability": "Senhas armazenadas em texto plano",
+      "category": "authentication",
+      "severity": "CRITICAL",
+      "impact": "C: HIGH, I: HIGH, A: MEDIUM",
+      "recommendation": "Implementar armazenamento seguro com bcrypt/argon2."
+    },
+    {
+      "id": "AZ-001",
+      "vulnerability": "Controle de acesso ausente",
+      "category": "authorization",
+      "severity": "CRITICAL",
+      "impact": "C: HIGH, I: HIGH, A: MEDIUM",
+      "recommendation": "Implementar middleware de autenticação (JWT/Session) em todas as rotas da API."
+    },
+    {
+      "id": "AZ-002",
+      "vulnerability": "IDOR (Insecure Direct Object Reference)",
+      "category": "authorization",
+      "severity": "CRITICAL",
+      "impact": "C: HIGH, I: HIGH, A: MEDIUM",
+      "recommendation": "Restringir o escopo de navegação a um diretório de dados específico (sandboxing)."
+    },
+    {
+      "id": "AZ-003",
+      "vulnerability": "Verificação de permissão apenas no frontend",
+      "category": "authorization",
+      "severity": "CRITICAL",
+      "impact": "C: HIGH, I: HIGH, A: MEDIUM",
+      "recommendation": "Implementar lógica de autorização no backend e refletir roles no frontend para controle de UI."
+    },
+    {
+      "id": "LM-001",
+      "vulnerability": "Logs contendo dados sensíveis",
+      "category": "logging_monitoring",
+      "severity": "CRITICAL",
+      "impact": "C: LOW, I: LOW, A: LOW",
+      "recommendation": "Implement a regex-based redaction filter in the LogStreamer class to mask sensitive patterns before streaming and storage."
+    },
+    {
+      "id": "AI-001",
+      "vulnerability": "Prompt injection possível",
+      "category": "ai_llm_security",
+      "severity": "CRITICAL",
+      "impact": "C: HIGH, I: HIGH, A: HIGH",
+      "recommendation": "Use secure delimiters (e.g., XML tags) and implement prompt injection detection filters."
+    },
+    {
+      "id": "AI-002",
+      "vulnerability": "LLM com acesso irrestrito a ferramentas",
+      "category": "ai_llm_security",
+      "severity": "CRITICAL",
+      "impact": "C: HIGH, I: HIGH, A: HIGH",
+      "recommendation": "Disable YOLO/bypass modes and implement explicit human approval for destructive or high-risk tool calls."
+    },
+    {
+      "id": "AU-002",
+      "vulnerability": "Hash de senha inseguro",
+      "category": "authentication",
+      "severity": "HIGH",
+      "impact": "C: HIGH, I: HIGH, A: MEDIUM",
+      "recommendation": "Adicionar biblioteca passlib ou similar para hashing seguro."
+    },
+    {
+      "id": "AU-004",
+      "vulnerability": "Reset de senha inseguro",
+      "category": "authentication",
+      "severity": "HIGH",
+      "impact": "C: HIGH, I: HIGH, A: MEDIUM",
+      "recommendation": "Implementar fluxo de reset com tokens seguros e expiracao."
+    },
+    {
+      "id": "AU-005",
+      "vulnerability": "Sessoes sem expiração",
+      "category": "authentication",
+      "severity": "HIGH",
+      "impact": "C: HIGH, I: HIGH, A: MEDIUM",
+      "recommendation": "Implementar sessoes com TTL e cookies HttpOnly/Secure."
+    },
+    {
+      "id": "AU-006",
+      "vulnerability": "Ausência de proteção contra brute force",
+      "category": "authentication",
+      "severity": "HIGH",
+      "impact": "C: HIGH, I: HIGH, A: MEDIUM",
+      "recommendation": "Adicionar middleware de rate limiting (ex: slowapi)."
+    },
+    {
+      "id": "AU-007",
+      "vulnerability": "Tokens permanentes",
+      "category": "authentication",
+      "severity": "HIGH",
+      "impact": "C: HIGH, I: HIGH, A: MEDIUM",
+      "recommendation": "Utilizar JWT com tempo de expiracao curto e refresh tokens."
+    },
+    {
+      "id": "AU-008",
+      "vulnerability": "Session fixation",
+      "category": "authentication",
+      "severity": "HIGH",
+      "impact": "C: HIGH, I: HIGH, A: MEDIUM",
+      "recommendation": "Regenerar ID de sessao apos login."
+    },
+    {
+      "id": "AZ-004",
+      "vulnerability": "Admin routes expostas",
+      "category": "authorization",
+      "severity": "HIGH",
+      "impact": "C: HIGH, I: HIGH, A: MEDIUM",
+      "recommendation": "Proteger rotas operacionais com controle de acesso baseado em roles (RBAC)."
+    },
+    {
+      "id": "AP-001",
+      "vulnerability": "Endpoints sem rate limit",
+      "category": "api_security",
+      "severity": "HIGH",
+      "impact": "C: LOW, I: LOW, A: HIGH",
+      "recommendation": "Implementar middleware de rate limiting no FastAPI (ex: slowapi) e aplicar limites especificos por endpoint e IP."
+    },
+    {
+      "id": "IV-007",
+      "vulnerability": "Sanitização Ausente",
+      "category": "input_validation",
+      "severity": "HIGH",
+      "impact": "C: HIGH, I: HIGH, A: MEDIUM",
+      "recommendation": "Validate session_id matches UUID format before constructing file path. Optionally resolve path and assert it stays within sessions_dir. Strip or omit command array from public API responses."
+    },
+    {
+      "id": "FU-001",
+      "vulnerability": "Uploads sem validação de tipo",
+      "category": "file_upload",
+      "severity": "HIGH",
+      "impact": "C: LOW, I: LOW, A: LOW",
+      "recommendation": ""
+    },
+    {
+      "id": "FU-005",
+      "vulnerability": "Possibilidade de upload executável",
+      "category": "file_upload",
+      "severity": "HIGH",
+      "impact": "C: LOW, I: LOW, A: LOW",
+      "recommendation": ""
+    },
+    {
+      "id": "SS-001",
+      "vulnerability": "Cookies sem httpOnly",
+      "category": "session_security",
+      "severity": "HIGH",
+      "impact": "C: LOW, I: LOW, A: LOW",
+      "recommendation": "Implementar cookies HttpOnly para sessoes de autenticacao e chat."
+    },
+    {
+      "id": "SS-002",
+      "vulnerability": "Cookies sem Secure flag",
+      "category": "session_security",
+      "severity": "HIGH",
+      "impact": "C: LOW, I: LOW, A: LOW",
+      "recommendation": "Configurar Secure=True em todos os cookies sensiveis."
+    },
+    {
+      "id": "SS-005",
+      "vulnerability": "Sessões sem expiração",
+      "category": "session_security",
+      "severity": "HIGH",
+      "impact": "C: LOW, I: LOW, A: LOW",
+      "recommendation": "Implementar expiraÃ§Ã£o (TTL) e rotina de limpeza de sessoes."
+    },
+    {
+      "id": "CR-001",
+      "vulnerability": "HTTPS obrigatório",
+      "category": "cryptography",
+      "severity": "HIGH",
+      "impact": "C: HIGH, I: MEDIUM, A: LOW",
+      "recommendation": ""
+    },
+    {
+      "id": "SH-001",
+      "vulnerability": "Content-Security-Policy (CSP)",
+      "category": "security_headers",
+      "severity": "HIGH",
+      "impact": "C: MEDIUM, I: MEDIUM, A: LOW",
+      "recommendation": ""
+    },
+    {
+      "id": "IF-001",
+      "vulnerability": "HTTPS / TLS termination",
+      "category": "infrastructure",
+      "severity": "HIGH",
+      "impact": "C: MEDIUM, I: MEDIUM, A: MEDIUM",
+      "recommendation": ""
+    },
+    {
+      "id": "IF-005",
+      "vulnerability": "Backups",
+      "category": "infrastructure",
+      "severity": "HIGH",
+      "impact": "C: LOW, I: HIGH, A: HIGH",
+      "recommendation": ""
+    },
+    {
+      "id": "DO-003",
+      "vulnerability": "Secrets scanning ausente",
+      "category": "devsecops",
+      "severity": "HIGH",
+      "impact": "C: MEDIUM, I: MEDIUM, A: LOW",
+      "recommendation": "Integrar gitleaks ou trufflehog na CI/CD. Adicionar hook de pre-commit para validação local de segredos."
+    },
+    {
+      "id": "DA-003",
+      "vulnerability": "Retention Policy",
+      "category": "unknown",
+      "severity": "HIGH",
+      "impact": "C: HIGH, I: MEDIUM, A: LOW",
+      "recommendation": ""
+    },
+    {
+      "id": "DA-005",
+      "vulnerability": "LGPD/GDPR Compliance",
+      "category": "unknown",
+      "severity": "HIGH",
+      "impact": "C: HIGH, I: MEDIUM, A: LOW",
+      "recommendation": ""
+    },
+    {
+      "id": "AI-003",
+      "vulnerability": "Ausência de filtragem de input",
+      "category": "ai_llm_security",
+      "severity": "HIGH",
+      "impact": "C: LOW, I: LOW, A: LOW",
+      "recommendation": "Implement input moderation, rate limiting, and maximum context window constraints."
+    },
+    {
+      "id": "AI-004",
+      "vulnerability": "Possibilidade de exfiltração de dados",
+      "category": "ai_llm_security",
+      "severity": "HIGH",
+      "impact": "C: LOW, I: LOW, A: LOW",
+      "recommendation": "Sanitize LLM output to strip external links or images and use output guardrails to prevent system prompt leakage."
+    },
+    {
+      "id": "SC-003",
+      "vulnerability": "Arquivos Sensíveis Expostos",
+      "category": "secrets_config",
+      "severity": "MEDIUM",
+      "impact": "C: LOW, I: LOW, A: LOW",
+      "recommendation": "Adicionar .gitignore na raiz do projeto com exclusões adequadas."
+    },
+    {
+      "id": "SC-005",
+      "vulnerability": "Modo Debug Enabled",
+      "category": "secrets_config",
+      "severity": "MEDIUM",
+      "impact": "C: LOW, I: LOW, A: LOW",
+      "recommendation": "Utilizar log level info em ambientes de produção."
+    },
+    {
+      "id": "DS-001",
+      "vulnerability": "Dependências com vulnerabilidades conhecidas",
+      "category": "dependencies_supply_chain",
+      "severity": "MEDIUM",
+      "impact": "C: LOW, I: LOW, A: LOW",
+      "recommendation": "Atualizar vite para >= 7.3.1 no frontend."
+    },
+    {
+      "id": "AU-003",
+      "vulnerability": "Ausencia de MFA",
+      "category": "authentication",
+      "severity": "MEDIUM",
+      "impact": "C: MEDIUM, I: MEDIUM, A: LOW",
+      "recommendation": "Integrar TOTP/2FA."
+    },
+    {
+      "id": "AZ-005",
+      "vulnerability": "Escopo de permissões mal definido",
+      "category": "authorization",
+      "severity": "MEDIUM",
+      "impact": "C: HIGH, I: HIGH, A: MEDIUM",
+      "recommendation": "Definir matriz de permissões (ex: Admin, Operator, Auditor) e implementar enforcement."
+    },
+    {
+      "id": "AP-002",
+      "vulnerability": "Endpoints retornando dados excessivos",
+      "category": "api_security",
+      "severity": "MEDIUM",
+      "impact": "C: MEDIUM, I: MEDIUM, A: LOW",
+      "recommendation": "Utilizar DTOs mais enxutos, filtrar campos sensiveis e implementar carregamento sob demanda para listas grandes."
+    },
+    {
+      "id": "AP-003",
+      "vulnerability": "Enumeração de usuários",
+      "category": "api_security",
+      "severity": "MEDIUM",
+      "impact": "C: MEDIUM, I: MEDIUM, A: LOW",
+      "recommendation": "Restringir o BROWSE_ROOT a um diretorio de dados isolado e validar rigorosamente os caminhos acessados."
+    },
+    {
+      "id": "AP-006",
+      "vulnerability": "Ausência de paginação",
+      "category": "api_security",
+      "severity": "MEDIUM",
+      "impact": "C: MEDIUM, I: MEDIUM, A: LOW",
+      "recommendation": "Implementar paginacao obrigatoria em todos os endpoints que retornam listas, com limites default e maximos."
+    },
+    {
+      "id": "AP-007",
+      "vulnerability": "Replay attacks possíveis",
+      "category": "api_security",
+      "severity": "MEDIUM",
+      "impact": "C: MEDIUM, I: MEDIUM, A: LOW",
+      "recommendation": "Implementar suporte a headers de idempotencia (ex: X-Idempotency-Key) para todas as operacoes de escrita (POST/PUT/DELETE)."
+    },
+    {
+      "id": "IV-003",
+      "vulnerability": "Template Injection / Prompt Injection",
+      "category": "input_validation",
+      "severity": "MEDIUM",
+      "impact": "C: LOW, I: LOW, A: LOW",
+      "recommendation": "Delimit user content with structural markers (XML tags). Evaluate if bypassPermissions/yolo is needed for interactive chat sessions."
+    },
+    {
+      "id": "IV-006",
+      "vulnerability": "Inputs Não Validados",
+      "category": "input_validation",
+      "severity": "MEDIUM",
+      "impact": "C: LOW, I: LOW, A: LOW",
+      "recommendation": "Add Field(..., max_length=N) to Pydantic models for free-text inputs. Validate agent_id on session creation."
+    },
+    {
+      "id": "FU-002",
+      "vulnerability": "Uploads sem limite de tamanho",
+      "category": "file_upload",
+      "severity": "MEDIUM",
+      "impact": "C: LOW, I: LOW, A: LOW",
+      "recommendation": ""
+    },
+    {
+      "id": "FU-004",
+      "vulnerability": "Ausência de antivírus",
+      "category": "file_upload",
+      "severity": "MEDIUM",
+      "impact": "C: LOW, I: LOW, A: LOW",
+      "recommendation": ""
+    },
+    {
+      "id": "SS-003",
+      "vulnerability": "SameSite ausente",
+      "category": "session_security",
+      "severity": "MEDIUM",
+      "impact": "C: LOW, I: LOW, A: LOW",
+      "recommendation": "Configurar SameSite=Strict em cookies de sessao."
+    },
+    {
+      "id": "SS-006",
+      "vulnerability": "Tokens reutilizáveis",
+      "category": "session_security",
+      "severity": "MEDIUM",
+      "impact": "C: LOW, I: LOW, A: LOW",
+      "recommendation": "Implementar rotaca§Ã£o de IDs de sessao e invalidacao manual."
+    },
+    {
+      "id": "CR-003",
+      "vulnerability": "Encryption at-rest",
+      "category": "cryptography",
+      "severity": "MEDIUM",
+      "impact": "C: HIGH, I: MEDIUM, A: LOW",
+      "recommendation": ""
+    },
+    {
+      "id": "CR-004",
+      "vulnerability": "Chaves expostas",
+      "category": "cryptography",
+      "severity": "MEDIUM",
+      "impact": "C: HIGH, I: MEDIUM, A: LOW",
+      "recommendation": ""
+    },
+    {
+      "id": "SH-002",
+      "vulnerability": "Strict-Transport-Security (HSTS)",
+      "category": "security_headers",
+      "severity": "MEDIUM",
+      "impact": "C: MEDIUM, I: MEDIUM, A: LOW",
+      "recommendation": ""
+    },
+    {
+      "id": "SH-003",
+      "vulnerability": "X-Frame-Options",
+      "category": "security_headers",
+      "severity": "MEDIUM",
+      "impact": "C: MEDIUM, I: MEDIUM, A: LOW",
+      "recommendation": ""
+    },
+    {
+      "id": "SH-004",
+      "vulnerability": "X-Content-Type-Options",
+      "category": "security_headers",
+      "severity": "MEDIUM",
+      "impact": "C: MEDIUM, I: MEDIUM, A: LOW",
+      "recommendation": ""
+    },
+    {
+      "id": "LM-004",
+      "vulnerability": "Ausência de alertas de segurança",
+      "category": "logging_monitoring",
+      "severity": "MEDIUM",
+      "impact": "C: LOW, I: LOW, A: LOW",
+      "recommendation": "Integrate a central alerting service to notify operators of integrity failures or system crashes."
+    },
+    {
+      "id": "IF-002",
+      "vulnerability": "Firewall / regras de rede",
+      "category": "infrastructure",
+      "severity": "MEDIUM",
+      "impact": "C: MEDIUM, I: MEDIUM, A: MEDIUM",
+      "recommendation": ""
+    },
+    {
+      "id": "IF-003",
+      "vulnerability": "WAF (Web Application Firewall)",
+      "category": "infrastructure",
+      "severity": "MEDIUM",
+      "impact": "C: MEDIUM, I: MEDIUM, A: MEDIUM",
+      "recommendation": ""
+    },
+    {
+      "id": "IF-004",
+      "vulnerability": "Segmentação de rede",
+      "category": "infrastructure",
+      "severity": "MEDIUM",
+      "impact": "C: MEDIUM, I: MEDIUM, A: MEDIUM",
+      "recommendation": ""
+    },
+    {
+      "id": "IF-006",
+      "vulnerability": "Proteção DDoS",
+      "category": "infrastructure",
+      "severity": "MEDIUM",
+      "impact": "C: MEDIUM, I: MEDIUM, A: MEDIUM",
+      "recommendation": ""
+    },
+    {
+      "id": "DO-001",
+      "vulnerability": "Ausência de code review",
+      "category": "devsecops",
+      "severity": "MEDIUM",
+      "impact": "C: MEDIUM, I: MEDIUM, A: LOW",
+      "recommendation": "Configurar branch protection no GitHub/GitLab. Exigir reviews obrigatórios para áreas críticas via CODEOWNERS."
+    },
+    {
+      "id": "DO-002",
+      "vulnerability": "Pipeline sem análise de segurança",
+      "category": "devsecops",
+      "severity": "MEDIUM",
+      "impact": "C: MEDIUM, I: MEDIUM, A: LOW",
+      "recommendation": "Implementar esteira de CI/CD (ex: GitHub Actions) com validações de segurança em cada Pull Request."
+    },
+    {
+      "id": "DO-004",
+      "vulnerability": "SAST não implementado",
+      "category": "devsecops",
+      "severity": "MEDIUM",
+      "impact": "C: MEDIUM, I: MEDIUM, A: LOW",
+      "recommendation": "Adicionar Semgrep e linters de segurança (ex: bandit para Python, eslint-plugin-security para JS) ao pipeline de desenvolvimento."
+    },
+    {
+      "id": "DO-006",
+      "vulnerability": "Deploy sem auditoria",
+      "category": "devsecops",
+      "severity": "MEDIUM",
+      "impact": "C: MEDIUM, I: MEDIUM, A: LOW",
+      "recommendation": "Desenvolver scripts de deploy automatizados que gerem uma trilha de auditoria persistente ligada aos commits do repositório."
+    },
+    {
+      "id": "DA-001",
+      "vulnerability": "PII Protection",
+      "category": "unknown",
+      "severity": "MEDIUM",
+      "impact": "C: LOW, I: LOW, A: LOW",
+      "recommendation": ""
+    },
+    {
+      "id": "DA-002",
+      "vulnerability": "Data Minimization",
+      "category": "unknown",
+      "severity": "MEDIUM",
+      "impact": "C: LOW, I: LOW, A: LOW",
+      "recommendation": ""
+    },
+    {
+      "id": "FE-003",
+      "vulnerability": "Vulnerable JavaScript dependencies",
+      "category": "unknown",
+      "severity": "MEDIUM",
+      "impact": "C: LOW, I: LOW, A: LOW",
+      "recommendation": ""
+    },
+    {
+      "id": "AI-005",
+      "vulnerability": "Logs de decisão da IA inexistentes",
+      "category": "ai_llm_security",
+      "severity": "MEDIUM",
+      "impact": "C: LOW, I: LOW, A: LOW",
+      "recommendation": "Implement structured event sourcing (ESAA) for all agent tool choices and internal reasoning steps."
+    },
+    {
+      "id": "SC-007",
+      "vulnerability": "Configs de Exemplo",
+      "category": "secrets_config",
+      "severity": "LOW",
+      "impact": "C: LOW, I: LOW, A: LOW",
+      "recommendation": "Garantir que .env.example contenha apenas placeholders."
+    },
+    {
+      "id": "AZ-006",
+      "vulnerability": "Ações sensíveis sem confirmação",
+      "category": "authorization",
+      "severity": "LOW",
+      "impact": "C: HIGH, I: HIGH, A: MEDIUM",
+      "recommendation": "Adicionar steps de confirmação no frontend para todas as ações mutativas críticas."
+    },
+    {
+      "id": "CR-005",
+      "vulnerability": "Rotação de chaves",
+      "category": "cryptography",
+      "severity": "LOW",
+      "impact": "C: HIGH, I: MEDIUM, A: LOW",
+      "recommendation": ""
+    },
+    {
+      "id": "SH-005",
+      "vulnerability": "Referrer-Policy",
+      "category": "security_headers",
+      "severity": "LOW",
+      "impact": "C: MEDIUM, I: MEDIUM, A: LOW",
+      "recommendation": ""
+    },
+    {
+      "id": "LM-005",
+      "vulnerability": "Ausência de correlação de requisições",
+      "category": "logging_monitoring",
+      "severity": "LOW",
+      "impact": "C: LOW, I: LOW, A: LOW",
+      "recommendation": "Add correlation ID middleware to FastAPI and propagate the ID to all downstream logging calls."
+    },
+    {
+      "id": "DO-005",
+      "vulnerability": "DAST não implementado",
+      "category": "devsecops",
+      "severity": "LOW",
+      "impact": "C: MEDIUM, I: MEDIUM, A: LOW",
+      "recommendation": "Implementar scan dinâmico (ZAP) em ambiente de staging antes de qualquer deploy em produção."
+    },
+    {
+      "id": "DA-004",
+      "vulnerability": "Anonymization / Pseudonymization",
+      "category": "unknown",
+      "severity": "LOW",
+      "impact": "C: LOW, I: LOW, A: LOW",
+      "recommendation": ""
+    }
+  ]
+}

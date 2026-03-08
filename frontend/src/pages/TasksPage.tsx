@@ -39,6 +39,10 @@ export function TasksPage() {
   const selectedTask = filteredTasks.find((task) => task.task_ref === selectedTaskId)
     ?? state?.tasks.find((task) => task.task_ref === selectedTaskId)
     ?? null;
+  const roadmapConsistencyById = useMemo(
+    () => Object.fromEntries((state?.available_roadmaps ?? []).map((item) => [item.roadmap_id, item.is_consistent])),
+    [state?.available_roadmaps],
+  );
 
   const handleRunTask = async (
     task: TaskSummary,
@@ -56,8 +60,10 @@ export function TasksPage() {
       setSelectedRunId(run.run_id);
       setRunLogsById((current) => ({ ...current, [run.run_id]: run.logs ?? [] }));
       navigate(`/projects/${state.project.id}/runs`);
-    } catch {
+    } catch (error) {
+      await reload();
       setRunningTaskRef(null);
+      throw error;
     }
   };
 
@@ -80,6 +86,7 @@ export function TasksPage() {
         availableAgents={state.available_agents}
         activeRunCount={state.active_run_count}
         remainingRunSlots={state.remaining_run_slots}
+        roadmapConsistencyById={roadmapConsistencyById}
         tasks={filteredTasks}
         selectedTaskId={selectedTaskId}
         onSelectTask={setSelectedTaskId}
@@ -90,6 +97,7 @@ export function TasksPage() {
         projectId={state.project.id}
         availableAgents={state.available_agents}
         remainingRunSlots={state.remaining_run_slots}
+        roadmapConsistent={selectedTask ? (roadmapConsistencyById[selectedTask.roadmap_id] ?? true) : true}
         task={selectedTask}
         open={selectedTask !== null}
         onClose={() => setSelectedTaskId(null)}

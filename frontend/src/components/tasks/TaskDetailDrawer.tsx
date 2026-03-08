@@ -14,6 +14,7 @@ interface TaskDetailDrawerProps {
     busy: boolean;
   }>;
   remainingRunSlots: number;
+  roadmapConsistent: boolean;
   task: TaskSummary | null;
   open: boolean;
   onClose: () => void;
@@ -25,6 +26,7 @@ export function TaskDetailDrawer({
   projectId,
   availableAgents,
   remainingRunSlots,
+  roadmapConsistent,
   task,
   open,
   onClose,
@@ -40,12 +42,18 @@ export function TaskDetailDrawer({
     [availableAgents, preferredRunner],
   );
   const canResumeTask = task?.status === 'in_progress' && !task.active_run_id;
+  const hasOwnershipConflict = !!task
+    && canResumeTask
+    && !!task.assigned_to
+    && !!selectedAgent
+    && task.assigned_to !== selectedAgent.agent_id;
   const canExecuteNow = !!task
     && !task.active_run_id
     && remainingRunSlots > 0
     && !!selectedAgent
     && selectedAgent.available
     && !selectedAgent.busy
+    && !hasOwnershipConflict
     && (task.is_eligible || canResumeTask);
 
   useEffect(() => {
@@ -172,6 +180,16 @@ export function TaskDetailDrawer({
               <p>Agente atual: {task.assigned_to || 'não atribuído'}</p>
               <p>Run ativa: {task.active_run_id ?? 'nenhuma'}</p>
               <p>Slots disponíveis: {remainingRunSlots}</p>
+              {!roadmapConsistent ? (
+                <p className="task-blocked-hint">
+                  Integridade pendente no snapshot. Tasks independentes continuam liberadas; use Repair Integrity para reconciliar o roadmap materializado.
+                </p>
+              ) : null}
+              {hasOwnershipConflict ? (
+                <p className="task-blocked-hint">
+                  Task em progresso atribuída a {task.assigned_to}. Regreda para todo antes de trocar para {selectedAgent?.label}.
+                </p>
+              ) : null}
               {selectedAgent ? (
                 <p className={selectedAgent.available && !selectedAgent.busy ? 'task-eligible-hint' : 'task-blocked-hint'}>
                   Override atual: {selectedAgent.label}

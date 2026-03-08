@@ -5,7 +5,7 @@ from pathlib import Path
 from fastapi import APIRouter, HTTPException
 
 from app.api.routes_projects import store
-from app.api.routes_state import _load_roadmap_variants
+from app.api.routes_state import _discover_roadmap_variants
 from app.api.schemas import (
     ChatCreateRequest,
     ChatMessageCreateRequest,
@@ -57,10 +57,13 @@ def _resolve_task_context(roadmap_dir: str, roadmap_id: str | None, task_id: str
     if not task_id:
         return None
     selected_roadmap_id = roadmap_id or "roadmap.json"
-    variants = _load_roadmap_variants(roadmap_dir)
-    roadmap = variants.get(selected_roadmap_id)
-    if not roadmap:
+    variants = _discover_roadmap_variants(roadmap_dir)
+    roadmap_entry = variants.get(selected_roadmap_id)
+    if not roadmap_entry:
         raise HTTPException(status_code=404, detail="Requested roadmap not found.")
+    if roadmap_entry.get("payload") is None:
+        raise HTTPException(status_code=409, detail=roadmap_entry.get("load_warning") or "Requested roadmap could not be loaded.")
+    roadmap = roadmap_entry["payload"]
     task = next((item for item in roadmap.get("tasks", []) if item.get("task_id") == task_id), None)
     if task is None:
         raise HTTPException(status_code=404, detail="Task not found for chat session.")

@@ -43,6 +43,7 @@ export function TopBar({
               .map((roadmap) => (
                 <option key={roadmap.roadmap_id} value={roadmap.roadmap_id}>
                   {roadmap.label}
+                  {roadmap.load_status === 'warning' ? ' [encoding]' : roadmap.load_status === 'error' ? ' [erro]' : ''}
                 </option>
               ))}
             <option value="aggregate">Todos os roadmaps</option>

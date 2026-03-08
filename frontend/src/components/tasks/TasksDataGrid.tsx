@@ -9,6 +9,7 @@ interface TasksDataGridProps {
   }>;
   activeRunCount: number;
   remainingRunSlots: number;
+  roadmapConsistencyById: Record<string, boolean>;
   tasks: TaskSummary[];
   selectedTaskId: string | null;
   onSelectTask: (taskId: string) => void;
@@ -20,6 +21,7 @@ export function TasksDataGrid({
   availableAgents,
   activeRunCount,
   remainingRunSlots,
+  roadmapConsistencyById,
   tasks,
   selectedTaskId,
   onSelectTask,
@@ -50,6 +52,7 @@ export function TasksDataGrid({
               const agentBusy = preferredRunner !== '-' && availableAgents.some((agent) => agent.agent_id === preferredRunner && agent.busy);
               const canResume = task.status === 'in_progress' && !task.active_run_id;
               const canExecute = task.status === 'todo' || canResume;
+              const ownershipConflict = canResume && !!task.assigned_to && preferredRunner !== '-' && task.assigned_to !== preferredRunner;
               let disabledReason: string | null = null;
 
               if (!canExecute) {
@@ -62,6 +65,8 @@ export function TasksDataGrid({
                 disabledReason = `Agente ${preferredRunner} não está disponível no ambiente.`;
               } else if (agentBusy) {
                 disabledReason = `Agente ${preferredRunner} já está ocupado.`;
+              } else if (ownershipConflict) {
+                disabledReason = `Task em progresso atribuída a ${task.assigned_to}. Regreda para todo antes de trocar para ${preferredRunner}.`;
               } else if (!canResume && !task.is_eligible) {
                 disabledReason = task.ineligibility_reasons[0] ?? 'Task inelegível.';
               }

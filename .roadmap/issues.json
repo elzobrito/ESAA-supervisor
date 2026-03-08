@@ -4,8 +4,8 @@
     "esaa_version": "0.4.x",
     "generated_by": "esaa.project",
     "source_event_store": ".roadmap/activity.jsonl",
-    "last_event_seq": 198,
-    "updated_at": "2026-03-07T19:05:00Z"
+    "last_event_seq": 254,
+    "updated_at": "2026-03-08T18:13:23Z"
   },
   "issues": [
     {
@@ -668,7 +668,7 @@
     },
     {
       "issue_id": "ISS-RUN-7352CB40",
-      "status": "open",
+      "status": "resolved",
       "severity": "medium",
       "title": "Agent reported issue while executing SEC-012",
       "baseline_id": null,
@@ -676,20 +676,25 @@
         "task_id": "SEC-012"
       },
       "evidence": "Agent requested issue reporting from manual review flow.",
-      "resolution": null,
+      "resolution": {
+        "summary": "Issue resolved manually via supervisor UI after operational verification.",
+        "evidence": [
+          "Resolved manually from the Issues page after operator review."
+        ]
+      },
       "links": {
         "reported_by_task_id": "SEC-012",
-        "fixes_task_id": null,
+        "fixes_task_id": "SEC-012",
         "hotfix_task_id": null
       },
       "timeline": {
         "created_event_seq": 158,
-        "resolved_event_seq": null
+        "resolved_event_seq": 199
       }
     },
     {
       "issue_id": "ISS-RUN-40714C13",
-      "status": "open",
+      "status": "resolved",
       "severity": "medium",
       "title": "Agent reported issue while executing SEC-015",
       "baseline_id": null,
@@ -697,20 +702,25 @@
         "task_id": "SEC-015"
       },
       "evidence": "Agent did not return valid JSON",
-      "resolution": null,
+      "resolution": {
+        "summary": "Issue resolved manually via supervisor UI after operational verification.",
+        "evidence": [
+          "Resolved manually from the Issues page after operator review."
+        ]
+      },
       "links": {
         "reported_by_task_id": "SEC-015",
-        "fixes_task_id": null,
+        "fixes_task_id": "SEC-015",
         "hotfix_task_id": null
       },
       "timeline": {
         "created_event_seq": 170,
-        "resolved_event_seq": null
+        "resolved_event_seq": 200
       }
     },
     {
       "issue_id": "ISS-RUN-49369052",
-      "status": "open",
+      "status": "resolved",
       "severity": "medium",
       "title": "Agent reported issue while executing ESUP-IMPL-015",
       "baseline_id": null,
@@ -718,20 +728,25 @@
         "task_id": "ESUP-IMPL-015"
       },
       "evidence": "Agent did not return valid JSON",
-      "resolution": null,
+      "resolution": {
+        "summary": "Issue resolved manually via supervisor UI after operational verification.",
+        "evidence": [
+          "Resolved manually from the Issues page after operator review."
+        ]
+      },
       "links": {
         "reported_by_task_id": "ESUP-IMPL-015",
-        "fixes_task_id": null,
+        "fixes_task_id": "ESUP-IMPL-015",
         "hotfix_task_id": null
       },
       "timeline": {
         "created_event_seq": 184,
-        "resolved_event_seq": null
+        "resolved_event_seq": 201
       }
     },
     {
       "issue_id": "ISS-RUN-384DFC52",
-      "status": "open",
+      "status": "resolved",
       "severity": "medium",
       "title": "Agent reported issue while executing SEC-015",
       "baseline_id": null,
@@ -739,20 +754,25 @@
         "task_id": "SEC-015"
       },
       "evidence": "codex exited with code 1",
-      "resolution": null,
+      "resolution": {
+        "summary": "Issue resolved manually via supervisor UI after operational verification.",
+        "evidence": [
+          "Resolved manually from the Issues page after operator review."
+        ]
+      },
       "links": {
         "reported_by_task_id": "SEC-015",
-        "fixes_task_id": null,
+        "fixes_task_id": "SEC-015",
         "hotfix_task_id": null
       },
       "timeline": {
         "created_event_seq": 193,
-        "resolved_event_seq": null
+        "resolved_event_seq": 202
       }
     },
     {
       "issue_id": "ISS-RUN-F7B10D82",
-      "status": "open",
+      "status": "resolved",
       "severity": "medium",
       "title": "Agent reported issue while executing SEC-018",
       "baseline_id": null,
@@ -760,15 +780,20 @@
         "task_id": "SEC-018"
       },
       "evidence": "Agent requested issue reporting from manual review flow.",
-      "resolution": null,
+      "resolution": {
+        "summary": "Issue resolved manually via supervisor UI after operational verification.",
+        "evidence": [
+          "Resolved manually from the Issues page after operator review."
+        ]
+      },
       "links": {
         "reported_by_task_id": "SEC-018",
-        "fixes_task_id": null,
+        "fixes_task_id": "SEC-018",
         "hotfix_task_id": null
       },
       "timeline": {
         "created_event_seq": 198,
-        "resolved_event_seq": null
+        "resolved_event_seq": 203
       }
     }
   ],

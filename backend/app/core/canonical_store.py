@@ -1,11 +1,11 @@
 ﻿import os
-import json
 from typing import Optional
 
 from app.core.artifact_discovery import ArtifactDiscovery
 from app.core.projector import Projector
 from app.core.validators import ArtifactValidator
 from app.models.project_state import ConsolidatedState, ProjectMetadata
+from app.utils.json_artifacts import JsonArtifactLoadError, load_json_artifact
 from app.utils.jsonl import read_jsonl
 
 class CanonicalStore:
@@ -41,20 +41,28 @@ class CanonicalStore:
         # Basic loading of projection files if they exist
         roadmap_file = os.path.join(self.active_project.base_path, "roadmap.json")
         if os.path.exists(roadmap_file):
-            with open(roadmap_file, "r", encoding="utf-8") as f:
-                state.roadmap = json.load(f)
+            try:
+                state.roadmap = load_json_artifact(roadmap_file).payload
                 state.last_event_seq = state.roadmap.get("meta", {}).get("run", {}).get("last_event_seq", 0)
                 state.is_consistent = self._is_consistent(state.roadmap)
+            except JsonArtifactLoadError:
+                state.roadmap = {}
+                state.last_event_seq = 0
+                state.is_consistent = False
 
         issues_file = os.path.join(self.active_project.base_path, "issues.json")
         if os.path.exists(issues_file):
-            with open(issues_file, "r", encoding="utf-8") as f:
-                state.issues = json.load(f)
+            try:
+                state.issues = load_json_artifact(issues_file).payload
+            except JsonArtifactLoadError:
+                state.issues = {"issues": []}
 
         lessons_file = os.path.join(self.active_project.base_path, "lessons.json")
         if os.path.exists(lessons_file):
-            with open(lessons_file, "r", encoding="utf-8") as f:
-                state.lessons = json.load(f)
+            try:
+                state.lessons = load_json_artifact(lessons_file).payload
+            except JsonArtifactLoadError:
+                state.lessons = {"lessons": []}
 
         activity_file = os.path.join(self.active_project.base_path, "activity.jsonl")
         if os.path.exists(activity_file):

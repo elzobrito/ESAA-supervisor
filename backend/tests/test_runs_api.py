@@ -81,7 +81,7 @@ def test_start_next_run_returns_run_response() -> None:
     )
     with patch("app.api.routes_runs.store") as mock_store, \
          patch("app.api.routes_runs.RunEngine") as MockEngine, \
-         patch("app.api.routes_runs._load_roadmap_variants", return_value={"roadmap.json": MOCK_ROADMAP}):
+         patch("app.api.routes_runs._discover_roadmap_variants", return_value={"roadmap.json": {"payload": MOCK_ROADMAP}}):
         _mock_store(mock_store)
         instance = MockEngine.return_value
         import asyncio
@@ -111,7 +111,7 @@ def test_start_next_run_passes_execution_mode() -> None:
     )
     with patch("app.api.routes_runs.store") as mock_store, \
          patch("app.api.routes_runs.RunEngine") as MockEngine, \
-         patch("app.api.routes_runs._load_roadmap_variants", return_value={"roadmap.json": MOCK_ROADMAP}):
+         patch("app.api.routes_runs._discover_roadmap_variants", return_value={"roadmap.json": {"payload": MOCK_ROADMAP}}):
         _mock_store(mock_store)
         instance = MockEngine.return_value
 
@@ -135,7 +135,7 @@ def test_start_next_run_422_when_no_eligible_task() -> None:
     no_task_state.issues = {"issues": []}
 
     with patch("app.api.routes_runs.store") as mock_store, \
-         patch("app.api.routes_runs._load_roadmap_variants", return_value={"roadmap.json": {"tasks": []}}):
+         patch("app.api.routes_runs._discover_roadmap_variants", return_value={"roadmap.json": {"payload": {"tasks": []}}}):
         mock_store.active_project = MOCK_PROJECT
         mock_store.get_state.return_value = no_task_state
 
@@ -241,7 +241,7 @@ def test_start_task_run_blocks_when_dependency_is_pending() -> None:
         "indexes": {"by_status": {"todo": 2, "in_progress": 0, "review": 0, "done": 0}},
     }
     with patch("app.api.routes_runs.store") as mock_store, \
-         patch("app.api.routes_runs._load_roadmap_variants", return_value={"roadmap.json": blocked_roadmap}):
+         patch("app.api.routes_runs._discover_roadmap_variants", return_value={"roadmap.json": {"payload": blocked_roadmap}}):
         _mock_store(mock_store)
         response = client.post(
             f"/api/v1/projects/{MOCK_PROJECT_ID}/runs/task",
@@ -252,7 +252,7 @@ def test_start_task_run_blocks_when_dependency_is_pending() -> None:
     assert "Dependency T-001 is todo" in str(response.json()["detail"])
 
 
-def test_start_task_run_returns_409_when_projection_is_stale() -> None:
+def test_start_task_run_allows_projection_lag_for_independent_task() -> None:
     with tempfile.TemporaryDirectory() as tmp_dir:
         roadmap = {
             "meta": {
@@ -268,6 +268,18 @@ def test_start_task_run_returns_409_when_projection_is_stale() -> None:
                 {
                     "task_id": "T-001",
                     "task_kind": "impl",
+                    "title": "Task 1",
+                    "description": "desc",
+                    "status": "todo",
+                    "depends_on": [],
+                    "targets": [],
+                    "outputs": {"files": []},
+                    "immutability": {"done_is_immutable": True},
+                    "required_verification": [],
+                },
+                {
+                    "task_id": "T-002",
+                    "task_kind": "impl",
                     "title": "Task",
                     "description": "desc",
                     "status": "todo",
@@ -278,7 +290,7 @@ def test_start_task_run_returns_409_when_projection_is_stale() -> None:
                     "required_verification": [],
                 }
             ],
-            "indexes": {"by_status": {"todo": 1, "in_progress": 0, "review": 0, "done": 0}, "by_kind": {"spec": 0, "impl": 1, "qa": 0}, "by_preferred_runner": {}},
+            "indexes": {"by_status": {"todo": 2, "in_progress": 0, "review": 0, "done": 0}, "by_kind": {"spec": 0, "impl": 2, "qa": 0}, "by_preferred_runner": {}},
         }
         from app.core.projector import Projector
         roadmap["meta"]["run"]["projection_hash_sha256"] = Projector.compute_projection_hash(roadmap)
@@ -295,8 +307,8 @@ def test_start_task_run_returns_409_when_projection_is_stale() -> None:
                 "event_seq": 2,
                 "ts": "2026-03-07T15:00:00Z",
                 "actor": "claude-code",
-                "action": "complete",
-                "payload": {"task_id": "T-001", "prior_status": "in_progress"},
+                "action": "claim",
+                "payload": {"task_id": "T-001", "prior_status": "todo"},
             }) + "\n")
 
         stale_project = MagicMock()
@@ -306,13 +318,61 @@ def test_start_task_run_returns_409_when_projection_is_stale() -> None:
         with patch("app.api.routes_runs.store") as mock_store:
             mock_store.active_project = stale_project
             mock_store.get_state.return_value = MOCK_STATE
-            response = client.post(
-                f"/api/v1/projects/{MOCK_PROJECT_ID}/runs/task",
-                json={"task_id": "T-001", "agent_id": "gemini-cli"},
-            )
+            with patch("app.api.routes_runs.RunEngine") as MockEngine:
+                async def fake_start(*args, **kwargs):
+                    return RunState(
+                        run_id="run-lag",
+                        task_id="T-002",
+                        agent_id="gemini-cli",
+                        status=RunStatus.PREFLIGHT,
+                        started_at=datetime(2026, 3, 7, 4, 0, 0),
+                    )
+                MockEngine.return_value.start_run.side_effect = fake_start
+                response = client.post(
+                    f"/api/v1/projects/{MOCK_PROJECT_ID}/runs/task",
+                    json={"task_id": "T-002", "agent_id": "gemini-cli"},
+                )
+
+    assert response.status_code == 200
+
+
+def test_start_task_run_returns_409_for_in_progress_task_of_other_agent() -> None:
+    owned_roadmap = {
+        "tasks": [
+            {
+                "task_id": "T-001",
+                "task_kind": "impl",
+                "title": "Task",
+                "description": "desc",
+                "status": "in_progress",
+                "assigned_to": "codex",
+                "started_at": "2026-03-07T15:00:00Z",
+                "depends_on": [],
+                "targets": [],
+                "outputs": {"files": []},
+                "immutability": {"done_is_immutable": True},
+                "required_verification": [],
+                "planning": {"preferred_runner": "claude-code"},
+            }
+        ],
+        "indexes": {"by_status": {"todo": 0, "in_progress": 1, "review": 0, "done": 0}},
+    }
+    with patch("app.api.routes_runs.store") as mock_store, \
+         patch("app.api.routes_runs._discover_roadmap_variants", return_value={"roadmap.json": {"payload": owned_roadmap}}), \
+         patch("app.api.routes_runs.RunEngine") as MockEngine:
+        _mock_store(mock_store)
+
+        async def fake_start(*args, **kwargs):
+            raise RuntimeError("Task T-001 is in_progress and assigned to codex. Regress it to todo before switching to claude-code.")
+
+        MockEngine.return_value.start_run.side_effect = fake_start
+        response = client.post(
+            f"/api/v1/projects/{MOCK_PROJECT_ID}/runs/task",
+            json={"task_id": "T-001", "agent_id": "claude-code"},
+        )
 
     assert response.status_code == 409
-    assert "integrity repair" in response.json()["detail"].lower()
+    assert "assigned to codex" in response.json()["detail"]
 
 
 def test_patch_task_planning_persists_only_preferred_runner() -> None:
@@ -334,7 +394,7 @@ def test_patch_task_planning_persists_only_preferred_runner() -> None:
         ]
     }
     with patch("app.api.routes_tasks.store") as mock_store, \
-         patch("app.api.routes_tasks._load_roadmap_variants", return_value={"roadmap.json": roadmap}), \
+         patch("app.api.routes_tasks._discover_roadmap_variants", return_value={"roadmap.json": {"payload": roadmap}}), \
          patch("app.api.routes_tasks.EventWriter") as MockWriter, \
          patch("app.api.routes_tasks.Projector"):
         _mock_store(mock_store)

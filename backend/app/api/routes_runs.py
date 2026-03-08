@@ -4,7 +4,7 @@ from app.core.selector import TaskSelector
 from app.core.run_engine import RunEngine
 from app.core.eligibility import EligibilityEngine
 from app.api.routes_projects import store
-from app.api.routes_state import _load_roadmap_variants
+from app.api.routes_state import _discover_roadmap_variants, _load_roadmap_variants
 
 router = APIRouter(prefix="/projects/{project_id}/runs", tags=["runs"])
 
@@ -60,11 +60,13 @@ def _resolve_roadmap(project_id: str, roadmap_id: str | None) -> dict:
     roadmap_key = roadmap_id or "roadmap.json"
     if roadmap_key == "aggregate":
         raise HTTPException(status_code=422, detail="Runs require a specific roadmap, not aggregate mode.")
-    variants = _load_roadmap_variants(store.active_project.base_path)
+    variants = _discover_roadmap_variants(store.active_project.base_path)
     selected = variants.get(roadmap_key)
     if not selected:
         raise HTTPException(status_code=404, detail="Requested roadmap not found for execution.")
-    return selected
+    if selected.get("payload") is None:
+        raise HTTPException(status_code=409, detail=selected.get("load_warning") or "Requested roadmap could not be loaded for execution.")
+    return selected["payload"]
 
 
 @router.get("/eligibility", response_model=EligibilityReportResponse)
