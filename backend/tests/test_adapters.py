@@ -34,6 +34,33 @@ def test_codex_adapter_includes_reasoning_override() -> None:
     assert "-m" in command
     assert "gpt-5.1-codex" in command
     assert any(part == 'reasoning_effort="medium"' for part in command)
+    assert "resume" not in command
+
+
+def test_codex_adapter_resume_by_session_id() -> None:
+    adapter = CodexAdapter()
+    context = _context(model_id="gpt-5.1-codex")
+    context.metadata["codex_session_id"] = "0b6fd2c5-4e57-45c9-aa17-1cf32c6fbb2c"
+    command = adapter.build_command(context, "prompt")
+    assert "codex" in command[0].lower()
+    assert command[1:3] == ["exec", "resume"]
+    assert "--full-auto" in command
+    assert "--skip-git-repo-check" in command
+    assert "--last" not in command
+    assert "0b6fd2c5-4e57-45c9-aa17-1cf32c6fbb2c" in command
+    assert "--sandbox" not in command
+    assert "--color" not in command
+
+
+def test_codex_adapter_resume_last() -> None:
+    adapter = CodexAdapter()
+    context = _context()
+    context.metadata["codex_resume_last"] = True
+    command = adapter.build_command(context, "prompt")
+    assert command[1:3] == ["exec", "resume"]
+    assert "--full-auto" in command
+    assert "--last" in command
+    assert "--sandbox" not in command
 
 
 def test_codex_adapter_strips_transcript_noise_from_stderr() -> None:
@@ -56,6 +83,28 @@ def test_codex_adapter_strips_transcript_noise_from_stderr() -> None:
     assert "OpenAI Codex v0.107.0" in stderr
     assert "model: gpt-5.4" in stderr
     assert "ERROR:" in stderr
+
+
+def test_codex_adapter_extracts_tokens_and_session_id() -> None:
+    adapter = CodexAdapter()
+    metadata = adapter._extract_metadata_extras(
+        raw_output="\n".join(
+            [
+                "OpenAI Codex v0.107.0 (research preview)",
+                "session id: 0b6fd2c5-4e57-45c9-aa17-1cf32c6fbb2c",
+                "tokens used 1,234",
+            ]
+        ),
+        stdout="",
+        stderr="",
+    )
+    assert metadata == {
+        "token_usage": {
+            "total": 1234,
+            "models": {},
+        },
+        "codex_session_id": "0b6fd2c5-4e57-45c9-aa17-1cf32c6fbb2c",
+    }
 
 
 def test_gemini_adapter_generates_temp_settings_for_reasoning_effort() -> None:

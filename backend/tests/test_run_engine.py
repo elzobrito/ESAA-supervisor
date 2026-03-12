@@ -10,7 +10,7 @@ from app.core.projector import Projector
 from app.core.run_coordinator import RunCoordinator
 from app.core.run_engine import RunEngine
 from app.models.agent_result import AgentMetadata, AgentPayload, AgentResult
-from app.models.run_state import RunExecutionMode, RunStatus
+from app.models.run_state import RunExecutionMode, RunState, RunStatus
 
 
 def setup_function() -> None:
@@ -26,6 +26,7 @@ def _reset_runtime_state() -> None:
     RunEngine._run_tasks.clear()
     RunEngine._decision_events.clear()
     RunEngine._decision_payloads.clear()
+    RunEngine._agent_session_ids.clear()
     RunCoordinator._project_runs.clear()
     RunCoordinator._run_projects.clear()
     RunCoordinator._busy_agents.clear()
@@ -355,6 +356,34 @@ def test_dependencies_block_task_execution(tmp_path: Path) -> None:
             await engine.start_run("TASK-2", "gemini-cli", roadmap_dir=roadmap_dir, roadmap=roadmap)
 
     asyncio.run(scenario())
+
+
+def test_codex_session_id_is_reused_across_context_builds() -> None:
+    engine = RunEngine("project-codex-session")
+    run_state = RunState(
+        run_id="RUN-1",
+        task_id="TASK-1",
+        agent_id="codex",
+    )
+
+    engine._remember_agent_session_id(
+        run_state=run_state,
+        result={
+            "metadata": {
+                "codex_session_id": "0b6fd2c5-4e57-45c9-aa17-1cf32c6fbb2c",
+            }
+        },
+    )
+
+    context = engine._build_context(
+        task=_task("TASK-2", runner="codex"),
+        agent_id="codex",
+        roadmap_id="roadmap.json",
+        lessons=[],
+        roadmap_dir=None,
+    )
+
+    assert context.metadata.get("codex_session_id") == "0b6fd2c5-4e57-45c9-aa17-1cf32c6fbb2c"
 
 
 def test_start_run_allows_independent_task_when_projection_is_behind_activity(tmp_path: Path) -> None:

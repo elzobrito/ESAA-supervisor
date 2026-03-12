@@ -23,6 +23,7 @@ class RunEngine:
     _run_tasks: Dict[str, asyncio.Task] = {}
     _decision_events: Dict[str, asyncio.Event] = {}
     _decision_payloads: Dict[str, dict[str, Any]] = {}
+    _agent_session_ids: Dict[str, str] = {}
 
     def __init__(self, project_id: str):
         self.project_id = project_id
@@ -141,12 +142,14 @@ class RunEngine:
 
                 context = self._build_context(
                     task=task,
+                    agent_id=run_state.agent_id,
                     roadmap_id=run_state.roadmap_id,
                     lessons=lessons,
                     roadmap_dir=roadmap_dir,
                 )
                 adapter = self.agent_router.get_adapter(run_state.agent_id)
                 result = await asyncio.to_thread(adapter.run, context, self._build_prompt(context), self._log_callback(run_id))
+                self._remember_agent_session_id(run_state=run_state, result=result.model_dump(mode="json"))
 
                 run_state.exit_code = result.metadata.exit_code
                 run_state.agent_result = result.model_dump(mode="json")
@@ -467,6 +470,7 @@ class RunEngine:
         self,
         *,
         task: dict[str, Any],
+        agent_id: str,
         roadmap_id: str | None,
         lessons: list[dict[str, Any]],
         roadmap_dir: str | None,
@@ -478,6 +482,15 @@ class RunEngine:
         ]
         raw_outputs = task.get("outputs", [])
         output_files = raw_outputs.get("files", []) if isinstance(raw_outputs, dict) else raw_outputs
+        metadata: dict[str, Any] = {
+            "workspace_root": self._workspace_root_from_roadmap_dir(roadmap_dir),
+            "roadmap_id": roadmap_id or "roadmap.json",
+            "title": task.get("title", ""),
+        }
+        cached_session_id = self._cached_session_id(agent_id)
+        if agent_id == "codex" and cached_session_id:
+            metadata["codex_session_id"] = cached_session_id
+
         return TaskContext(
             task_id=task["task_id"],
             task_kind=task.get("task_kind", "impl"),
@@ -486,11 +499,7 @@ class RunEngine:
             outputs=TaskOutputs(files=output_files),
             prior_status=task.get("status", "todo"),
             active_lessons=active_lessons,
-            metadata={
-                "workspace_root": self._workspace_root_from_roadmap_dir(roadmap_dir),
-                "roadmap_id": roadmap_id or "roadmap.json",
-                "title": task.get("title", ""),
-            },
+            metadata=metadata,
         )
 
     def _resolve_agent_id(self, *, task: dict[str, Any], override_agent_id: str | None) -> str:
@@ -549,7 +558,28 @@ class RunEngine:
         token_usage = metadata.get("token_usage")
         if isinstance(token_usage, dict) and token_usage:
             execution["token_usage"] = token_usage
+        codex_session_id = metadata.get("codex_session_id")
+        if isinstance(codex_session_id, str) and codex_session_id.strip():
+            execution["codex_session_id"] = codex_session_id.strip()
         return {key: value for key, value in execution.items() if value is not None and value != {}}
+
+    def _remember_agent_session_id(self, *, run_state: RunState, result: dict[str, Any]) -> None:
+        metadata = result.get("metadata", {})
+        if not isinstance(metadata, dict):
+            return
+        session_id = metadata.get("codex_session_id")
+        if not isinstance(session_id, str):
+            return
+        normalized = session_id.strip()
+        if not normalized:
+            return
+        self._agent_session_ids[self._agent_session_key(run_state.agent_id)] = normalized
+
+    def _cached_session_id(self, agent_id: str) -> str | None:
+        return self._agent_session_ids.get(self._agent_session_key(agent_id))
+
+    def _agent_session_key(self, agent_id: str) -> str:
+        return f"{self.project_id}:{agent_id}"
 
     @staticmethod
     def _load_init_prompt(workspace_root: str | None) -> str:
